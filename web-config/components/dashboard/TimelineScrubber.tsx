@@ -1,13 +1,14 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Detection } from '@/lib/api';
+import { Detection, SessionInfo } from '@/lib/api';
 
 interface TimelineScrubberProps {
     startTime: Date;
     endTime: Date;
     currentTime: Date;
     events: Detection[];
+    sessions?: SessionInfo[];
     onSeek: (time: Date) => void;
     height?: number;
     className?: string;
@@ -18,6 +19,7 @@ export default function TimelineScrubber({
     endTime,
     currentTime,
     events,
+    sessions = [],
     onSeek,
     height = 60,
     className = ''
@@ -26,9 +28,9 @@ export default function TimelineScrubber({
     const containerRef = useRef<HTMLDivElement>(null);
     const [isDragging, setIsDragging] = useState(false);
 
-    // Timeline range (zoom level) - default to full duration
-    const [viewStart, setViewStart] = useState(startTime.getTime());
-    const [viewEnd, setViewEnd] = useState(endTime.getTime());
+    // Timeline range (Visible Window)
+    const viewStart = startTime.getTime();
+    const viewEnd = endTime.getTime();
 
     const draw = () => {
         const canvas = canvasRef.current;
@@ -48,6 +50,8 @@ export default function TimelineScrubber({
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         const duration = viewEnd - viewStart;
+        if (duration <= 0) return;
+
         const pixelsPerMs = canvas.width / duration;
 
         // Draw time markers (grid)
@@ -62,12 +66,14 @@ export default function TimelineScrubber({
             const targetPx = 100;
             const msPerTick = targetPx / pixelsPerMs;
 
-            // Round to nice intervals (1s, 10s, 1m, 5m, 10m, 1h)
+            // Round to nice intervals (1s, 1m, 5m, 1h, 6h, 1d, 1w)
             const intervals = [
-                1000, 10000, 60000, 300000, 600000, 3600000
+                1000, 10000, 60000, 300000, 600000, 3600000,
+                10800000, 21600000, 43200000, 86400000, 604800000
             ];
-            const interval = intervals.find(i => i >= msPerTick) || 3600000;
+            const interval = intervals.find(i => i >= msPerTick) || 86400000;
 
+            // Align first tick to interval
             const firstTick = Math.ceil(viewStart / interval) * interval;
 
             for (let t = firstTick; t <= viewEnd; t += interval) {
@@ -78,13 +84,35 @@ export default function TimelineScrubber({
                 ctx.stroke();
 
                 const date = new Date(t);
-                const label = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: interval < 60000 ? '2-digit' : undefined });
+                let label = '';
+                if (interval < 60000) label = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                else if (interval < 86400000) label = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                else label = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+
                 ctx.fillText(label, x, canvas.height - 5);
             }
         };
         updateGrid();
 
-        // Draw events
+        // Draw Session Blocks (Green/Blue background where video exists)
+        ctx.fillStyle = '#1e3a8a'; // blue-900 with opacity
+        sessions.forEach(session => {
+            const sTime = new Date(session.created_at).getTime();
+            const eTime = session.ended_at ? new Date(session.ended_at).getTime() : Date.now();
+
+            // Skip if out of view
+            if (eTime < viewStart || sTime > viewEnd) return;
+
+            const start = Math.max(sTime, viewStart);
+            const end = Math.min(eTime, viewEnd);
+
+            const x = (start - viewStart) * pixelsPerMs;
+            const w = (end - start) * pixelsPerMs;
+
+            ctx.fillRect(x, 5, Math.max(w, 2), height - 25);
+        });
+
+        // Draw events (Detections)
         events.forEach(event => {
             if (!event.timestamp) return;
             const t = new Date(event.timestamp).getTime();
@@ -93,9 +121,9 @@ export default function TimelineScrubber({
             const x = (t - viewStart) * pixelsPerMs;
 
             // Color based on class (simple logic for now)
-            ctx.fillStyle = event.class_name?.includes('fire') ? '#EF4444' : '#3B82F6';
-            ctx.globalAlpha = 0.6;
-            ctx.fillRect(x - 2, 10, 4, height - 30);
+            ctx.fillStyle = event.class_name?.includes('fire') ? '#EF4444' : '#3B82F6'; // Red or Blue
+            ctx.globalAlpha = 0.8;
+            ctx.fillRect(x - 1, 10, 2, height - 30);
             ctx.globalAlpha = 1.0;
         });
 
@@ -125,7 +153,7 @@ export default function TimelineScrubber({
         draw();
         window.addEventListener('resize', draw);
         return () => window.removeEventListener('resize', draw);
-    }, [startTime, endTime, currentTime, events, viewStart, viewEnd]);
+    }, [startTime, endTime, currentTime, events, sessions, viewStart, viewEnd]);
 
     const handleMouseEvent = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!containerRef.current) return;
@@ -148,7 +176,7 @@ export default function TimelineScrubber({
     return (
         <div
             ref={containerRef}
-            className={`relative w-full overflow-hidden select-none cursor-pointer bg-gray-900 border-t border-gray-800 ${className}`}
+            className={`relative w-full overflow-hidden select-none cursor-pointer bg-gray-950 border-t border-gray-800 ${className}`}
             style={{ height }}
             onMouseDown={handleMouseEvent}
             onMouseMove={handleMouseEvent}
