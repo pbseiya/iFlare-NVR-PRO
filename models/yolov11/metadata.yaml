@@ -1,0 +1,26 @@
+description: Ultralytics YOLO11m model trained on data.yaml
+author: Ultralytics
+date: '2026-02-02T11:32:31.861183'
+version: 8.4.9
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: fire
+  1: smoke
+  2: fire_smoke
+  3: steam
+args:
+  batch: 1
+  fraction: 1.0
+  half: false
+  int8: false
+  dynamic: false
+  nms: false
+channels: 3
+end2end: false

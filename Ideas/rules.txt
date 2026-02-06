@@ -1,0 +1,25 @@
+อ้างอิงจาก /home/pongsak/projects/iflare4sale/production
+วิดีโอที่ใช้ทดสอบ ~/projects/iflare4sale/original/media/DSCF0008.AVI, fps=1
+rtspที่ใช้ทดสอบ rtsp://localhost:8554/iflare, fps=1
+
+ต้องการที่จะทำ web ui ในการ setup config การ inference yolov11 ด้วย cpu เท่านั้น ด้วยภาษาและ model ที่แตกต่างกันออกไป ว่าจะใช้วิธีได้ให้เลือกได้
+
+1. python+pytorch ใช้ weight file: ~/projects/yolov11_inference_cpu/models/om_flare_yolov11.pt
+2. cpp+openvino ใช้ weight file: ~/projects/yolov11_inference_cpu/models/yolov11
+3. rust+openvino ใช้ weight file:~/projects/yolov11_inference_cpu/models/yolov11
+
+ต้องการแยกส่วน code ในการ 
+1. รับ input เข้ามาให้เลือกได้ว่าจะใช้ไฟล์ video หรือ rtsp เป็น source และกำหนดได้ว่าจะใช้ fps ที่ส่งไป inference เท่าไร มีส่วนการอ่าน source fps ด้วยแต่อาจไม่แม่น ใช้จับเวลาจะแม่นกว่า
+2. ส่วน pre-process
+3. ส่วน inference
+4. ส่วน post-processing
+5. ส่วน render ให้เลือกได้ว่าจะ pipeline render หรือ แยกไป render ภายหลัง
+6. ส่วนการบันทึกข้อมูลได้แก่
+6.1 timestamp
+6.2 bbox สำหรับให้ opencv นำไปตีกรอบในภาพได้เลย
+6.3 class
+6.4 confidential
+6.5 pre-processing, inference, post-processing, render, total time
+7. web ui แบบ nvr สำหรับแสดงผลแบบ realtim หรือย้อนหลัง ซึ่งสามารถเลือกที่ให้แสดง bbox ที่บันทึกไว้ใน database ได้
+8. การติดตั้ง package ให้ใช้ uv add  และ echo "Seiya010" | sudo -S
+ช่วยออกแบบระบบให้หน่อยว่าต้องแยกส่วนประกอบอะไรบ้าง
