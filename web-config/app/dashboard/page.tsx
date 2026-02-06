@@ -3,12 +3,16 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 import Sidebar from '@/components/dashboard/Sidebar';
+import SessionCard from '@/components/dashboard/SessionCard';
 import SessionCardSimple from '@/components/dashboard/SessionCardSimple';
+import RoleSwitcher from '@/components/dashboard/RoleSwitcher';
 import { LayoutGrid, Activity } from 'lucide-react';
 
 export default function DashboardPage() {
     const queryClient = useQueryClient();
+    const { isAdmin } = useAuth();
     const [selectedView, setSelectedView] = useState<'overview' | 'cameras'>('overview');
 
     // Fetch sessions
@@ -34,9 +38,45 @@ export default function DashboardPage() {
         },
     });
 
+    // Delete session mutation
+    const deleteSessionMutation = useMutation({
+        mutationFn: (sessionId: number) => api.deleteSession(sessionId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] });
+        },
+    });
+
     const sessions = sessionsData?.sessions || [];
     const runningSessions = sessions.filter(s => s.status === 'running');
     const completedSessions = sessions.filter(s => s.status === 'completed');
+
+    // Render session card based on role
+    const renderSessionCard = (session: any) => {
+        const commonProps = {
+            key: session.id,
+            session,
+            onStop: (id: number) => stopSessionMutation.mutate(id),
+            onResume: (id: number) => resumeSessionMutation.mutate(id),
+            isStopping: stopSessionMutation.isPending,
+            isResuming: resumeSessionMutation.isPending,
+        };
+
+        if (isAdmin) {
+            return (
+                <SessionCard
+                    {...commonProps}
+                    onEdit={(session) => {
+                        // TODO: Implement edit modal
+                        console.log('Edit session:', session);
+                    }}
+                    onDelete={(id) => deleteSessionMutation.mutate(id)}
+                    isDeleting={deleteSessionMutation.isPending}
+                />
+            );
+        }
+
+        return <SessionCardSimple {...commonProps} />;
+    };
 
     return (
         <div className="min-h-screen bg-gray-950 text-white flex">
@@ -46,9 +86,13 @@ export default function DashboardPage() {
             {/* Main Content */}
             <div className="flex-1 p-8">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold mb-2">NVR Dashboard</h1>
-                    <p className="text-gray-400">Professional Monitoring System</p>
+                <div className="mb-8 flex items-start justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold mb-2">NVR Dashboard</h1>
+                        <p className="text-gray-400">Professional Monitoring System</p>
+                    </div>
+                    {/* Role Switcher - For Development */}
+                    <RoleSwitcher />
                 </div>
 
                 {/* Stats Overview */}
@@ -85,16 +129,7 @@ export default function DashboardPage() {
                         <div className="text-gray-500">Loading...</div>
                     ) : runningSessions.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {runningSessions.map(session => (
-                                <SessionCardSimple
-                                    key={session.id}
-                                    session={session}
-                                    onStop={(id) => stopSessionMutation.mutate(id)}
-                                    onResume={(id) => resumeSessionMutation.mutate(id)}
-                                    isStopping={stopSessionMutation.isPending}
-                                    isResuming={resumeSessionMutation.isPending}
-                                />
-                            ))}
+                            {runningSessions.map(renderSessionCard)}
                         </div>
                     ) : (
                         <div className="bg-gray-900 rounded-xl p-8 border border-gray-800 text-center text-gray-500">
@@ -108,16 +143,7 @@ export default function DashboardPage() {
                     <h2 className="text-xl font-semibold mb-4">Recent Sessions</h2>
                     {completedSessions.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {completedSessions.slice(0, 6).map(session => (
-                                <SessionCardSimple
-                                    key={session.id}
-                                    session={session}
-                                    onStop={(id) => stopSessionMutation.mutate(id)}
-                                    onResume={(id) => resumeSessionMutation.mutate(id)}
-                                    isStopping={stopSessionMutation.isPending}
-                                    isResuming={resumeSessionMutation.isPending}
-                                />
-                            ))}
+                            {completedSessions.slice(0, 6).map(renderSessionCard)}
                         </div>
                     ) : (
                         <div className="bg-gray-900 rounded-xl p-8 border border-gray-800 text-center text-gray-500">
