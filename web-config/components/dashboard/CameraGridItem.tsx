@@ -1,16 +1,19 @@
 'use client';
 
 import { SessionInfo } from '@/lib/api';
-import { Activity, Video, Maximize2 } from 'lucide-react';
+import { Maximize2, Circle } from 'lucide-react';
 import { useState } from 'react';
+import LiveCameraFeed from './LiveCameraFeed';
+import { DrawDetectionsOptions } from '@/lib/detection-utils';
 
 interface CameraGridItemProps {
     session: SessionInfo;
     onFocus?: () => void;
     isFocused?: boolean;
+    detectionOptions: DrawDetectionsOptions;
 }
 
-export default function CameraGridItem({ session, onFocus, isFocused = false }: CameraGridItemProps) {
+export default function CameraGridItem({ session, onFocus, isFocused = false, detectionOptions }: CameraGridItemProps) {
     const [isHovered, setIsHovered] = useState(false);
     const isRunning = session.status === 'running';
 
@@ -29,15 +32,9 @@ export default function CameraGridItem({ session, onFocus, isFocused = false }: 
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Video Placeholder - Will be replaced with actual video player */}
-            <div className="aspect-video bg-gray-950 flex items-center justify-center">
-                <div className="text-center">
-                    <Video className="w-12 h-12 text-gray-700 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">
-                        {isRunning ? 'Live Stream' : 'No Stream'}
-                    </p>
-                    <p className="text-xs text-gray-700 mt-1">Session #{session.id}</p>
-                </div>
+            {/* Live Video Feed with Detection Overlay */}
+            <div className="aspect-video bg-gray-950">
+                <LiveCameraFeed session={session} options={detectionOptions} />
             </div>
 
             {/* Overlay - Session Info */}
@@ -68,7 +65,7 @@ export default function CameraGridItem({ session, onFocus, isFocused = false }: 
                     <div className="flex items-center gap-2 ml-2">
                         <div className="text-right">
                             <div className="flex items-center gap-1 text-blue-400">
-                                <Activity size={12} />
+                                <Circle size={8} className="fill-current" />
                                 <span className="text-xs font-semibold">
                                     {session.total_detections?.toLocaleString() || '0'}
                                 </span>
@@ -95,3 +92,4 @@ export default function CameraGridItem({ session, onFocus, isFocused = false }: 
         </div>
     );
 }
+
