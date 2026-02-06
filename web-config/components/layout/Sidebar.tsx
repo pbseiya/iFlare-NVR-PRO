@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Camera, Settings, Film, Menu, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const navItems = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -17,6 +17,12 @@ export function Sidebar() {
     const pathname = usePathname();
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
+
+    // Update CSS variable when sidebar state changes
+    useEffect(() => {
+        const sidebarWidth = isCollapsed ? '64px' : '256px';
+        document.documentElement.style.setProperty('--sidebar-width', sidebarWidth);
+    }, [isCollapsed]);
 
     return (
         <>
@@ -107,3 +113,4 @@ export function Sidebar() {
         </>
     );
 }
+

@@ -19,7 +19,10 @@ export default function RootLayout({
                 <Providers>
                     <div className="min-h-screen flex">
                         <Sidebar />
-                        <main className="flex-1 min-h-screen transition-all duration-300 lg:ml-64">
+                        <main
+                            className="flex-1 min-h-screen transition-all duration-300"
+                            style={{ marginLeft: 'var(--sidebar-width, 256px)' }}
+                        >
                             {children}
                         </main>
                     </div>
