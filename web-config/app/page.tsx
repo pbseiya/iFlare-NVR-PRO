@@ -3,15 +3,19 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, SessionConfig, SessionInfo } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { Activity, Cpu, HardDrive, Plus, RefreshCw, X } from "lucide-react";
 import { StatCard } from "@/components/dashboard/StatCard";
 import SessionCard from "@/components/dashboard/SessionCard";
+import SessionCardSimple from "@/components/dashboard/SessionCardSimple";
+import RoleSwitcher from "@/components/dashboard/RoleSwitcher";
 import { NewSessionForm } from "@/components/dashboard/NewSessionForm";
 import { Modal } from "@/components/Modal";
 import { EditSessionModal } from "@/components/EditSessionModal";
 
 export default function DashboardPage() {
     const queryClient = useQueryClient();
+    const { isAdmin } = useAuth();
     const [editSession, setEditSession] = useState<SessionInfo | null>(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; sessionId: number | null }>({ show: false, sessionId: null });
@@ -60,7 +64,16 @@ export default function DashboardPage() {
 
     return (
         <div className="space-y-8">
-            {/* Header / Stats Row */}
+            {/* Header with Role Switcher */}
+            <div className="flex items-start justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold mb-2">Live Operations</h1>
+                    <p className="text-gray-600">Monitor and manage your sessions</p>
+                </div>
+                <RoleSwitcher />
+            </div>
+
+            {/* Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard
                     title="Active Sessions"
@@ -103,19 +116,31 @@ export default function DashboardPage() {
                         <div className="text-center py-12 text-slate-400">Loading sessions...</div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {sessionsData?.sessions.map((session) => (
-                                <SessionCard
-                                    key={session.id}
-                                    session={session}
-                                    onStop={(id) => stopSessionMutation.mutate(id)}
-                                    onResume={(id) => resumeSessionMutation.mutate(id)}
-                                    onDelete={(id) => setDeleteConfirm({ show: true, sessionId: id })}
-                                    onEdit={setEditSession}
-                                    isStopping={stopSessionMutation.isPending}
-                                    isResuming={resumeSessionMutation.isPending}
-                                    isDeleting={deleteSessionMutation.isPending}
-                                />
-                            ))}
+                            {sessionsData?.sessions.map((session) => {
+                                const commonProps = {
+                                    key: session.id,
+                                    session,
+                                    onStop: (id: number) => stopSessionMutation.mutate(id),
+                                    onResume: (id: number) => resumeSessionMutation.mutate(id),
+                                    isStopping: stopSessionMutation.isPending,
+                                    isResuming: resumeSessionMutation.isPending,
+                                };
+
+                                // Admin sees full SessionCard with Edit/Delete
+                                if (isAdmin) {
+                                    return (
+                                        <SessionCard
+                                            {...commonProps}
+                                            onEdit={setEditSession}
+                                            onDelete={(id) => setDeleteConfirm({ show: true, sessionId: id })}
+                                            isDeleting={deleteSessionMutation.isPending}
+                                        />
+                                    );
+                                }
+
+                                // Regular users see SessionCardSimple (Stop/Resume only)
+                                return <SessionCardSimple {...commonProps} />;
+                            })}
                             {sessionsData?.sessions.length === 0 && (
                                 <div className="col-span-full py-12 text-center bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
                                     <p className="text-slate-500">No active sessions.</p>
