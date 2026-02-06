@@ -4,11 +4,11 @@ import { Tv, LayoutGrid, Video, Settings, Home } from 'lucide-react';
 import Link from 'next/link';
 
 interface SidebarProps {
-    selectedView: string;
-    onViewChange: (view: 'overview' | 'cameras') => void;
+    selectedView?: string;
+    onViewChange?: (view: 'overview' | 'cameras') => void;
 }
 
-export default function Sidebar({ selectedView, onViewChange }: SidebarProps) {
+export default function Sidebar({ selectedView = 'overview', onViewChange }: SidebarProps) {
     const navItems = [
         { id: 'overview', label: 'Dashboard', icon: Home, href: '/dashboard' },
         { id: 'cameras', label: 'Cameras', icon: Tv, href: '/dashboard' },
@@ -42,7 +42,7 @@ export default function Sidebar({ selectedView, onViewChange }: SidebarProps) {
                             return (
                                 <li key={item.id}>
                                     <button
-                                        onClick={() => onViewChange(item.id as 'overview' | 'cameras')}
+                                        onClick={() => onViewChange?.(item.id as 'overview' | 'cameras')}
                                         className={`
                                             w-full flex items-center gap-3 px-4 py-3 rounded-lg
                                             transition-colors text-left
