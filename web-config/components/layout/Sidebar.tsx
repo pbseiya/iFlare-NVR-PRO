@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Camera, Settings, Film, Menu } from "lucide-react";
+import { LayoutDashboard, Camera, Settings, Film, Menu, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -16,27 +16,36 @@ const navItems = [
 export function Sidebar() {
     const pathname = usePathname();
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(false);
 
     return (
         <>
-            {/* Mobile Trigger */}
+            {/* Mobile Menu Button */}
             <button
-                className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-slate-900 text-white rounded-md"
                 onClick={() => setIsMobileOpen(!isMobileOpen)}
+                className="fixed top-4 left-4 z-50 lg:hidden rounded-lg bg-slate-800 p-2 text-white shadow-lg"
             >
                 <Menu size={24} />
             </button>
 
-            {/* Sidebar Container */}
+            {/* Sidebar */}
             <aside
                 className={cn(
-                    "fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 text-slate-100 transition-transform duration-300 ease-in-out lg:translate-x-0",
-                    isMobileOpen ? "translate-x-0" : "-translate-x-full"
+                    "fixed left-0 top-0 z-40 h-screen bg-slate-900 text-white shadow-xl transition-all duration-300",
+                    isCollapsed ? "w-16" : "w-64",
+                    isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
                 )}
             >
                 {/* Logo Area */}
                 <div className="flex h-16 items-center justify-center border-b border-slate-800">
-                    <h1 className="text-xl font-bold tracking-wider">NVR<span className="text-blue-500">PRO</span></h1>
+                    {!isCollapsed && (
+                        <h1 className="text-xl font-bold tracking-wider">
+                            NVR<span className="text-blue-500">PRO</span>
+                        </h1>
+                    )}
+                    {isCollapsed && (
+                        <div className="text-xl font-bold text-blue-500">N</div>
+                    )}
                 </div>
 
                 {/* Navigation */}
@@ -51,11 +60,13 @@ export function Sidebar() {
                                     "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
                                     isActive
                                         ? "bg-blue-600 text-white shadow-md"
-                                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                                        : "text-slate-400 hover:bg-slate-800 hover:text-white",
+                                    isCollapsed && "justify-center"
                                 )}
+                                title={isCollapsed ? item.name : undefined}
                             >
                                 <item.icon size={20} />
-                                {item.name}
+                                {!isCollapsed && item.name}
                             </Link>
                         );
                     })}
@@ -63,11 +74,27 @@ export function Sidebar() {
 
                 {/* Footer / Status */}
                 <div className="border-t border-slate-800 p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-xs text-slate-400">System Online</span>
-                    </div>
+                    {!isCollapsed && (
+                        <div className="flex items-center gap-3">
+                            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                            <span className="text-xs text-slate-400">System Online</span>
+                        </div>
+                    )}
+                    {isCollapsed && (
+                        <div className="flex justify-center">
+                            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                        </div>
+                    )}
                 </div>
+
+                {/* Toggle Button */}
+                <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className="absolute -right-3 top-20 hidden lg:flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-colors"
+                    title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                >
+                    {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                </button>
             </aside>
 
             {/* Overlay for Mobile */}
