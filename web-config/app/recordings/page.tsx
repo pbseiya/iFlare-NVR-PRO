@@ -23,6 +23,11 @@ export default function RecordingsPage() {
     const [startDate, setStartDate] = useState<string>(today);
     const [endDate, setEndDate] = useState<string>(today);
 
+    // Overlay State
+    const [showBBox, setShowBBox] = useState(true);
+    const [showLabels, setShowLabels] = useState(true);
+    const [showConfidence, setShowConfidence] = useState(true);
+
     // Playback State
     const [currentTime, setCurrentTime] = useState<Date>(new Date());
     const [isPlaying, setIsPlaying] = useState(false);
@@ -148,6 +153,34 @@ export default function RecordingsPage() {
                                 />
                             </div>
                         </div>
+
+                        {/* Overlay Controls */}
+                        <div className="flex flex-col ml-2">
+                            <span className="text-xs text-gray-500 mb-1">Overlays</span>
+                            <div className="flex bg-gray-800 rounded-lg p-1 border border-gray-700 h-[38px] items-center gap-3 px-3">
+                                {[
+                                    { id: 'bbox', label: 'Box', state: showBBox, setter: setShowBBox },
+                                    { id: 'class', label: 'Label', state: showLabels, setter: setShowLabels },
+                                    { id: 'conf', label: 'Conf', state: showConfidence, setter: setShowConfidence },
+                                ].map(opt => (
+                                    <label key={opt.id} className="flex items-center gap-1.5 cursor-pointer text-sm select-none">
+                                        <div className={`
+                                            w-4 h-4 rounded border flex items-center justify-center transition-colors
+                                            ${opt.state ? 'bg-blue-600 border-blue-600' : 'border-gray-500 hover:border-gray-400'}
+                                        `}>
+                                            {opt.state && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            className="hidden"
+                                            checked={opt.state}
+                                            onChange={(e) => opt.setter(e.target.checked)}
+                                        />
+                                        <span className={opt.state ? 'text-gray-200' : 'text-gray-400'}>{opt.label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </header>
 
@@ -162,6 +195,9 @@ export default function RecordingsPage() {
                                     <p className="text-sm text-gray-300 font-mono">{selectedCamera}</p>
                                     <p className="text-xs text-gray-500">
                                         {filteredSessions.length} segments in range
+                                    </p>
+                                    <p className="text-xs text-gray-600 mt-1">
+                                        Overlays: {[showBBox && 'Box', showLabels && 'Label', showConfidence && 'Conf'].filter(Boolean).join(', ') || 'None'}
                                     </p>
                                 </div>
                                 <p className="text-blue-500 font-mono mt-8 text-4xl">
