@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import Sidebar from '@/components/dashboard/Sidebar';
-import SessionCard from '@/components/dashboard/SessionCard';
+import SessionCardSimple from '@/components/dashboard/SessionCardSimple';
 import { LayoutGrid, Activity } from 'lucide-react';
 
 export default function DashboardPage() {
+    const queryClient = useQueryClient();
     const [selectedView, setSelectedView] = useState<'overview' | 'cameras'>('overview');
 
     // Fetch sessions
@@ -15,6 +16,22 @@ export default function DashboardPage() {
         queryKey: ['sessions'],
         queryFn: () => api.listSessions({ limit: 100 }),
         refetchInterval: 5000,
+    });
+
+    // Stop session mutation
+    const stopSessionMutation = useMutation({
+        mutationFn: (sessionId: number) => api.stopSession(sessionId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] });
+        },
+    });
+
+    // Resume session mutation
+    const resumeSessionMutation = useMutation({
+        mutationFn: (sessionId: number) => api.resumeSession(sessionId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['sessions'] });
+        },
     });
 
     const sessions = sessionsData?.sessions || [];
@@ -69,7 +86,14 @@ export default function DashboardPage() {
                     ) : runningSessions.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {runningSessions.map(session => (
-                                <SessionCard key={session.id} session={session} />
+                                <SessionCardSimple
+                                    key={session.id}
+                                    session={session}
+                                    onStop={(id) => stopSessionMutation.mutate(id)}
+                                    onResume={(id) => resumeSessionMutation.mutate(id)}
+                                    isStopping={stopSessionMutation.isPending}
+                                    isResuming={resumeSessionMutation.isPending}
+                                />
                             ))}
                         </div>
                     ) : (
@@ -85,7 +109,14 @@ export default function DashboardPage() {
                     {completedSessions.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {completedSessions.slice(0, 6).map(session => (
-                                <SessionCard key={session.id} session={session} />
+                                <SessionCardSimple
+                                    key={session.id}
+                                    session={session}
+                                    onStop={(id) => stopSessionMutation.mutate(id)}
+                                    onResume={(id) => resumeSessionMutation.mutate(id)}
+                                    isStopping={stopSessionMutation.isPending}
+                                    isResuming={resumeSessionMutation.isPending}
+                                />
                             ))}
                         </div>
                     ) : (
@@ -98,3 +129,4 @@ export default function DashboardPage() {
         </div>
     );
 }
+
