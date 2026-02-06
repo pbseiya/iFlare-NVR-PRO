@@ -2,7 +2,7 @@
 
 import { SessionInfo } from '@/lib/api';
 import { Maximize2, Circle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import LiveCameraFeed from './LiveCameraFeed';
 import { DrawDetectionsOptions } from '@/lib/detection-utils';
 
@@ -15,10 +15,22 @@ interface CameraGridItemProps {
 
 export default function CameraGridItem({ session, onFocus, isFocused = false, detectionOptions }: CameraGridItemProps) {
     const [isHovered, setIsHovered] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
     const isRunning = session.status === 'running';
+
+    const handleDoubleClick = () => {
+        if (containerRef.current) {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                containerRef.current.requestFullscreen();
+            }
+        }
+    };
 
     return (
         <div
+            ref={containerRef}
             className={`
                 relative bg-gray-900 rounded-lg overflow-hidden border-2 transition-all cursor-pointer
                 ${isFocused
@@ -29,6 +41,7 @@ export default function CameraGridItem({ session, onFocus, isFocused = false, de
                 }
             `}
             onClick={onFocus}
+            onDoubleClick={handleDoubleClick}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
