@@ -8,6 +8,7 @@ import Sidebar from '@/components/dashboard/Sidebar';
 import SessionCard from '@/components/dashboard/SessionCard';
 import SessionCardSimple from '@/components/dashboard/SessionCardSimple';
 import RoleSwitcher from '@/components/dashboard/RoleSwitcher';
+import CameraGrid from '@/components/dashboard/CameraGrid';
 import { LayoutGrid, Activity } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -96,61 +97,70 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-gray-400 text-sm">Active Sessions</span>
-                            <Activity className="w-5 h-5 text-green-500" />
-                        </div>
-                        <div className="text-3xl font-bold text-green-500">{runningSessions.length}</div>
-                    </div>
+                {selectedView === 'overview' && (
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-gray-400 text-sm">Active Sessions</span>
+                                    <Activity className="w-5 h-5 text-green-500" />
+                                </div>
+                                <div className="text-3xl font-bold text-green-500">{runningSessions.length}</div>
+                            </div>
 
-                    <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-gray-400 text-sm">Total Sessions</span>
-                            <LayoutGrid className="w-5 h-5 text-blue-500" />
-                        </div>
-                        <div className="text-3xl font-bold text-blue-500">{sessions.length}</div>
-                    </div>
+                            <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-gray-400 text-sm">Total Sessions</span>
+                                    <LayoutGrid className="w-5 h-5 text-blue-500" />
+                                </div>
+                                <div className="text-3xl font-bold text-blue-500">{sessions.length}</div>
+                            </div>
 
-                    <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-gray-400 text-sm">Completed</span>
-                            <LayoutGrid className="w-5 h-5 text-gray-500" />
+                            <div className="bg-gray-900 rounded-xl p-6 border border-gray-800">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-gray-400 text-sm">Completed</span>
+                                    <LayoutGrid className="w-5 h-5 text-gray-500" />
+                                </div>
+                                <div className="text-3xl font-bold text-gray-400">{completedSessions.length}</div>
+                            </div>
                         </div>
-                        <div className="text-3xl font-bold text-gray-400">{completedSessions.length}</div>
-                    </div>
-                </div>
 
-                {/* Sessions Grid */}
-                <div className="mb-6">
-                    <h2 className="text-xl font-semibold mb-4">Active Sessions</h2>
-                    {isLoading ? (
-                        <div className="text-gray-500">Loading...</div>
-                    ) : runningSessions.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {runningSessions.map(renderSessionCard)}
+                        {/* Sessions Grid */}
+                        <div className="mb-6">
+                            <h2 className="text-xl font-semibold mb-4">Active Sessions</h2>
+                            {isLoading ? (
+                                <div className="text-gray-500">Loading...</div>
+                            ) : runningSessions.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {runningSessions.map(renderSessionCard)}
+                                </div>
+                            ) : (
+                                <div className="bg-gray-900 rounded-xl p-8 border border-gray-800 text-center text-gray-500">
+                                    No active sessions
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div className="bg-gray-900 rounded-xl p-8 border border-gray-800 text-center text-gray-500">
-                            No active sessions
-                        </div>
-                    )}
-                </div>
 
-                {/* Recent Sessions */}
-                <div>
-                    <h2 className="text-xl font-semibold mb-4">Recent Sessions</h2>
-                    {completedSessions.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {completedSessions.slice(0, 6).map(renderSessionCard)}
+                        {/* Recent Sessions */}
+                        <div>
+                            <h2 className="text-xl font-semibold mb-4">Recent Sessions</h2>
+                            {completedSessions.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {completedSessions.slice(0, 6).map(renderSessionCard)}
+                                </div>
+                            ) : (
+                                <div className="bg-gray-900 rounded-xl p-8 border border-gray-800 text-center text-gray-500">
+                                    No recent sessions
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div className="bg-gray-900 rounded-xl p-8 border border-gray-800 text-center text-gray-500">
-                            No recent sessions
-                        </div>
-                    )}
-                </div>
+                    </>
+                )}
+
+                {/* Camera Grid View */}
+                {selectedView === 'cameras' && (
+                    <CameraGrid sessions={sessions} />
+                )}
             </div>
         </div>
     );
