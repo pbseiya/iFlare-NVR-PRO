@@ -230,35 +230,48 @@ export default function RecordingsPage() {
 
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col p-6 gap-6 overflow-hidden">
-                    {/* Video Player Area */}
-                    <div className="flex-1 bg-black rounded-2xl border border-gray-800 relative overflow-hidden flex items-center justify-center">
+                    {/* Video Player Grid */}
+                    <div className="flex-1 bg-black rounded-2xl border border-gray-800 relative overflow-hidden">
                         {selectedCameras.length > 0 ? (
-                            <div className="text-center">
-                                <p className="text-xl text-gray-500 mb-2">Video Player Placeholder</p>
-                                <div className="inline-block bg-gray-800 rounded px-4 py-2 mt-2">
-                                    <p className="text-sm text-gray-300 font-mono">
-                                        {selectedCameras.length === 1 ? selectedCameras[0] : `Multiple Sources (${selectedCameras.length})`}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                        {filteredSessions.length} segments in range
-                                    </p>
-                                    <p className="text-xs text-gray-600 mt-1">
-                                        Overlays: {[showBBox && 'Box', showLabels && 'Label', showConfidence && 'Conf'].filter(Boolean).join(', ') || 'None'}
-                                    </p>
-                                </div>
-                                <p className="text-blue-500 font-mono mt-8 text-4xl">
-                                    {currentTime.toLocaleTimeString([], { hour12: false })}
-                                </p>
-                                {isPlaying && (
-                                    <p className="text-green-500 text-sm mt-2 animate-pulse">
-                                        PLAYING ({playbackSpeed}x)
-                                    </p>
-                                )}
+                            <div className={`grid h-full gap-1 ${selectedCameras.length === 1 ? 'grid-cols-1' :
+                                    selectedCameras.length <= 2 ? 'grid-cols-2' :
+                                        selectedCameras.length <= 4 ? 'grid-cols-2 grid-rows-2' :
+                                            'grid-cols-3 grid-rows-3'
+                                }`}>
+                                {selectedCameras.map(cam => (
+                                    <div key={cam} className="relative bg-gray-900 border border-gray-900 flex items-center justify-center overflow-hidden">
+                                        <div className="absolute top-2 left-2 bg-black/50 px-2 py-1 rounded text-xs font-mono text-gray-200 z-10">
+                                            {cam}
+                                        </div>
+
+                                        {/* Mock Video Content */}
+                                        <div className="text-center opacity-50">
+                                            <p className="text-4xl font-bold text-gray-800 mb-2">{cam}</p>
+                                            <p className="text-sm text-gray-600">
+                                                {currentTime.toLocaleTimeString()}
+                                            </p>
+                                        </div>
+
+                                        {/* Overlay Info (Mock) */}
+                                        <div className="absolute bottom-2 left-2 text-[10px] text-gray-500 font-mono text-left">
+                                            IDs: {showBBox ? 'ON' : 'OFF'} | Labels: {showLabels ? 'ON' : 'OFF'}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : (
-                            <div className="text-center text-gray-600">
-                                <Clock size={48} className="mx-auto mb-4 opacity-50" />
-                                <p>Select a camera to view recordings</p>
+                            <div className="flex h-full items-center justify-center text-center text-gray-600">
+                                <div>
+                                    <Clock size={48} className="mx-auto mb-4 opacity-50" />
+                                    <p>Select a camera to view recordings</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Global Status Overlay */}
+                        {isPlaying && (
+                            <div className="absolute top-4 right-4 bg-green-900/80 text-green-200 px-3 py-1 rounded-full text-xs font-bold animate-pulse z-50">
+                                LIVE SYNC {playbackSpeed}x
                             </div>
                         )}
                     </div>
