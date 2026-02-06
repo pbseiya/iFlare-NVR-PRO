@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api, SessionInfo, Detection } from '@/lib/api';
 import TimelineScrubber from '@/components/dashboard/TimelineScrubber';
-import { Play, Pause, SkipBack, SkipForward, Clock, Calendar as CalendarIcon, ZoomIn, ZoomOut } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Clock, Calendar as CalendarIcon, ZoomIn, ZoomOut, ChevronDown, Check } from 'lucide-react';
 
 const ZOOM_SCALES = [
     { label: '1H', ms: 3600000 },
@@ -19,7 +19,10 @@ export default function RecordingsPage() {
     const today = new Date().toISOString().split('T')[0];
 
     // Controls State
-    const [selectedCamera, setSelectedCamera] = useState<string>('');
+    const [selectedCameras, setSelectedCameras] = useState<string[]>([]);
+    const [isCamDropdownOpen, setIsCamDropdownOpen] = useState(false);
+    const camDropdownRef = useRef<HTMLDivElement>(null);
+
     const [startDate, setStartDate] = useState<string>(today);
     const [endDate, setEndDate] = useState<string>(today);
 
@@ -34,10 +37,21 @@ export default function RecordingsPage() {
     const [playbackSpeed, setPlaybackSpeed] = useState<number>(1);
     const [zoomLevel, setZoomLevel] = useState<number>(3600000); // Default 1 Hour
 
-    // Fetch all sessions
+    // Click outside to close dropdown
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (camDropdownRef.current && !camDropdownRef.current.contains(event.target as Node)) {
+                setIsCamDropdownOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    // Fetch all sessions (increase limit to get a good history)
     const { data: sessionsResponse } = useQuery({
         queryKey: ['sessions'],
-        queryFn: () => api.listSessions({ limit: 2000 }),
+        queryFn: () => api.listSessions({ limit: 1000 }),
     });
     const allSessions = sessionsResponse?.sessions || [];
 
@@ -49,22 +63,22 @@ export default function RecordingsPage() {
 
     // Filter sessions by Camera and Date Range
     const filteredSessions = useMemo(() => {
-        if (!selectedCamera) return [];
+        if (selectedCameras.length === 0) return [];
         const start = new Date(startDate).setHours(0, 0, 0, 0);
         const end = new Date(endDate).setHours(23, 59, 59, 999);
 
         return allSessions.filter(s => {
             const name = s.name || s.source_path;
-            if (name !== selectedCamera) return false;
+            if (!selectedCameras.includes(name)) return false;
 
             const sessionTime = new Date(s.created_at).getTime();
             return sessionTime >= start && sessionTime <= end;
         });
-    }, [allSessions, selectedCamera, startDate, endDate]);
+    }, [allSessions, selectedCameras, startDate, endDate]);
 
     // Fetch detections only for visible time range (simplified: fetch for all filtered sessions)
     const { data: detections = [] } = useQuery({
-        queryKey: ['detections', selectedCamera, startDate, endDate],
+        queryKey: ['detections', selectedCameras, startDate, endDate],
         queryFn: async () => {
             if (filteredSessions.length === 0) return [];
             // Optimize: Limit concurrent fetches or only fetch for sessions near currentTime
@@ -89,12 +103,12 @@ export default function RecordingsPage() {
         };
     }, [currentTime, zoomLevel]);
 
-    // Auto-select first camera
+    // Auto-select first camera if none selected
     useEffect(() => {
-        if (!selectedCamera && cameras.length > 0) {
-            setSelectedCamera(cameras[0]);
+        if (selectedCameras.length === 0 && cameras.length > 0) {
+            setSelectedCameras([cameras[0]]);
         }
-    }, [cameras, selectedCamera]);
+    }, [cameras, selectedCameras.length]);
 
     const handleSpeedChange = (speed: number) => setPlaybackSpeed(speed);
 
@@ -103,6 +117,12 @@ export default function RecordingsPage() {
         const jump = zoomLevel * 0.5;
         const newTime = new Date(currentTime.getTime() + (direction === 'forward' ? jump : -jump));
         setCurrentTime(newTime);
+    };
+
+    const toggleCamera = (cam: string) => {
+        setSelectedCameras(prev =>
+            prev.includes(cam) ? prev.filter(c => c !== cam) : [...prev, cam]
+        );
     };
 
     return (
@@ -116,19 +136,43 @@ export default function RecordingsPage() {
                     </div>
 
                     <div className="flex items-center gap-4 flex-wrap justify-end">
-                        {/* Camera Selector */}
-                        <div className="flex flex-col">
-                            <span className="text-xs text-gray-500 mb-1">Source / Camera</span>
-                            <select
-                                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none min-w-[200px]"
-                                onChange={(e) => setSelectedCamera(e.target.value)}
-                                value={selectedCamera}
+                        {/* Camera Selector (Multi-Select) */}
+                        <div className="flex flex-col relative" ref={camDropdownRef}>
+                            <span className="text-xs text-gray-500 mb-1">Sources / Cameras</span>
+                            <button
+                                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none min-w-[200px] flex items-center justify-between"
+                                onClick={() => setIsCamDropdownOpen(!isCamDropdownOpen)}
                             >
-                                <option value="">Select Camera...</option>
-                                {cameras.map(cam => (
-                                    <option key={cam} value={cam}>{cam}</option>
-                                ))}
-                            </select>
+                                <span className="truncate max-w-[180px]">
+                                    {selectedCameras.length === 0 ? 'Select Cameras...' :
+                                        selectedCameras.length === 1 ? selectedCameras[0] :
+                                            `${selectedCameras.length} Cameras Selected`}
+                                </span>
+                                <ChevronDown size={14} className="text-gray-400" />
+                            </button>
+
+                            {isCamDropdownOpen && (
+                                <div className="absolute top-full left-0 mt-1 w-full min-w-[220px] bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto p-1">
+                                    {cameras.map(cam => {
+                                        const isSelected = selectedCameras.includes(cam);
+                                        return (
+                                            <div
+                                                key={cam}
+                                                className={`
+                                                    flex items-center gap-2 px-3 py-2 rounded cursor-pointer text-sm
+                                                    ${isSelected ? 'bg-blue-600/20 text-blue-200' : 'text-gray-300 hover:bg-gray-700'}
+                                                `}
+                                                onClick={() => toggleCamera(cam)}
+                                            >
+                                                <div className={`w-4 h-4 rounded border flex items-center justify-center ${isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-500'}`}>
+                                                    {isSelected && <Check size={10} className="text-white" />}
+                                                </div>
+                                                <span className="truncate">{cam}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
 
                         {/* Date Range Selector */}
@@ -188,11 +232,13 @@ export default function RecordingsPage() {
                 <div className="flex-1 flex flex-col p-6 gap-6 overflow-hidden">
                     {/* Video Player Area */}
                     <div className="flex-1 bg-black rounded-2xl border border-gray-800 relative overflow-hidden flex items-center justify-center">
-                        {selectedCamera ? (
+                        {selectedCameras.length > 0 ? (
                             <div className="text-center">
                                 <p className="text-xl text-gray-500 mb-2">Video Player Placeholder</p>
                                 <div className="inline-block bg-gray-800 rounded px-4 py-2 mt-2">
-                                    <p className="text-sm text-gray-300 font-mono">{selectedCamera}</p>
+                                    <p className="text-sm text-gray-300 font-mono">
+                                        {selectedCameras.length === 1 ? selectedCameras[0] : `Multiple Sources (${selectedCameras.length})`}
+                                    </p>
                                     <p className="text-xs text-gray-500">
                                         {filteredSessions.length} segments in range
                                     </p>
