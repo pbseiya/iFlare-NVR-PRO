@@ -19,10 +19,8 @@ export default function RootLayout({
                 <Providers>
                     <div className="min-h-screen flex">
                         <ConditionalSidebar />
-                        <main className="flex-1 lg:ml-64 min-h-screen transition-all duration-300 [.dashboard-route_&]:ml-0">
-                            <div className="p-4 md:p-8 max-w-7xl mx-auto [.dashboard-route_&]:p-0 [.dashboard-route_&]:max-w-none">
-                                {children}
-                            </div>
+                        <main className="flex-1 min-h-screen transition-all duration-300">
+                            {children}
                         </main>
                     </div>
                 </Providers>
