@@ -56,6 +56,9 @@ export interface Detection {
     bbox_x2: number;
     bbox_y2: number;
     timestamp: string | null;
+    // Optional fields for backward compatibility
+    bbox?: number[]; // [x1, y1, x2, y2]
+    class?: string;
 }
 
 export interface SessionResponse {
