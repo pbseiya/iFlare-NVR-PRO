@@ -11,8 +11,8 @@ interface SidebarProps {
 export default function Sidebar({ selectedView = 'overview', onViewChange }: SidebarProps) {
     const navItems = [
         { id: 'overview', label: 'Dashboard', icon: Home, href: '/dashboard' },
-        { id: 'cameras', label: 'Cameras', icon: Tv, href: '/dashboard' },
-        { id: 'recordings', label: 'Recordings', icon: Video, href: '/nvr' },
+        { id: 'cameras', label: 'Cameras', icon: Tv, href: '/cameras' },
+        { id: 'recordings', label: 'Recordings', icon: Video, href: '/recordings' },
         { id: 'settings', label: 'Settings', icon: Settings, href: '/' },
     ];
 

@@ -7,7 +7,7 @@ import Sidebar from '@/components/dashboard/Sidebar';
 import TimelineScrubber from '@/components/dashboard/TimelineScrubber';
 import { Play, Pause, SkipBack, SkipForward, Calendar, Clock } from 'lucide-react';
 
-export default function TimelinePage() {
+export default function RecordingsPage() {
     const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
     const [currentTime, setCurrentTime] = useState<Date>(new Date());
     const [isPlaying, setIsPlaying] = useState(false);
@@ -51,7 +51,7 @@ export default function TimelinePage() {
                 {/* Header */}
                 <header className="px-6 py-4 bg-gray-900 border-b border-gray-800 flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold">Timeline Review</h1>
+                        <h1 className="text-2xl font-bold">Recordings</h1>
                         <p className="text-gray-400 text-sm">Analyze historical detection events</p>
                     </div>
 
