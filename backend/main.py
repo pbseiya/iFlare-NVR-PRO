@@ -106,6 +106,7 @@ async def start_session(config: SessionConfig):
             save_video=config.save_video,
             video_output_path=config.video_output_path,
             render_mode=config.render_mode,
+            recording_mode=config.recording_mode,
             name=config.name,
         )
 
@@ -292,12 +293,44 @@ async def delete_session(session_id: int):
         if not session:
             raise HTTPException(status_code=404, detail="Session not found")
 
-        # Stop the session if it's running
         if session.get("status") == "running":
-            await app.state.inference_engine.stop_session(session_id)
+            print(f"🛑 Stopping session {session_id} before deletion...")
+            try:
+                import asyncio
 
-        # Delete from database (CASCADE will delete detections and metrics)
+                await asyncio.wait_for(
+                    app.state.inference_engine.stop_session(session_id), timeout=5.0
+                )
+            except asyncio.TimeoutError:
+                print(f"⚠️ Timed out waiting for session {session_id} to stop. Forcing deletion.")
+            except Exception as e:
+                print(f"⚠️ Error stopping session {session_id}: {e}")
+
+        # Clean up video files
+        try:
+            import shutil
+
+            # 1. Delete session directory (Video Segments)
+            session_dir = os.path.join(os.getcwd(), "videos", "output", f"session_{session_id}")
+            if os.path.exists(session_dir):
+                shutil.rmtree(session_dir)
+                print(f"🗑️ Deleted session directory: {session_dir}")
+
+            # 2. Check for single video output (Legacy or non-segment mode)
+            video_path = session.get("video_output_path")
+            if video_path and isinstance(video_path, str) and os.path.exists(video_path):
+                # Avoid deleting if it was inside the directory we just removed
+                if not video_path.startswith(session_dir):
+                    os.remove(video_path)
+                    print(f"🗑️ Deleted video file: {video_path}")
+        except Exception as e:
+            print(f"⚠️ Error cleaning up files for session {session_id}: {e}")
+
+        # Delete from database (Manually delete children first to be safe)
         async with app.state.db.acquire() as conn:
+            await conn.execute("DELETE FROM video_segments WHERE session_id = $1", session_id)
+            await conn.execute("DELETE FROM detections WHERE session_id = $1", session_id)
+            await conn.execute("DELETE FROM performance_metrics WHERE session_id = $1", session_id)
             await conn.execute("DELETE FROM inference_sessions WHERE id = $1", session_id)
 
         return {"message": f"Session {session_id} deleted successfully", "session_id": session_id}

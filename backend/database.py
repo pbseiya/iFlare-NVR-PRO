@@ -49,6 +49,7 @@ class Database:
         save_video: bool = False,
         video_output_path: Optional[str] = None,
         render_mode: str = "pipeline",
+        recording_mode: str = "none",
         name: Optional[str] = None,
     ) -> int:
         """Create a new inference session"""
@@ -58,8 +59,8 @@ class Database:
                 INSERT INTO inference_sessions (
                     model_name, language, source_type, source_path,
                     fps_target, conf_threshold, iou_threshold,
-                    save_video, video_output_path, render_mode, name
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                    save_video, video_output_path, render_mode, recording_mode, name
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                 RETURNING id
                 """,
                 model_name,
@@ -72,6 +73,7 @@ class Database:
                 save_video,
                 video_output_path,
                 render_mode,
+                recording_mode,
                 name,
             )
         return session_id

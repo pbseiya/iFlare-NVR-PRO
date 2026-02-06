@@ -1,12 +1,16 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { api, SessionInfo, Detection, SessionConfig } from '@/lib/api';
 import { Play, Pause, FastForward, Rewind, Maximize, AlertTriangle, Monitor, Calendar, Clock, ChevronRight, Video, Tv, ArrowLeft, Film, Radio } from 'lucide-react';
 
 export default function NVRPage() {
-    const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
+    const searchParams = useSearchParams();
+    const initialSessionId = searchParams.get('session_id') ? parseInt(searchParams.get('session_id')!) : null;
+
+    const [selectedSessionId, setSelectedSessionId] = useState<number | null>(initialSessionId);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -43,7 +47,7 @@ export default function NVRPage() {
     // Fetch detections for selected session
     const { data: detections = [] } = useQuery({
         queryKey: ['detections', selectedSessionId],
-        queryFn: () => selectedSessionId ? api.getDetections(selectedSessionId) : Promise.resolve([]),
+        queryFn: () => selectedSessionId ? api.getDetections(selectedSessionId, 1000) : Promise.resolve([]),
         enabled: !!selectedSessionId,
         refetchInterval: (query) => {
             return selectedSession?.status === 'running' ? 2000 : false;
@@ -58,12 +62,12 @@ export default function NVRPage() {
         refetchInterval: 5000,
     });
 
-    // Auto-select first session if none selected
+    // Auto-select first session if none selected AND no initial ID provided
     useEffect(() => {
-        if (!selectedSessionId && sessionsData?.sessions && sessionsData.sessions.length > 0) {
+        if (!selectedSessionId && !initialSessionId && sessionsData?.sessions && sessionsData.sessions.length > 0) {
             handleSessionSelect(sessionsData.sessions[0]);
         }
-    }, [sessionsData, selectedSessionId]);
+    }, [sessionsData, selectedSessionId, initialSessionId]);
 
     // Handle Session Selection
     const handleSessionSelect = (session: SessionInfo) => {
@@ -77,7 +81,7 @@ export default function NVRPage() {
     };
 
     // Handle Clip Selection
-    const handleClipSelect = (segment: any) => {
+    const handleSegmentSelect = (segment: any) => {
         setActiveSegment(segment);
         setIsLiveMode(false); // Force Playback mode
         setIsPlaying(true); // Auto-play
@@ -159,8 +163,25 @@ export default function NVRPage() {
                     // Or improved logic: segment start + video.currentTime = session absolute time.
                     // Detections have 'timestamp'. Match!
 
+                    // Use the earliest detection as reference time instead of segment start
+                    // This handles cases where video segment starts after detections begin
                     let referenceTime = 0;
-                    if (activeSegment) {
+                    if (detections.length > 0) {
+                        // Find earliest detection timestamp
+                        const earliestDetection = detections.reduce((earliest, d) => {
+                            if (!d.timestamp) return earliest;
+                            const dTime = new Date(d.timestamp).getTime();
+                            return !earliest || dTime < earliest ? dTime : earliest;
+                        }, null as number | null);
+
+                        if (earliestDetection) {
+                            referenceTime = earliestDetection;
+                        } else if (activeSegment) {
+                            referenceTime = new Date(activeSegment.start_time).getTime();
+                        } else if (selectedSession.created_at) {
+                            referenceTime = new Date(selectedSession.created_at).getTime();
+                        }
+                    } else if (activeSegment) {
                         referenceTime = new Date(activeSegment.start_time).getTime();
                     } else if (selectedSession.created_at) {
                         referenceTime = new Date(selectedSession.created_at).getTime();
@@ -168,11 +189,34 @@ export default function NVRPage() {
 
                     const currentAbsTime = referenceTime + (video.currentTime * 1000);
 
-                    // Find detections within 100ms
-                    const activeDetections = detections.filter(d => {
+                    // Find best matching frame within 3s window
+                    const bestMatch = detections.reduce((best, d) => {
+                        if (!d.timestamp) return best;
                         const dTime = new Date(d.timestamp).getTime();
-                        return Math.abs(dTime - currentAbsTime) < 100; // 100ms window
-                    });
+                        const diff = Math.abs(dTime - currentAbsTime);
+
+                        if (diff < 3000) { // Check within 3s window (hold longer)
+                            if (!best.closestTime || diff < best.diff) {
+                                return { closestTime: dTime, diff: diff };
+                            }
+                        }
+                        return best;
+                    }, { closestTime: null as number | null, diff: Infinity });
+
+                    const activeDetections = bestMatch.closestTime
+                        ? detections.filter(d => d.timestamp && new Date(d.timestamp).getTime() === bestMatch.closestTime)
+                        : [];
+
+                    // Debug logging (throttled)
+                    if (Math.random() < 0.01) {
+                        console.log('Time Sync:', {
+                            videoTime: video.currentTime,
+                            referenceTime: new Date(referenceTime).toISOString(),
+                            absTime: new Date(currentAbsTime).toISOString(),
+                            bestMatchTime: bestMatch.closestTime ? new Date(bestMatch.closestTime).toISOString() : 'none',
+                            count: activeDetections.length
+                        });
+                    }
 
                     // Draw
                     if (activeDetections.length > 0) {
@@ -280,13 +324,23 @@ export default function NVRPage() {
                                                         </div>
                                                     </div>
                                                 )}
-                                                {/* Clip Info Overlay */}
-                                                {activeSegment && (
-                                                    <div className="absolute top-4 left-4 bg-black/70 backdrop-blur text-white text-xs px-3 py-1.5 rounded-lg border border-white/10 flex items-center gap-2">
-                                                        <Film className="w-3 h-3 text-blue-400" />
-                                                        Playback: {new Date(activeSegment.start_time).toLocaleTimeString()}
+                                                {/* Status Overlay */}
+                                                <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className={`
+                                px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider shadow-lg backdrop-blur-md flex items-center gap-2
+                                ${isPlaying ? 'bg-blue-500/80 text-white' : 'bg-red-500/80 text-white animate-pulse'}
+                            `}>
+                                                            {isPlaying ? <Play size={12} className="fill-current" /> : <div className="w-2 h-2 bg-white rounded-full animate-ping" />}
+                                                            {isPlaying ? `Playback: ${new Date(activeSegment?.start_time || 0).toLocaleTimeString()}` : "Live Feed"}
+                                                        </span>
+
+                                                        {/* Session Name Badge */}
+                                                        <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-black/60 text-white backdrop-blur-md border border-white/10 shadow-lg">
+                                                            {selectedSession?.name || "Unnamed Session"}
+                                                        </span>
                                                     </div>
-                                                )}
+                                                </div>
                                             </>
                                         ) : (
                                             <div className="flex flex-col items-center justify-center text-gray-500">
@@ -397,36 +451,63 @@ export default function NVRPage() {
                                 <div className="px-2 py-1 text-xs font-bold text-gray-400 uppercase tracking-wider">
                                     Recordings ({selectedSession?.fps_target} FPS)
                                 </div>
-                                {segments.length === 0 ? (
-                                    <div className="text-center p-4 text-gray-500 text-xs">
-                                        No segments recorded yet.
-                                        {selectedSession?.status === 'running' && <div className="mt-1 animate-pulse">Recording in progress...</div>}
-                                    </div>
-                                ) : (
-                                    segments.slice().reverse().map((seg: any) => (
-                                        <div
-                                            key={seg.id}
-                                            onClick={() => handleClipSelect(seg)}
-                                            className={`p-2 rounded-md cursor-pointer border flex items-center gap-3 transition-colors ${activeSegment?.id === seg.id
-                                                    ? 'bg-blue-600/30 border-blue-500'
-                                                    : 'bg-gray-700/30 border-gray-700 hover:bg-gray-700'
-                                                }`}
-                                        >
-                                            <div className="bg-gray-800 p-2 rounded text-blue-400">
-                                                <Film className="w-4 h-4" />
+                                <div className="space-y-2">
+                                    {(() => {
+                                        const seen = new Set();
+                                        const uniqueSegments = segments?.filter(s => {
+                                            const key = new Date(s.start_time).getTime();
+                                            if (seen.has(key)) return false;
+                                            seen.add(key);
+                                            return true;
+                                        }) || [];
+
+                                        return uniqueSegments.length > 0 ? (
+                                            uniqueSegments.map((segment) => {
+                                                const isActive = activeSegment?.id === segment.id;
+                                                const startTime = new Date(segment.start_time);
+                                                const duration = segment.duration_seconds
+                                                    ? `${Math.round(segment.duration_seconds)}s`
+                                                    : "Recording...";
+
+                                                return (
+                                                    <button
+                                                        key={segment.id}
+                                                        onClick={() => handleSegmentSelect(segment)}
+                                                        className={`
+                                                    w-full text-left p-3 rounded-lg border transition-all flex items-center gap-3
+                                                    ${isActive
+                                                                ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-900/20'
+                                                                : 'bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-slate-600'
+                                                            }
+                                                `}
+                                                    >
+                                                        <div className={`
+                                                    p-2 rounded-lg 
+                                                    ${isActive ? 'bg-white/20' : 'bg-slate-700'}
+                                                `}>
+                                                            <Film size={16} className={isActive ? 'text-white' : 'text-slate-400'} />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className={`text-sm font-medium truncate ${isActive ? 'text-white' : 'text-slate-200'}`}>
+                                                                {startTime.toLocaleTimeString()}
+                                                            </div>
+                                                            <div className={`text-xs truncate ${isActive ? 'text-blue-100' : 'text-slate-400'}`}>
+                                                                {duration}
+                                                            </div>
+                                                        </div>
+                                                        <div className={`text-xs ${isActive ? 'text-blue-200' : 'text-slate-500'}`}>
+                                                            {startTime.toLocaleDateString()}
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })
+                                        ) : (
+                                            <div className="text-center py-8 text-slate-500">
+                                                No recordings found for this session.
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-sm font-medium text-gray-200">
-                                                    {new Date(seg.start_time).toLocaleTimeString()}
-                                                </div>
-                                                <div className="text-xs text-gray-500 flex justify-between">
-                                                    <span>{seg.duration_seconds ? Math.round(seg.duration_seconds) + 's' : 'Recording...'}</span>
-                                                    <span>{new Date(seg.start_time).toLocaleDateString()}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
+                                        );
+                                    })()}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -437,6 +518,15 @@ export default function NVRPage() {
 }
 
 // Helpers
+const getClassColor = (className: string) => {
+    const lower = className.toLowerCase();
+    if (lower.includes('fire_smoke')) return '#ef4444'; // Red
+    if (lower.includes('smoke')) return '#a855f7'; // Purple
+    if (lower.includes('fire')) return '#eab308'; // Yellow
+    if (lower.includes('steam')) return '#3b82f6'; // Blue
+    return '#ef4444'; // Default Red
+};
+
 function drawDetections(
     ctx: CanvasRenderingContext2D,
     canvas: HTMLCanvasElement,
@@ -446,27 +536,34 @@ function drawDetections(
 ) {
     if (!options.showBoxes) return;
 
+    // Calculate scaling to match object-fit: contain behavior
+    const hRatio = canvas.width / sourceDim.width;
+    const vRatio = canvas.height / sourceDim.height;
+    const ratio = Math.min(hRatio, vRatio);
+
+    // Calculate letterbox offsets (centering)
+    const offsetX = (canvas.width - sourceDim.width * ratio) / 2;
+    const offsetY = (canvas.height - sourceDim.height * ratio) / 2;
+
     detections.forEach(d => {
         const bbox = d.bbox_x1 !== undefined ? [d.bbox_x1, d.bbox_y1, d.bbox_x2, d.bbox_y2] : d.bbox;
         const className = d.class_name || d.class;
         const conf = d.confidence || d.conf;
 
-        const scaleX = canvas.width / sourceDim.width;
-        const scaleY = canvas.height / sourceDim.height;
+        // Apply scaling and offset
+        const x = bbox[0] * ratio + offsetX;
+        const y = bbox[1] * ratio + offsetY;
+        const w = (bbox[2] - bbox[0]) * ratio;
+        const h = (bbox[3] - bbox[1]) * ratio;
 
-        if (!isFinite(scaleX) || !isFinite(scaleY)) return;
+        const color = getClassColor(className);
 
-        const x = bbox[0] * scaleX;
-        const y = bbox[1] * scaleY;
-        const w = (bbox[2] - bbox[0]) * scaleX;
-        const h = (bbox[3] - bbox[1]) * scaleY;
-
-        ctx.strokeStyle = '#ef4444';
+        ctx.strokeStyle = color;
         ctx.lineWidth = 2;
         ctx.strokeRect(x, y, w, h);
 
         if (options.showLabels) {
-            ctx.fillStyle = '#ef4444';
+            ctx.fillStyle = color;
             let text = `${className}`;
             if (options.showConfidence) {
                 text += ` ${Math.round(conf * 100)}%`;
@@ -543,12 +640,14 @@ const LiveView = ({ sessionId, toggles }: { sessionId: number, toggles: any }) =
                         const w = bbox[2] - bbox[0];
                         const h = bbox[3] - bbox[1];
 
-                        ctx.strokeStyle = '#ef4444';
+                        const color = getClassColor(className);
+
+                        ctx.strokeStyle = color;
                         ctx.lineWidth = 2 / ratio;
                         ctx.strokeRect(x, y, w, h);
 
                         if (currentToggles.showLabels) {
-                            ctx.fillStyle = '#ef4444';
+                            ctx.fillStyle = color;
                             let text = `${className}`;
                             if (currentToggles.showConfidence) {
                                 text += ` ${Math.round(conf * 100)}%`;
