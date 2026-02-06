@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
-import { ConditionalSidebar } from "@/components/layout/ConditionalSidebar";
+import { Sidebar } from "@/components/layout/Sidebar";
 
 export const metadata: Metadata = {
     title: "YOLOv11 Configuration",
@@ -18,7 +18,7 @@ export default function RootLayout({
             <body suppressHydrationWarning className="bg-slate-50 text-slate-900">
                 <Providers>
                     <div className="min-h-screen flex">
-                        <ConditionalSidebar />
+                        <Sidebar />
                         <main className="flex-1 min-h-screen transition-all duration-300">
                             {children}
                         </main>
