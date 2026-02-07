@@ -1,7 +1,7 @@
 // API Client for YOLOv11 Backend
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 export const apiClient = axios.create({
     baseURL: API_BASE_URL,
@@ -9,6 +9,12 @@ export const apiClient = axios.create({
         'Content-Type': 'application/json',
     },
 });
+
+// Helper to ensure timestamps from backend (naive UTC) are treated as UTC by frontend
+const ensureUtc = (dateStr: string | null | undefined): string | null => {
+    if (!dateStr) return null;
+    return dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`;
+};
 
 export const LANGUAGE_MODELS = [
     { id: 'python+pytorch', name: 'Python + PyTorch (Default)' },
@@ -48,6 +54,8 @@ export interface SessionInfo extends SessionConfig {
 }
 
 export interface Detection {
+    id?: number;
+    session_id: number;
     frame_number: number;
     class_name: string;
     confidence: number;
@@ -66,6 +74,16 @@ export interface SessionResponse {
     status: string;
     message: string;
     created_at: string;
+}
+
+export interface VideoSegment {
+    id: number;
+    session_id: number;
+    file_path: string;
+    start_time: string;
+    end_time: string | null;
+    duration_seconds: number | null;
+    status: string;
 }
 
 export interface SessionListResponse {
@@ -93,12 +111,24 @@ export const api = {
         status?: string;
     }): Promise<SessionListResponse> => {
         const response = await apiClient.get('/api/sessions', { params });
-        return response.data;
+        // Ensure UTC timestamps for Sessions (DB stores UTC)
+        const sessions = response.data.sessions.map((s: SessionInfo) => ({
+            ...s,
+            created_at: ensureUtc(s.created_at) as string,
+            ended_at: ensureUtc(s.ended_at)
+        }));
+        return { ...response.data, sessions };
+        return { ...response.data, sessions };
     },
 
     getSession: async (sessionId: number): Promise<SessionInfo> => {
         const response = await apiClient.get(`/api/sessions/${sessionId}`);
-        return response.data;
+        const s = response.data;
+        return {
+            ...s,
+            created_at: ensureUtc(s.created_at) as string,
+            ended_at: ensureUtc(s.ended_at)
+        };
     },
 
     stopSession: async (sessionId: number, status: string = 'stopped') => {
@@ -123,19 +153,49 @@ export const api = {
         return response.data;
     },
 
-    getDetections: async (sessionId: number, limit: number = 1000): Promise<Detection[]> => {
+    getDetections: async (sessionId: number, limit: number = 1000, start?: string, end?: string): Promise<Detection[]> => {
+        // Strip 'Z' to send local time to backend (which expects naive datetime matching DB)
+        const params: any = { limit };
+        // Use ISO string, but ensure backend handles timezone correctly.
+        // If backend expects naive, we should send naive UTC.
+        // Current issue: DB might be storing naive local time.
+        // Let's try sending standard ISO format.
+        if (start) params.start_time = start.replace('Z', '');
+        if (end) params.end_time = end.replace('Z', '');
+
         const response = await apiClient.get(`/api/sessions/${sessionId}/detections`, {
-            params: { limit }
+            params
         });
+
+        let detections: Detection[] = [];
         // Handle direct array or wrapped object
         if (Array.isArray(response.data)) {
-            return response.data;
+            detections = response.data;
+        } else {
+            detections = response.data.detections || [];
         }
-        return response.data.detections || [];
+
+        // Ensure UTC timestamps
+        return detections;
     },
 
-    getSessionSegments: async (sessionId: number): Promise<any[]> => {
+    getSessionSegments: async (sessionId: number): Promise<VideoSegment[]> => {
         const response = await apiClient.get(`/api/sessions/${sessionId}/segments`);
+        // Ensure UTC timestamps
         return response.data;
+    },
+
+    // Video Streaming Helper
+    getVideoUrl: (videoPath: string): string => {
+        if (!videoPath) return '';
+        // Use browser's base URL if available, otherwise fallback to API_BASE_URL
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : API_BASE_URL;
+        // Construct the full URL for the video stream endpoint through the Next.js rewrite (if configured) or direct to backend
+        // Since we are using a proxy or direct access, let's assume /api routes are handled correctly.
+        // If we are on the frontend, we want to hit the backend URL. 
+        // Note: The backend endpoint is /api/video/stream?path=...
+
+        // If we are using valid relative paths in the proxy setup:
+        return `${API_BASE_URL}/api/video/stream?path=${encodeURIComponent(videoPath)}`;
     },
 };

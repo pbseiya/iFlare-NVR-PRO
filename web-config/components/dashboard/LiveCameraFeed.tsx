@@ -29,76 +29,80 @@ export default function LiveCameraFeed({ session, options }: LiveCameraFeedProps
 
     // Draw function - renders frame and detections on canvas
     const draw = () => {
-        const canvas = canvasRef.current;
-        const data = latestDataRef.current;
-        const img = imgRef.current;
-        const currentToggles = togglesRef.current;
+        try {
+            const canvas = canvasRef.current;
+            const data = latestDataRef.current;
+            const img = imgRef.current;
+            const currentToggles = togglesRef.current;
 
-        if (canvas && data && img) {
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-                // Set canvas size to match container
-                canvas.width = canvas.parentElement?.clientWidth || 640;
-                canvas.height = canvas.parentElement?.clientHeight || 360;
+            if (canvas && data && img) {
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    // Set canvas size to match container
+                    canvas.width = canvas.parentElement?.clientWidth || 640;
+                    canvas.height = canvas.parentElement?.clientHeight || 360;
 
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // Calculate scaling to fit image (object-fit: contain)
-                const hRatio = canvas.width / img.width;
-                const vRatio = canvas.height / img.height;
-                const ratio = Math.min(hRatio, vRatio);
-                const centerShift_x = (canvas.width - img.width * ratio) / 2;
-                const centerShift_y = (canvas.height - img.height * ratio) / 2;
+                    // Calculate scaling to fit image (object-fit: contain)
+                    const hRatio = canvas.width / img.width;
+                    const vRatio = canvas.height / img.height;
+                    const ratio = Math.min(hRatio, vRatio);
+                    const centerShift_x = (canvas.width - img.width * ratio) / 2;
+                    const centerShift_y = (canvas.height - img.height * ratio) / 2;
 
-                // Draw the frame
-                ctx.drawImage(img, 0, 0, img.width, img.height,
-                    centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
+                    // Draw the frame
+                    ctx.drawImage(img, 0, 0, img.width, img.height,
+                        centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
 
-                // Draw detections if enabled
-                if (currentToggles.showBoxes && data.detections) {
-                    ctx.save();
-                    ctx.translate(centerShift_x, centerShift_y);
-                    ctx.scale(ratio, ratio);
+                    // Draw detections if enabled
+                    if (currentToggles.showBoxes && data.detections) {
+                        ctx.save();
+                        ctx.translate(centerShift_x, centerShift_y);
+                        ctx.scale(ratio, ratio);
 
-                    data.detections.forEach((d: any) => {
-                        const bbox = d.bbox;
-                        const className = d.class;
-                        const conf = d.conf;
+                        data.detections.forEach((d: any) => {
+                            const bbox = d.bbox;
+                            const className = d.class;
+                            const conf = d.conf;
 
-                        const x = bbox[0];
-                        const y = bbox[1];
-                        const w = bbox[2] - bbox[0];
-                        const h = bbox[3] - bbox[1];
+                            const x = bbox[0];
+                            const y = bbox[1];
+                            const w = bbox[2] - bbox[0];
+                            const h = bbox[3] - bbox[1];
 
-                        const color = getClassColor(className);
+                            const color = getClassColor(className);
 
-                        // Draw bounding box
-                        ctx.strokeStyle = color;
-                        ctx.lineWidth = 2 / ratio;
-                        ctx.strokeRect(x, y, w, h);
+                            // Draw bounding box
+                            ctx.strokeStyle = color;
+                            ctx.lineWidth = 2 / ratio;
+                            ctx.strokeRect(x, y, w, h);
 
-                        // Draw label
-                        if (currentToggles.showLabels) {
-                            ctx.fillStyle = color;
-                            let text = `${className}`;
-                            if (currentToggles.showConfidence) {
-                                text += ` ${Math.round(conf * 100)}%`;
+                            // Draw label
+                            if (currentToggles.showLabels) {
+                                ctx.fillStyle = color;
+                                let text = `${className}`;
+                                if (currentToggles.showConfidence) {
+                                    text += ` ${Math.round(conf * 100)}%`;
+                                }
+                                const fontSize = Math.max(12, 12 / ratio);
+                                ctx.font = `bold ${fontSize}px sans-serif`;
+                                const padding = 5 / ratio;
+                                const textMetrics = ctx.measureText(text);
+                                const bgHeight = fontSize + padding * 2;
+                                ctx.fillRect(x, y - bgHeight, textMetrics.width + padding * 2, bgHeight);
+
+                                ctx.fillStyle = 'white';
+                                ctx.fillText(text, x + padding, y - padding);
                             }
-                            const fontSize = Math.max(12, 12 / ratio);
-                            ctx.font = `bold ${fontSize}px sans-serif`;
-                            const padding = 5 / ratio;
-                            const textMetrics = ctx.measureText(text);
-                            const bgHeight = fontSize + padding * 2;
-                            ctx.fillRect(x, y - bgHeight, textMetrics.width + padding * 2, bgHeight);
+                        });
 
-                            ctx.fillStyle = 'white';
-                            ctx.fillText(text, x + padding, y - padding);
-                        }
-                    });
-
-                    ctx.restore();
+                        ctx.restore();
+                    }
                 }
             }
+        } catch (e) {
+            console.error('[draw] Error drawing frame:', e);
         }
     };
 
@@ -108,7 +112,7 @@ export default function LiveCameraFeed({ session, options }: LiveCameraFeedProps
 
         const connect = () => {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//localhost:8000/ws/live/${session.id}`;
+            const wsUrl = `${protocol}//${window.location.hostname}:8000/ws/live/${session.id}`;
             const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
 
@@ -116,13 +120,20 @@ export default function LiveCameraFeed({ session, options }: LiveCameraFeedProps
                 try {
                     const data = JSON.parse(event.data);
                     if (data.type === 'frame' && data.frame) {
+                        // console.log(`[ws] Frame received: ${data.frame.length} bytes, Detections: ${data.detections?.length}`);
                         latestDataRef.current = data;
                         const img = new Image();
                         img.onload = () => {
+                            // console.log('[ws] Image loaded successfully');
                             imgRef.current = img;
                             draw();
                         };
+                        img.onerror = (e) => {
+                            console.error('[ws] Image load failed', e);
+                        };
                         img.src = `data:image/jpeg;base64,${data.frame}`;
+                    } else if (data.type === 'frame') {
+                        console.warn('[ws] Frame message received but no image data');
                     }
                 } catch (e) {
                     console.error('WebSocket message error:', e);

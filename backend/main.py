@@ -116,8 +116,8 @@ async def start_session(config: SessionConfig):
             output_dir = os.path.join(os.getcwd(), "videos", "output")
             os.makedirs(output_dir, exist_ok=True)
 
-            # Generate path: videos/output/session_{id}.mp4
-            generated_path = os.path.join(output_dir, f"session_{session_id}.mp4")
+            # Generate path: videos/output/session_{id}.webm
+            generated_path = os.path.join(output_dir, f"session_{session_id}.webm")
 
             # Update DB and Config
             await app.state.db.update_session(session_id, {"video_output_path": generated_path})
@@ -378,8 +378,8 @@ async def resume_session(session_id: int):
             output_dir = os.path.join(os.getcwd(), "videos", "output")
             os.makedirs(output_dir, exist_ok=True)
 
-            # Generate path: videos/output/session_{id}.mp4
-            generated_path = os.path.join(output_dir, f"session_{session_id}.mp4")
+            # Generate path: videos/output/session_{id}.webm
+            generated_path = os.path.join(output_dir, f"session_{session_id}.webm")
 
             # Update DB
             await app.state.db.update_session(session_id, {"video_output_path": generated_path})
@@ -466,7 +466,7 @@ async def get_detections(
     end_time: Optional[datetime] = None,
     class_id: Optional[int] = None,
     min_confidence: Optional[float] = Query(None, ge=0.0, le=1.0),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(100, ge=1, le=100000),
     offset: int = Query(0, ge=0),
 ):
     """Get detections for a session"""
@@ -612,23 +612,38 @@ async def websocket_live(websocket: WebSocket, session_id: int):
         )
 
         # Keep connection alive and handle messages
-        while True:
-            try:
-                # Receive message from client
-                data = await websocket.receive_json()
+        # Subscribe to inference engine frames
+        queue = app.state.engine.add_subscriber(session_id)
 
-                # Handle different message types
-                if data.get("type") == "ping":
-                    await websocket.send_json({"type": "pong"})
+        try:
+            while True:
+                # Receive message from client (keep alive/ping)
+                # We use asyncio.wait to handle both incoming messages and outgoing queue
+                receive_task = asyncio.create_task(websocket.receive_json())
+                queue_task = asyncio.create_task(queue.get())
 
-                # TODO: Implement actual live streaming logic
-                # This would involve:
-                # 1. Listening to inference engine output
-                # 2. Sending frames and detections to client
-                # 3. Handling client requests (pause, resume, etc.)
+                done, pending = await asyncio.wait(
+                    [receive_task, queue_task], return_when=asyncio.FIRST_COMPLETED
+                )
 
-            except WebSocketDisconnect:
-                break
+                if receive_task in done:
+                    data = receive_task.result()
+                    if data.get("type") == "ping":
+                        await websocket.send_json({"type": "pong"})
+                else:
+                    receive_task.cancel()
+
+                if queue_task in done:
+                    message = queue_task.result()
+                    await websocket.send_json(message)
+                else:
+                    queue_task.cancel()
+
+        except WebSocketDisconnect:
+            pass
+
+        finally:
+            app.state.engine.remove_subscriber(session_id, queue)
 
     except Exception as e:
         await websocket.send_json({"error": str(e)})
@@ -711,7 +726,7 @@ async def video_stream(path: str = Query(...), range: str = Header(None)):
 
     mime_type, _ = mimetypes.guess_type(video_path)
     if not mime_type:
-        mime_type = "video/mp4"
+        mime_type = "video/webm"
 
     headers = {
         "Content-Range": f"bytes {start}-{end}/{file_size}",

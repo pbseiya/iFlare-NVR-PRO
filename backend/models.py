@@ -30,10 +30,10 @@ class SessionConfig(BaseModel):
     fps_target: int = Field(10, ge=1, le=60, description="Target FPS for inference")
     conf_threshold: float = Field(0.25, ge=0.0, le=1.0, description="Confidence threshold")
     iou_threshold: float = Field(0.45, ge=0.0, le=1.0, description="IoU threshold for NMS")
-    save_video: bool = Field(False, description="Legacy: whether to save output video")
+    save_video: bool = Field(True, description="Legacy: whether to save output video")
     video_output_path: Optional[str] = Field(None, description="Output video path")
     recording_mode: str = Field(
-        "none", pattern="^(none|clean|annotated)$", description="Recording mode"
+        "clean", pattern="^(none|clean|annotated)$", description="Recording mode"
     )
     render_mode: str = Field(
         "pipeline", pattern="^(pipeline|deferred)$", description="Rendering mode"

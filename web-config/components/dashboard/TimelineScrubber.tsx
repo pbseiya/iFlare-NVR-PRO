@@ -113,15 +113,39 @@ export default function TimelineScrubber({
         });
 
         // Draw events (Detections)
-        events.forEach(event => {
+        // Priority: fire_smoke > smoke > fire > steam
+        const getPriority = (cls: string = '') => {
+            if (cls.includes('fire_smoke')) return 4;
+            if (cls.includes('smoke')) return 3;
+            if (cls.includes('fire')) return 2;
+            if (cls.includes('steam')) return 1;
+            return 0;
+        };
+
+        // Sort events by priority (low to high) so high priority is drawn last (on top)
+        const sortedEvents = [...events].sort((a, b) => {
+            const pA = getPriority((a.class_name || '').toLowerCase());
+            const pB = getPriority((b.class_name || '').toLowerCase());
+            return pA - pB;
+        });
+
+        sortedEvents.forEach(event => {
             if (!event.timestamp) return;
             const t = new Date(event.timestamp).getTime();
             if (t < viewStart || t > viewEnd) return;
 
             const x = (t - viewStart) * pixelsPerMs;
 
-            // Color based on class (simple logic for now)
-            ctx.fillStyle = event.class_name?.includes('fire') ? '#EF4444' : '#3B82F6'; // Red or Blue
+            // Color based on class
+            let color = '#22C55E'; // Green (default / steam)
+            const cls = (event.class_name || '').toLowerCase();
+
+            if (cls.includes('fire_smoke')) color = '#EF4444';      // Red
+            else if (cls.includes('smoke')) color = '#A855F7';      // Purple
+            else if (cls.includes('steam')) color = '#3B82F6';      // Blue
+            else if (cls.includes('fire')) color = '#EAB308';       // Yellow
+
+            ctx.fillStyle = color;
             ctx.globalAlpha = 0.8;
             ctx.fillRect(x - 1, 10, 2, height - 30);
             ctx.globalAlpha = 1.0;

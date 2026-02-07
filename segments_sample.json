@@ -1,0 +1,4248 @@
+{
+  "id": 697,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_000035.webm",
+  "start_time": "2026-02-07T00:00:35.007699",
+  "end_time": "2026-02-07T00:01:35.634617",
+  "duration_seconds": 60.626918,
+  "status": "completed"
+}
+{
+  "id": 700,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_000135.webm",
+  "start_time": "2026-02-07T00:01:35.634617",
+  "end_time": "2026-02-07T00:02:36.372633",
+  "duration_seconds": 60.738016,
+  "status": "completed"
+}
+{
+  "id": 703,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_000236.webm",
+  "start_time": "2026-02-07T00:02:36.372633",
+  "end_time": "2026-02-07T00:03:37.213095",
+  "duration_seconds": 60.840462,
+  "status": "completed"
+}
+{
+  "id": 706,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_000337.webm",
+  "start_time": "2026-02-07T00:03:37.213095",
+  "end_time": "2026-02-07T00:04:37.960352",
+  "duration_seconds": 60.747257,
+  "status": "completed"
+}
+{
+  "id": 709,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_000437.webm",
+  "start_time": "2026-02-07T00:04:37.960352",
+  "end_time": "2026-02-07T00:05:38.616513",
+  "duration_seconds": 60.656161,
+  "status": "completed"
+}
+{
+  "id": 712,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_000538.webm",
+  "start_time": "2026-02-07T00:05:38.616513",
+  "end_time": "2026-02-07T00:06:39.351952",
+  "duration_seconds": 60.735439,
+  "status": "completed"
+}
+{
+  "id": 715,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_000639.webm",
+  "start_time": "2026-02-07T00:06:39.351952",
+  "end_time": "2026-02-07T00:07:40.216838",
+  "duration_seconds": 60.864886,
+  "status": "completed"
+}
+{
+  "id": 718,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_000740.webm",
+  "start_time": "2026-02-07T00:07:40.216838",
+  "end_time": "2026-02-07T00:08:41.143479",
+  "duration_seconds": 60.926641,
+  "status": "completed"
+}
+{
+  "id": 721,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_000841.webm",
+  "start_time": "2026-02-07T00:08:41.143479",
+  "end_time": "2026-02-07T00:09:41.200948",
+  "duration_seconds": 60.057469,
+  "status": "completed"
+}
+{
+  "id": 724,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_000941.webm",
+  "start_time": "2026-02-07T00:09:41.200948",
+  "end_time": "2026-02-07T00:10:41.937611",
+  "duration_seconds": 60.736663,
+  "status": "completed"
+}
+{
+  "id": 727,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_001041.webm",
+  "start_time": "2026-02-07T00:10:41.937611",
+  "end_time": "2026-02-07T00:11:42.852128",
+  "duration_seconds": 60.914517,
+  "status": "completed"
+}
+{
+  "id": 730,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_001142.webm",
+  "start_time": "2026-02-07T00:11:42.852128",
+  "end_time": "2026-02-07T00:12:43.609869",
+  "duration_seconds": 60.757741,
+  "status": "completed"
+}
+{
+  "id": 733,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_001243.webm",
+  "start_time": "2026-02-07T00:12:43.609869",
+  "end_time": "2026-02-07T00:13:43.771650",
+  "duration_seconds": 60.161781,
+  "status": "completed"
+}
+{
+  "id": 736,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_001343.webm",
+  "start_time": "2026-02-07T00:13:43.771650",
+  "end_time": "2026-02-07T00:14:44.486317",
+  "duration_seconds": 60.714667,
+  "status": "completed"
+}
+{
+  "id": 739,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_001444.webm",
+  "start_time": "2026-02-07T00:14:44.486317",
+  "end_time": "2026-02-07T00:15:45.143442",
+  "duration_seconds": 60.657125,
+  "status": "completed"
+}
+{
+  "id": 742,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_001545.webm",
+  "start_time": "2026-02-07T00:15:45.143442",
+  "end_time": "2026-02-07T00:16:45.916455",
+  "duration_seconds": 60.773013,
+  "status": "completed"
+}
+{
+  "id": 745,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_001645.webm",
+  "start_time": "2026-02-07T00:16:45.916455",
+  "end_time": "2026-02-07T00:17:46.609896",
+  "duration_seconds": 60.693441,
+  "status": "completed"
+}
+{
+  "id": 748,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_001746.webm",
+  "start_time": "2026-02-07T00:17:46.609896",
+  "end_time": "2026-02-07T00:18:47.516196",
+  "duration_seconds": 60.9063,
+  "status": "completed"
+}
+{
+  "id": 751,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_001847.webm",
+  "start_time": "2026-02-07T00:18:47.516196",
+  "end_time": "2026-02-07T00:19:48.194100",
+  "duration_seconds": 60.677904,
+  "status": "completed"
+}
+{
+  "id": 754,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_001948.webm",
+  "start_time": "2026-02-07T00:19:48.194100",
+  "end_time": "2026-02-07T00:20:48.929171",
+  "duration_seconds": 60.735071,
+  "status": "completed"
+}
+{
+  "id": 757,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_002048.webm",
+  "start_time": "2026-02-07T00:20:48.929171",
+  "end_time": "2026-02-07T00:21:49.887474",
+  "duration_seconds": 60.958303,
+  "status": "completed"
+}
+{
+  "id": 760,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_002149.webm",
+  "start_time": "2026-02-07T00:21:49.887474",
+  "end_time": "2026-02-07T00:22:50.768810",
+  "duration_seconds": 60.881336,
+  "status": "completed"
+}
+{
+  "id": 763,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_002250.webm",
+  "start_time": "2026-02-07T00:22:50.768810",
+  "end_time": "2026-02-07T00:23:51.422177",
+  "duration_seconds": 60.653367,
+  "status": "completed"
+}
+{
+  "id": 766,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_002351.webm",
+  "start_time": "2026-02-07T00:23:51.422177",
+  "end_time": "2026-02-07T00:24:52.078616",
+  "duration_seconds": 60.656439,
+  "status": "completed"
+}
+{
+  "id": 769,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_002452.webm",
+  "start_time": "2026-02-07T00:24:52.078616",
+  "end_time": "2026-02-07T00:25:52.652012",
+  "duration_seconds": 60.573396,
+  "status": "completed"
+}
+{
+  "id": 772,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_002552.webm",
+  "start_time": "2026-02-07T00:25:52.652012",
+  "end_time": "2026-02-07T00:26:53.383893",
+  "duration_seconds": 60.731881,
+  "status": "completed"
+}
+{
+  "id": 775,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_002653.webm",
+  "start_time": "2026-02-07T00:26:53.383893",
+  "end_time": "2026-02-07T00:27:53.923444",
+  "duration_seconds": 60.539551,
+  "status": "completed"
+}
+{
+  "id": 778,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_002753.webm",
+  "start_time": "2026-02-07T00:27:53.923444",
+  "end_time": "2026-02-07T00:28:54.669024",
+  "duration_seconds": 60.74558,
+  "status": "completed"
+}
+{
+  "id": 781,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_002854.webm",
+  "start_time": "2026-02-07T00:28:54.669024",
+  "end_time": "2026-02-07T00:29:55.224352",
+  "duration_seconds": 60.555328,
+  "status": "completed"
+}
+{
+  "id": 784,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_002955.webm",
+  "start_time": "2026-02-07T00:29:55.224352",
+  "end_time": "2026-02-07T00:30:55.970310",
+  "duration_seconds": 60.745958,
+  "status": "completed"
+}
+{
+  "id": 787,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_003055.webm",
+  "start_time": "2026-02-07T00:30:55.970310",
+  "end_time": "2026-02-07T00:31:56.873879",
+  "duration_seconds": 60.903569,
+  "status": "completed"
+}
+{
+  "id": 790,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_003156.webm",
+  "start_time": "2026-02-07T00:31:56.873879",
+  "end_time": "2026-02-07T00:32:57.515578",
+  "duration_seconds": 60.641699,
+  "status": "completed"
+}
+{
+  "id": 793,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_003257.webm",
+  "start_time": "2026-02-07T00:32:57.515578",
+  "end_time": "2026-02-07T00:33:58.226665",
+  "duration_seconds": 60.711087,
+  "status": "completed"
+}
+{
+  "id": 796,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_003358.webm",
+  "start_time": "2026-02-07T00:33:58.226665",
+  "end_time": "2026-02-07T00:34:59.080649",
+  "duration_seconds": 60.853984,
+  "status": "completed"
+}
+{
+  "id": 799,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_003459.webm",
+  "start_time": "2026-02-07T00:34:59.080649",
+  "end_time": "2026-02-07T00:35:59.231653",
+  "duration_seconds": 60.151004,
+  "status": "completed"
+}
+{
+  "id": 802,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_003559.webm",
+  "start_time": "2026-02-07T00:35:59.231653",
+  "end_time": "2026-02-07T00:37:00.101059",
+  "duration_seconds": 60.869406,
+  "status": "completed"
+}
+{
+  "id": 805,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_003700.webm",
+  "start_time": "2026-02-07T00:37:00.101059",
+  "end_time": "2026-02-07T00:38:00.713064",
+  "duration_seconds": 60.612005,
+  "status": "completed"
+}
+{
+  "id": 808,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_003800.webm",
+  "start_time": "2026-02-07T00:38:00.713064",
+  "end_time": "2026-02-07T00:39:01.448649",
+  "duration_seconds": 60.735585,
+  "status": "completed"
+}
+{
+  "id": 811,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_003901.webm",
+  "start_time": "2026-02-07T00:39:01.448649",
+  "end_time": "2026-02-07T00:40:02.139113",
+  "duration_seconds": 60.690464,
+  "status": "completed"
+}
+{
+  "id": 814,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_004002.webm",
+  "start_time": "2026-02-07T00:40:02.139113",
+  "end_time": "2026-02-07T00:41:02.842624",
+  "duration_seconds": 60.703511,
+  "status": "completed"
+}
+{
+  "id": 817,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_004102.webm",
+  "start_time": "2026-02-07T00:41:02.842624",
+  "end_time": "2026-02-07T00:42:03.615330",
+  "duration_seconds": 60.772706,
+  "status": "completed"
+}
+{
+  "id": 820,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_004203.webm",
+  "start_time": "2026-02-07T00:42:03.615330",
+  "end_time": "2026-02-07T00:43:04.326717",
+  "duration_seconds": 60.711387,
+  "status": "completed"
+}
+{
+  "id": 823,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_004304.webm",
+  "start_time": "2026-02-07T00:43:04.326717",
+  "end_time": "2026-02-07T00:44:05.063848",
+  "duration_seconds": 60.737131,
+  "status": "completed"
+}
+{
+  "id": 826,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_004405.webm",
+  "start_time": "2026-02-07T00:44:05.063848",
+  "end_time": "2026-02-07T00:45:05.827724",
+  "duration_seconds": 60.763876,
+  "status": "completed"
+}
+{
+  "id": 829,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_004505.webm",
+  "start_time": "2026-02-07T00:45:05.827724",
+  "end_time": "2026-02-07T00:46:06.611254",
+  "duration_seconds": 60.78353,
+  "status": "completed"
+}
+{
+  "id": 832,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_004606.webm",
+  "start_time": "2026-02-07T00:46:06.611254",
+  "end_time": "2026-02-07T00:47:07.352899",
+  "duration_seconds": 60.741645,
+  "status": "completed"
+}
+{
+  "id": 835,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_004707.webm",
+  "start_time": "2026-02-07T00:47:07.352899",
+  "end_time": "2026-02-07T00:48:08.301894",
+  "duration_seconds": 60.948995,
+  "status": "completed"
+}
+{
+  "id": 838,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_004808.webm",
+  "start_time": "2026-02-07T00:48:08.301894",
+  "end_time": "2026-02-07T00:49:08.366780",
+  "duration_seconds": 60.064886,
+  "status": "completed"
+}
+{
+  "id": 841,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_004908.webm",
+  "start_time": "2026-02-07T00:49:08.366780",
+  "end_time": "2026-02-07T00:50:08.971685",
+  "duration_seconds": 60.604905,
+  "status": "completed"
+}
+{
+  "id": 844,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_005008.webm",
+  "start_time": "2026-02-07T00:50:08.971685",
+  "end_time": "2026-02-07T00:51:09.797627",
+  "duration_seconds": 60.825942,
+  "status": "completed"
+}
+{
+  "id": 847,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_005109.webm",
+  "start_time": "2026-02-07T00:51:09.797627",
+  "end_time": "2026-02-07T00:52:10.565694",
+  "duration_seconds": 60.768067,
+  "status": "completed"
+}
+{
+  "id": 850,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_005210.webm",
+  "start_time": "2026-02-07T00:52:10.565694",
+  "end_time": "2026-02-07T00:53:11.439172",
+  "duration_seconds": 60.873478,
+  "status": "completed"
+}
+{
+  "id": 853,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_005311.webm",
+  "start_time": "2026-02-07T00:53:11.439172",
+  "end_time": "2026-02-07T00:54:12.129936",
+  "duration_seconds": 60.690764,
+  "status": "completed"
+}
+{
+  "id": 856,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_005412.webm",
+  "start_time": "2026-02-07T00:54:12.129936",
+  "end_time": "2026-02-07T00:55:12.869755",
+  "duration_seconds": 60.739819,
+  "status": "completed"
+}
+{
+  "id": 859,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_005512.webm",
+  "start_time": "2026-02-07T00:55:12.869755",
+  "end_time": "2026-02-07T00:56:13.386343",
+  "duration_seconds": 60.516588,
+  "status": "completed"
+}
+{
+  "id": 862,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_005613.webm",
+  "start_time": "2026-02-07T00:56:13.386343",
+  "end_time": "2026-02-07T00:57:14.130829",
+  "duration_seconds": 60.744486,
+  "status": "completed"
+}
+{
+  "id": 865,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_005714.webm",
+  "start_time": "2026-02-07T00:57:14.130829",
+  "end_time": "2026-02-07T00:58:14.788971",
+  "duration_seconds": 60.658142,
+  "status": "completed"
+}
+{
+  "id": 868,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_005814.webm",
+  "start_time": "2026-02-07T00:58:14.788971",
+  "end_time": "2026-02-07T00:59:15.597779",
+  "duration_seconds": 60.808808,
+  "status": "completed"
+}
+{
+  "id": 871,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_005915.webm",
+  "start_time": "2026-02-07T00:59:15.597779",
+  "end_time": "2026-02-07T01:00:16.405316",
+  "duration_seconds": 60.807537,
+  "status": "completed"
+}
+{
+  "id": 874,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_010016.webm",
+  "start_time": "2026-02-07T01:00:16.405316",
+  "end_time": "2026-02-07T01:01:16.660853",
+  "duration_seconds": 60.255537,
+  "status": "completed"
+}
+{
+  "id": 877,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_010116.webm",
+  "start_time": "2026-02-07T01:01:16.660853",
+  "end_time": "2026-02-07T01:02:17.366647",
+  "duration_seconds": 60.705794,
+  "status": "completed"
+}
+{
+  "id": 880,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_010217.webm",
+  "start_time": "2026-02-07T01:02:17.366647",
+  "end_time": "2026-02-07T01:03:18.018434",
+  "duration_seconds": 60.651787,
+  "status": "completed"
+}
+{
+  "id": 883,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_010318.webm",
+  "start_time": "2026-02-07T01:03:18.018434",
+  "end_time": "2026-02-07T01:04:18.666585",
+  "duration_seconds": 60.648151,
+  "status": "completed"
+}
+{
+  "id": 886,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_010418.webm",
+  "start_time": "2026-02-07T01:04:18.666585",
+  "end_time": "2026-02-07T01:05:19.428347",
+  "duration_seconds": 60.761762,
+  "status": "completed"
+}
+{
+  "id": 889,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_010519.webm",
+  "start_time": "2026-02-07T01:05:19.428347",
+  "end_time": "2026-02-07T01:06:20.063730",
+  "duration_seconds": 60.635383,
+  "status": "completed"
+}
+{
+  "id": 892,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_010620.webm",
+  "start_time": "2026-02-07T01:06:20.063730",
+  "end_time": "2026-02-07T01:07:20.585091",
+  "duration_seconds": 60.521361,
+  "status": "completed"
+}
+{
+  "id": 895,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_010720.webm",
+  "start_time": "2026-02-07T01:07:20.585091",
+  "end_time": "2026-02-07T01:08:21.201908",
+  "duration_seconds": 60.616817,
+  "status": "completed"
+}
+{
+  "id": 898,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_010821.webm",
+  "start_time": "2026-02-07T01:08:21.201908",
+  "end_time": "2026-02-07T01:09:21.702410",
+  "duration_seconds": 60.500502,
+  "status": "completed"
+}
+{
+  "id": 901,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_010921.webm",
+  "start_time": "2026-02-07T01:09:21.702410",
+  "end_time": "2026-02-07T01:10:22.600888",
+  "duration_seconds": 60.898478,
+  "status": "completed"
+}
+{
+  "id": 904,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_011022.webm",
+  "start_time": "2026-02-07T01:10:22.600888",
+  "end_time": "2026-02-07T01:11:23.306909",
+  "duration_seconds": 60.706021,
+  "status": "completed"
+}
+{
+  "id": 907,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_011123.webm",
+  "start_time": "2026-02-07T01:11:23.306909",
+  "end_time": "2026-02-07T01:12:24.024238",
+  "duration_seconds": 60.717329,
+  "status": "completed"
+}
+{
+  "id": 910,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_011224.webm",
+  "start_time": "2026-02-07T01:12:24.024238",
+  "end_time": "2026-02-07T01:13:24.879583",
+  "duration_seconds": 60.855345,
+  "status": "completed"
+}
+{
+  "id": 913,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_011324.webm",
+  "start_time": "2026-02-07T01:13:24.879583",
+  "end_time": "2026-02-07T01:14:24.917622",
+  "duration_seconds": 60.038039,
+  "status": "completed"
+}
+{
+  "id": 916,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_011424.webm",
+  "start_time": "2026-02-07T01:14:24.917622",
+  "end_time": "2026-02-07T01:15:25.620501",
+  "duration_seconds": 60.702879,
+  "status": "completed"
+}
+{
+  "id": 919,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_011525.webm",
+  "start_time": "2026-02-07T01:15:25.620501",
+  "end_time": "2026-02-07T01:16:26.338660",
+  "duration_seconds": 60.718159,
+  "status": "completed"
+}
+{
+  "id": 922,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_011626.webm",
+  "start_time": "2026-02-07T01:16:26.338660",
+  "end_time": "2026-02-07T01:17:27.097871",
+  "duration_seconds": 60.759211,
+  "status": "completed"
+}
+{
+  "id": 925,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_011727.webm",
+  "start_time": "2026-02-07T01:17:27.097871",
+  "end_time": "2026-02-07T01:18:27.735639",
+  "duration_seconds": 60.637768,
+  "status": "completed"
+}
+{
+  "id": 928,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_011827.webm",
+  "start_time": "2026-02-07T01:18:27.735639",
+  "end_time": "2026-02-07T01:19:28.295670",
+  "duration_seconds": 60.560031,
+  "status": "completed"
+}
+{
+  "id": 931,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_011928.webm",
+  "start_time": "2026-02-07T01:19:28.295670",
+  "end_time": "2026-02-07T01:20:28.865259",
+  "duration_seconds": 60.569589,
+  "status": "completed"
+}
+{
+  "id": 934,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_012028.webm",
+  "start_time": "2026-02-07T01:20:28.865259",
+  "end_time": "2026-02-07T01:21:29.499093",
+  "duration_seconds": 60.633834,
+  "status": "completed"
+}
+{
+  "id": 937,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_012129.webm",
+  "start_time": "2026-02-07T01:21:29.499093",
+  "end_time": "2026-02-07T01:22:30.120070",
+  "duration_seconds": 60.620977,
+  "status": "completed"
+}
+{
+  "id": 940,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_012230.webm",
+  "start_time": "2026-02-07T01:22:30.120070",
+  "end_time": "2026-02-07T01:23:30.762823",
+  "duration_seconds": 60.642753,
+  "status": "completed"
+}
+{
+  "id": 943,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_012330.webm",
+  "start_time": "2026-02-07T01:23:30.762823",
+  "end_time": "2026-02-07T01:24:31.334083",
+  "duration_seconds": 60.57126,
+  "status": "completed"
+}
+{
+  "id": 946,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_012431.webm",
+  "start_time": "2026-02-07T01:24:31.334083",
+  "end_time": "2026-02-07T01:25:32.083527",
+  "duration_seconds": 60.749444,
+  "status": "completed"
+}
+{
+  "id": 949,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_012532.webm",
+  "start_time": "2026-02-07T01:25:32.083527",
+  "end_time": "2026-02-07T01:26:32.904008",
+  "duration_seconds": 60.820481,
+  "status": "completed"
+}
+{
+  "id": 952,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_012632.webm",
+  "start_time": "2026-02-07T01:26:32.904008",
+  "end_time": "2026-02-07T01:27:33.759646",
+  "duration_seconds": 60.855638,
+  "status": "completed"
+}
+{
+  "id": 955,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_012733.webm",
+  "start_time": "2026-02-07T01:27:33.759646",
+  "end_time": "2026-02-07T01:28:34.491947",
+  "duration_seconds": 60.732301,
+  "status": "completed"
+}
+{
+  "id": 958,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_012834.webm",
+  "start_time": "2026-02-07T01:28:34.491947",
+  "end_time": "2026-02-07T01:29:35.181792",
+  "duration_seconds": 60.689845,
+  "status": "completed"
+}
+{
+  "id": 961,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_012935.webm",
+  "start_time": "2026-02-07T01:29:35.181792",
+  "end_time": "2026-02-07T01:30:35.936023",
+  "duration_seconds": 60.754231,
+  "status": "completed"
+}
+{
+  "id": 964,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_013035.webm",
+  "start_time": "2026-02-07T01:30:35.936023",
+  "end_time": "2026-02-07T01:31:36.538340",
+  "duration_seconds": 60.602317,
+  "status": "completed"
+}
+{
+  "id": 967,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_013136.webm",
+  "start_time": "2026-02-07T01:31:36.538340",
+  "end_time": "2026-02-07T01:32:37.169010",
+  "duration_seconds": 60.63067,
+  "status": "completed"
+}
+{
+  "id": 970,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_013237.webm",
+  "start_time": "2026-02-07T01:32:37.169010",
+  "end_time": "2026-02-07T01:33:37.829965",
+  "duration_seconds": 60.660955,
+  "status": "completed"
+}
+{
+  "id": 973,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_013337.webm",
+  "start_time": "2026-02-07T01:33:37.829965",
+  "end_time": "2026-02-07T01:34:38.465371",
+  "duration_seconds": 60.635406,
+  "status": "completed"
+}
+{
+  "id": 976,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_013438.webm",
+  "start_time": "2026-02-07T01:34:38.465371",
+  "end_time": "2026-02-07T01:35:39.188576",
+  "duration_seconds": 60.723205,
+  "status": "completed"
+}
+{
+  "id": 979,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_013539.webm",
+  "start_time": "2026-02-07T01:35:39.188576",
+  "end_time": "2026-02-07T01:36:39.848217",
+  "duration_seconds": 60.659641,
+  "status": "completed"
+}
+{
+  "id": 982,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_013639.webm",
+  "start_time": "2026-02-07T01:36:39.848217",
+  "end_time": "2026-02-07T01:37:40.482032",
+  "duration_seconds": 60.633815,
+  "status": "completed"
+}
+{
+  "id": 985,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_013740.webm",
+  "start_time": "2026-02-07T01:37:40.482032",
+  "end_time": "2026-02-07T01:38:41.151838",
+  "duration_seconds": 60.669806,
+  "status": "completed"
+}
+{
+  "id": 988,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_013841.webm",
+  "start_time": "2026-02-07T01:38:41.151838",
+  "end_time": "2026-02-07T01:39:41.913730",
+  "duration_seconds": 60.761892,
+  "status": "completed"
+}
+{
+  "id": 991,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_013941.webm",
+  "start_time": "2026-02-07T01:39:41.913730",
+  "end_time": "2026-02-07T01:40:41.967444",
+  "duration_seconds": 60.053714,
+  "status": "completed"
+}
+{
+  "id": 994,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_014041.webm",
+  "start_time": "2026-02-07T01:40:41.967444",
+  "end_time": "2026-02-07T01:41:42.722452",
+  "duration_seconds": 60.755008,
+  "status": "completed"
+}
+{
+  "id": 997,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_014142.webm",
+  "start_time": "2026-02-07T01:41:42.722452",
+  "end_time": "2026-02-07T01:42:43.320112",
+  "duration_seconds": 60.59766,
+  "status": "completed"
+}
+{
+  "id": 1000,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_014243.webm",
+  "start_time": "2026-02-07T01:42:43.320112",
+  "end_time": "2026-02-07T01:43:44.053166",
+  "duration_seconds": 60.733054,
+  "status": "completed"
+}
+{
+  "id": 1003,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_014344.webm",
+  "start_time": "2026-02-07T01:43:44.053166",
+  "end_time": "2026-02-07T01:44:44.642291",
+  "duration_seconds": 60.589125,
+  "status": "completed"
+}
+{
+  "id": 1006,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_014444.webm",
+  "start_time": "2026-02-07T01:44:44.642291",
+  "end_time": "2026-02-07T01:45:45.158045",
+  "duration_seconds": 60.515754,
+  "status": "completed"
+}
+{
+  "id": 1009,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_014545.webm",
+  "start_time": "2026-02-07T01:45:45.158045",
+  "end_time": "2026-02-07T01:46:45.840787",
+  "duration_seconds": 60.682742,
+  "status": "completed"
+}
+{
+  "id": 1012,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_014645.webm",
+  "start_time": "2026-02-07T01:46:45.840787",
+  "end_time": "2026-02-07T01:47:46.489251",
+  "duration_seconds": 60.648464,
+  "status": "completed"
+}
+{
+  "id": 1015,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_014746.webm",
+  "start_time": "2026-02-07T01:47:46.489251",
+  "end_time": "2026-02-07T01:48:47.114266",
+  "duration_seconds": 60.625015,
+  "status": "completed"
+}
+{
+  "id": 1018,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_014847.webm",
+  "start_time": "2026-02-07T01:48:47.114266",
+  "end_time": "2026-02-07T01:49:47.707378",
+  "duration_seconds": 60.593112,
+  "status": "completed"
+}
+{
+  "id": 1021,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_014947.webm",
+  "start_time": "2026-02-07T01:49:47.707378",
+  "end_time": "2026-02-07T01:50:48.460332",
+  "duration_seconds": 60.752954,
+  "status": "completed"
+}
+{
+  "id": 1024,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_015048.webm",
+  "start_time": "2026-02-07T01:50:48.460332",
+  "end_time": "2026-02-07T01:51:49.188090",
+  "duration_seconds": 60.727758,
+  "status": "completed"
+}
+{
+  "id": 1027,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_015149.webm",
+  "start_time": "2026-02-07T01:51:49.188090",
+  "end_time": "2026-02-07T01:52:50.013868",
+  "duration_seconds": 60.825778,
+  "status": "completed"
+}
+{
+  "id": 1030,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_015250.webm",
+  "start_time": "2026-02-07T01:52:50.013868",
+  "end_time": "2026-02-07T01:53:50.664214",
+  "duration_seconds": 60.650346,
+  "status": "completed"
+}
+{
+  "id": 1033,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_015350.webm",
+  "start_time": "2026-02-07T01:53:50.664214",
+  "end_time": "2026-02-07T01:54:51.306878",
+  "duration_seconds": 60.642664,
+  "status": "completed"
+}
+{
+  "id": 1036,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_015451.webm",
+  "start_time": "2026-02-07T01:54:51.306878",
+  "end_time": "2026-02-07T01:55:52.043699",
+  "duration_seconds": 60.736821,
+  "status": "completed"
+}
+{
+  "id": 1039,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_015552.webm",
+  "start_time": "2026-02-07T01:55:52.043699",
+  "end_time": "2026-02-07T01:56:52.704384",
+  "duration_seconds": 60.660685,
+  "status": "completed"
+}
+{
+  "id": 1042,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_015652.webm",
+  "start_time": "2026-02-07T01:56:52.704384",
+  "end_time": "2026-02-07T01:57:53.392712",
+  "duration_seconds": 60.688328,
+  "status": "completed"
+}
+{
+  "id": 1045,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_015753.webm",
+  "start_time": "2026-02-07T01:57:53.392712",
+  "end_time": "2026-02-07T01:58:54.037829",
+  "duration_seconds": 60.645117,
+  "status": "completed"
+}
+{
+  "id": 1048,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_015854.webm",
+  "start_time": "2026-02-07T01:58:54.037829",
+  "end_time": "2026-02-07T01:59:54.647866",
+  "duration_seconds": 60.610037,
+  "status": "completed"
+}
+{
+  "id": 1051,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_015954.webm",
+  "start_time": "2026-02-07T01:59:54.647866",
+  "end_time": "2026-02-07T02:00:55.401424",
+  "duration_seconds": 60.753558,
+  "status": "completed"
+}
+{
+  "id": 1054,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_020055.webm",
+  "start_time": "2026-02-07T02:00:55.401424",
+  "end_time": "2026-02-07T02:01:56.265313",
+  "duration_seconds": 60.863889,
+  "status": "completed"
+}
+{
+  "id": 1057,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_020156.webm",
+  "start_time": "2026-02-07T02:01:56.265313",
+  "end_time": "2026-02-07T02:02:56.882184",
+  "duration_seconds": 60.616871,
+  "status": "completed"
+}
+{
+  "id": 1060,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_020256.webm",
+  "start_time": "2026-02-07T02:02:56.882184",
+  "end_time": "2026-02-07T02:03:57.460579",
+  "duration_seconds": 60.578395,
+  "status": "completed"
+}
+{
+  "id": 1063,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_020357.webm",
+  "start_time": "2026-02-07T02:03:57.460579",
+  "end_time": "2026-02-07T02:04:58.348395",
+  "duration_seconds": 60.887816,
+  "status": "completed"
+}
+{
+  "id": 1066,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_020458.webm",
+  "start_time": "2026-02-07T02:04:58.348395",
+  "end_time": "2026-02-07T02:05:59.321073",
+  "duration_seconds": 60.972678,
+  "status": "completed"
+}
+{
+  "id": 1069,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_020559.webm",
+  "start_time": "2026-02-07T02:05:59.321073",
+  "end_time": "2026-02-07T02:07:00.036347",
+  "duration_seconds": 60.715274,
+  "status": "completed"
+}
+{
+  "id": 1072,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_020700.webm",
+  "start_time": "2026-02-07T02:07:00.036347",
+  "end_time": "2026-02-07T02:08:00.813331",
+  "duration_seconds": 60.776984,
+  "status": "completed"
+}
+{
+  "id": 1075,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_020800.webm",
+  "start_time": "2026-02-07T02:08:00.813331",
+  "end_time": "2026-02-07T02:09:01.507297",
+  "duration_seconds": 60.693966,
+  "status": "completed"
+}
+{
+  "id": 1078,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_020901.webm",
+  "start_time": "2026-02-07T02:09:01.507297",
+  "end_time": "2026-02-07T02:10:02.183099",
+  "duration_seconds": 60.675802,
+  "status": "completed"
+}
+{
+  "id": 1081,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_021002.webm",
+  "start_time": "2026-02-07T02:10:02.183099",
+  "end_time": "2026-02-07T02:11:02.881287",
+  "duration_seconds": 60.698188,
+  "status": "completed"
+}
+{
+  "id": 1084,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_021102.webm",
+  "start_time": "2026-02-07T02:11:02.881287",
+  "end_time": "2026-02-07T02:12:03.469699",
+  "duration_seconds": 60.588412,
+  "status": "completed"
+}
+{
+  "id": 1087,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_021203.webm",
+  "start_time": "2026-02-07T02:12:03.469699",
+  "end_time": "2026-02-07T02:13:04.027158",
+  "duration_seconds": 60.557459,
+  "status": "completed"
+}
+{
+  "id": 1090,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_021304.webm",
+  "start_time": "2026-02-07T02:13:04.027158",
+  "end_time": "2026-02-07T02:14:04.625124",
+  "duration_seconds": 60.597966,
+  "status": "completed"
+}
+{
+  "id": 1093,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_021404.webm",
+  "start_time": "2026-02-07T02:14:04.625124",
+  "end_time": "2026-02-07T02:15:05.164072",
+  "duration_seconds": 60.538948,
+  "status": "completed"
+}
+{
+  "id": 1096,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_021505.webm",
+  "start_time": "2026-02-07T02:15:05.164072",
+  "end_time": "2026-02-07T02:16:05.751658",
+  "duration_seconds": 60.587586,
+  "status": "completed"
+}
+{
+  "id": 1099,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_021605.webm",
+  "start_time": "2026-02-07T02:16:05.751658",
+  "end_time": "2026-02-07T02:17:06.374724",
+  "duration_seconds": 60.623066,
+  "status": "completed"
+}
+{
+  "id": 1102,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_021706.webm",
+  "start_time": "2026-02-07T02:17:06.374724",
+  "end_time": "2026-02-07T02:18:07.194972",
+  "duration_seconds": 60.820248,
+  "status": "completed"
+}
+{
+  "id": 1105,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_021807.webm",
+  "start_time": "2026-02-07T02:18:07.194972",
+  "end_time": "2026-02-07T02:19:07.984916",
+  "duration_seconds": 60.789944,
+  "status": "completed"
+}
+{
+  "id": 1108,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_021907.webm",
+  "start_time": "2026-02-07T02:19:07.984916",
+  "end_time": "2026-02-07T02:20:08.633405",
+  "duration_seconds": 60.648489,
+  "status": "completed"
+}
+{
+  "id": 1111,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_022008.webm",
+  "start_time": "2026-02-07T02:20:08.633405",
+  "end_time": "2026-02-07T02:21:09.253455",
+  "duration_seconds": 60.62005,
+  "status": "completed"
+}
+{
+  "id": 1114,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_022109.webm",
+  "start_time": "2026-02-07T02:21:09.253455",
+  "end_time": "2026-02-07T02:22:10.004079",
+  "duration_seconds": 60.750624,
+  "status": "completed"
+}
+{
+  "id": 1117,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_022210.webm",
+  "start_time": "2026-02-07T02:22:10.004079",
+  "end_time": "2026-02-07T02:23:10.471127",
+  "duration_seconds": 60.467048,
+  "status": "completed"
+}
+{
+  "id": 1120,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_022310.webm",
+  "start_time": "2026-02-07T02:23:10.471127",
+  "end_time": "2026-02-07T02:24:11.330888",
+  "duration_seconds": 60.859761,
+  "status": "completed"
+}
+{
+  "id": 1123,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_022411.webm",
+  "start_time": "2026-02-07T02:24:11.330888",
+  "end_time": "2026-02-07T02:25:11.857670",
+  "duration_seconds": 60.526782,
+  "status": "completed"
+}
+{
+  "id": 1126,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_022511.webm",
+  "start_time": "2026-02-07T02:25:11.857670",
+  "end_time": "2026-02-07T02:26:12.627662",
+  "duration_seconds": 60.769992,
+  "status": "completed"
+}
+{
+  "id": 1129,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_022612.webm",
+  "start_time": "2026-02-07T02:26:12.627662",
+  "end_time": "2026-02-07T02:27:13.294112",
+  "duration_seconds": 60.66645,
+  "status": "completed"
+}
+{
+  "id": 1132,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_022713.webm",
+  "start_time": "2026-02-07T02:27:13.294112",
+  "end_time": "2026-02-07T02:28:13.841325",
+  "duration_seconds": 60.547213,
+  "status": "completed"
+}
+{
+  "id": 1135,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_022813.webm",
+  "start_time": "2026-02-07T02:28:13.841325",
+  "end_time": "2026-02-07T02:29:14.375553",
+  "duration_seconds": 60.534228,
+  "status": "completed"
+}
+{
+  "id": 1138,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_022914.webm",
+  "start_time": "2026-02-07T02:29:14.375553",
+  "end_time": "2026-02-07T02:30:15.051105",
+  "duration_seconds": 60.675552,
+  "status": "completed"
+}
+{
+  "id": 1141,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_023015.webm",
+  "start_time": "2026-02-07T02:30:15.051105",
+  "end_time": "2026-02-07T02:31:15.984623",
+  "duration_seconds": 60.933518,
+  "status": "completed"
+}
+{
+  "id": 1144,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_023115.webm",
+  "start_time": "2026-02-07T02:31:15.984623",
+  "end_time": "2026-02-07T02:32:16.832134",
+  "duration_seconds": 60.847511,
+  "status": "completed"
+}
+{
+  "id": 1147,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_023216.webm",
+  "start_time": "2026-02-07T02:32:16.832134",
+  "end_time": "2026-02-07T02:33:17.576285",
+  "duration_seconds": 60.744151,
+  "status": "completed"
+}
+{
+  "id": 1150,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_023317.webm",
+  "start_time": "2026-02-07T02:33:17.576285",
+  "end_time": "2026-02-07T02:34:18.235408",
+  "duration_seconds": 60.659123,
+  "status": "completed"
+}
+{
+  "id": 1153,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_023418.webm",
+  "start_time": "2026-02-07T02:34:18.235408",
+  "end_time": "2026-02-07T02:35:18.805810",
+  "duration_seconds": 60.570402,
+  "status": "completed"
+}
+{
+  "id": 1156,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_023518.webm",
+  "start_time": "2026-02-07T02:35:18.805810",
+  "end_time": "2026-02-07T02:36:19.415114",
+  "duration_seconds": 60.609304,
+  "status": "completed"
+}
+{
+  "id": 1159,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_023619.webm",
+  "start_time": "2026-02-07T02:36:19.415114",
+  "end_time": "2026-02-07T02:37:20.043175",
+  "duration_seconds": 60.628061,
+  "status": "completed"
+}
+{
+  "id": 1162,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_023720.webm",
+  "start_time": "2026-02-07T02:37:20.043175",
+  "end_time": "2026-02-07T02:38:20.676218",
+  "duration_seconds": 60.633043,
+  "status": "completed"
+}
+{
+  "id": 1165,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_023820.webm",
+  "start_time": "2026-02-07T02:38:20.676218",
+  "end_time": "2026-02-07T02:39:21.280142",
+  "duration_seconds": 60.603924,
+  "status": "completed"
+}
+{
+  "id": 1168,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_023921.webm",
+  "start_time": "2026-02-07T02:39:21.280142",
+  "end_time": "2026-02-07T02:40:22.048645",
+  "duration_seconds": 60.768503,
+  "status": "completed"
+}
+{
+  "id": 1171,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_024022.webm",
+  "start_time": "2026-02-07T02:40:22.048645",
+  "end_time": "2026-02-07T02:41:22.570849",
+  "duration_seconds": 60.522204,
+  "status": "completed"
+}
+{
+  "id": 1173,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_024122.webm",
+  "start_time": "2026-02-07T02:41:22.570849",
+  "end_time": "2026-02-07T02:42:23.037235",
+  "duration_seconds": 60.466386,
+  "status": "completed"
+}
+{
+  "id": 1175,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_024223.webm",
+  "start_time": "2026-02-07T02:42:23.037235",
+  "end_time": "2026-02-07T02:43:23.712670",
+  "duration_seconds": 60.675435,
+  "status": "completed"
+}
+{
+  "id": 1177,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_024323.webm",
+  "start_time": "2026-02-07T02:43:23.712670",
+  "end_time": "2026-02-07T02:44:24.370188",
+  "duration_seconds": 60.657518,
+  "status": "completed"
+}
+{
+  "id": 1179,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_024424.webm",
+  "start_time": "2026-02-07T02:44:24.370188",
+  "end_time": "2026-02-07T02:45:24.962300",
+  "duration_seconds": 60.592112,
+  "status": "completed"
+}
+{
+  "id": 1181,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_024524.webm",
+  "start_time": "2026-02-07T02:45:24.962300",
+  "end_time": "2026-02-07T02:46:25.478550",
+  "duration_seconds": 60.51625,
+  "status": "completed"
+}
+{
+  "id": 1183,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_024625.webm",
+  "start_time": "2026-02-07T02:46:25.478550",
+  "end_time": "2026-02-07T02:47:25.945329",
+  "duration_seconds": 60.466779,
+  "status": "completed"
+}
+{
+  "id": 1185,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_024725.webm",
+  "start_time": "2026-02-07T02:47:25.945329",
+  "end_time": "2026-02-07T02:48:26.377044",
+  "duration_seconds": 60.431715,
+  "status": "completed"
+}
+{
+  "id": 1187,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_024826.webm",
+  "start_time": "2026-02-07T02:48:26.377044",
+  "end_time": "2026-02-07T02:49:26.847113",
+  "duration_seconds": 60.470069,
+  "status": "completed"
+}
+{
+  "id": 1189,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_024926.webm",
+  "start_time": "2026-02-07T02:49:26.847113",
+  "end_time": "2026-02-07T02:50:27.281702",
+  "duration_seconds": 60.434589,
+  "status": "completed"
+}
+{
+  "id": 1191,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_025027.webm",
+  "start_time": "2026-02-07T02:50:27.281702",
+  "end_time": "2026-02-07T02:51:27.850557",
+  "duration_seconds": 60.568855,
+  "status": "completed"
+}
+{
+  "id": 1193,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_025127.webm",
+  "start_time": "2026-02-07T02:51:27.850557",
+  "end_time": "2026-02-07T02:52:28.330471",
+  "duration_seconds": 60.479914,
+  "status": "completed"
+}
+{
+  "id": 1195,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_025228.webm",
+  "start_time": "2026-02-07T02:52:28.330471",
+  "end_time": "2026-02-07T02:53:28.950793",
+  "duration_seconds": 60.620322,
+  "status": "completed"
+}
+{
+  "id": 1197,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_025328.webm",
+  "start_time": "2026-02-07T02:53:28.950793",
+  "end_time": "2026-02-07T02:54:29.422709",
+  "duration_seconds": 60.471916,
+  "status": "completed"
+}
+{
+  "id": 1199,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_025429.webm",
+  "start_time": "2026-02-07T02:54:29.422709",
+  "end_time": "2026-02-07T02:55:29.904335",
+  "duration_seconds": 60.481626,
+  "status": "completed"
+}
+{
+  "id": 1201,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_025529.webm",
+  "start_time": "2026-02-07T02:55:29.904335",
+  "end_time": "2026-02-07T02:56:30.644186",
+  "duration_seconds": 60.739851,
+  "status": "completed"
+}
+{
+  "id": 1203,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_025630.webm",
+  "start_time": "2026-02-07T02:56:30.644186",
+  "end_time": "2026-02-07T02:57:31.425886",
+  "duration_seconds": 60.7817,
+  "status": "completed"
+}
+{
+  "id": 1205,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_025731.webm",
+  "start_time": "2026-02-07T02:57:31.425886",
+  "end_time": "2026-02-07T02:58:31.969660",
+  "duration_seconds": 60.543774,
+  "status": "completed"
+}
+{
+  "id": 1207,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_025831.webm",
+  "start_time": "2026-02-07T02:58:31.969660",
+  "end_time": "2026-02-07T02:59:32.452542",
+  "duration_seconds": 60.482882,
+  "status": "completed"
+}
+{
+  "id": 1209,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_025932.webm",
+  "start_time": "2026-02-07T02:59:32.452542",
+  "end_time": "2026-02-07T03:00:33.048246",
+  "duration_seconds": 60.595704,
+  "status": "completed"
+}
+{
+  "id": 1211,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_030033.webm",
+  "start_time": "2026-02-07T03:00:33.048246",
+  "end_time": "2026-02-07T03:01:33.611711",
+  "duration_seconds": 60.563465,
+  "status": "completed"
+}
+{
+  "id": 1213,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_030133.webm",
+  "start_time": "2026-02-07T03:01:33.611711",
+  "end_time": "2026-02-07T03:02:34.064977",
+  "duration_seconds": 60.453266,
+  "status": "completed"
+}
+{
+  "id": 1215,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_030234.webm",
+  "start_time": "2026-02-07T03:02:34.064977",
+  "end_time": "2026-02-07T03:03:34.513841",
+  "duration_seconds": 60.448864,
+  "status": "completed"
+}
+{
+  "id": 1217,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_030334.webm",
+  "start_time": "2026-02-07T03:03:34.513841",
+  "end_time": "2026-02-07T03:04:34.946198",
+  "duration_seconds": 60.432357,
+  "status": "completed"
+}
+{
+  "id": 1219,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_030434.webm",
+  "start_time": "2026-02-07T03:04:34.946198",
+  "end_time": "2026-02-07T03:05:35.451273",
+  "duration_seconds": 60.505075,
+  "status": "completed"
+}
+{
+  "id": 1221,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_030535.webm",
+  "start_time": "2026-02-07T03:05:35.451273",
+  "end_time": "2026-02-07T03:06:35.933682",
+  "duration_seconds": 60.482409,
+  "status": "completed"
+}
+{
+  "id": 1223,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_030635.webm",
+  "start_time": "2026-02-07T03:06:35.933682",
+  "end_time": "2026-02-07T03:07:36.462975",
+  "duration_seconds": 60.529293,
+  "status": "completed"
+}
+{
+  "id": 1225,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_030736.webm",
+  "start_time": "2026-02-07T03:07:36.462975",
+  "end_time": "2026-02-07T03:08:36.892391",
+  "duration_seconds": 60.429416,
+  "status": "completed"
+}
+{
+  "id": 1227,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_030836.webm",
+  "start_time": "2026-02-07T03:08:36.892391",
+  "end_time": "2026-02-07T03:09:37.612640",
+  "duration_seconds": 60.720249,
+  "status": "completed"
+}
+{
+  "id": 1229,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_030937.webm",
+  "start_time": "2026-02-07T03:09:37.612640",
+  "end_time": "2026-02-07T03:10:38.366329",
+  "duration_seconds": 60.753689,
+  "status": "completed"
+}
+{
+  "id": 1231,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_031038.webm",
+  "start_time": "2026-02-07T03:10:38.366329",
+  "end_time": "2026-02-07T03:11:38.946450",
+  "duration_seconds": 60.580121,
+  "status": "completed"
+}
+{
+  "id": 1233,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_031138.webm",
+  "start_time": "2026-02-07T03:11:38.946450",
+  "end_time": "2026-02-07T03:12:39.466003",
+  "duration_seconds": 60.519553,
+  "status": "completed"
+}
+{
+  "id": 1235,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_031239.webm",
+  "start_time": "2026-02-07T03:12:39.466003",
+  "end_time": "2026-02-07T03:13:39.997387",
+  "duration_seconds": 60.531384,
+  "status": "completed"
+}
+{
+  "id": 1237,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_031339.webm",
+  "start_time": "2026-02-07T03:13:39.997387",
+  "end_time": "2026-02-07T03:14:40.395931",
+  "duration_seconds": 60.398544,
+  "status": "completed"
+}
+{
+  "id": 1239,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_031440.webm",
+  "start_time": "2026-02-07T03:14:40.395931",
+  "end_time": "2026-02-07T03:15:40.805226",
+  "duration_seconds": 60.409295,
+  "status": "completed"
+}
+{
+  "id": 1241,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_031540.webm",
+  "start_time": "2026-02-07T03:15:40.805226",
+  "end_time": "2026-02-07T03:16:41.268643",
+  "duration_seconds": 60.463417,
+  "status": "completed"
+}
+{
+  "id": 1243,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_031641.webm",
+  "start_time": "2026-02-07T03:16:41.268643",
+  "end_time": "2026-02-07T03:17:41.754114",
+  "duration_seconds": 60.485471,
+  "status": "completed"
+}
+{
+  "id": 1245,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_031741.webm",
+  "start_time": "2026-02-07T03:17:41.754114",
+  "end_time": "2026-02-07T03:18:42.262379",
+  "duration_seconds": 60.508265,
+  "status": "completed"
+}
+{
+  "id": 1247,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_031842.webm",
+  "start_time": "2026-02-07T03:18:42.262379",
+  "end_time": "2026-02-07T03:19:42.744584",
+  "duration_seconds": 60.482205,
+  "status": "completed"
+}
+{
+  "id": 1249,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_031942.webm",
+  "start_time": "2026-02-07T03:19:42.744584",
+  "end_time": "2026-02-07T03:20:43.282445",
+  "duration_seconds": 60.537861,
+  "status": "completed"
+}
+{
+  "id": 1251,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_032043.webm",
+  "start_time": "2026-02-07T03:20:43.282445",
+  "end_time": "2026-02-07T03:21:43.919802",
+  "duration_seconds": 60.637357,
+  "status": "completed"
+}
+{
+  "id": 1253,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_032143.webm",
+  "start_time": "2026-02-07T03:21:43.919802",
+  "end_time": "2026-02-07T03:22:44.605991",
+  "duration_seconds": 60.686189,
+  "status": "completed"
+}
+{
+  "id": 1255,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_032244.webm",
+  "start_time": "2026-02-07T03:22:44.605991",
+  "end_time": "2026-02-07T03:23:45.273084",
+  "duration_seconds": 60.667093,
+  "status": "completed"
+}
+{
+  "id": 1257,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_032345.webm",
+  "start_time": "2026-02-07T03:23:45.273084",
+  "end_time": "2026-02-07T03:24:45.715232",
+  "duration_seconds": 60.442148,
+  "status": "completed"
+}
+{
+  "id": 1259,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_032445.webm",
+  "start_time": "2026-02-07T03:24:45.715232",
+  "end_time": "2026-02-07T03:25:46.139630",
+  "duration_seconds": 60.424398,
+  "status": "completed"
+}
+{
+  "id": 1261,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_032546.webm",
+  "start_time": "2026-02-07T03:25:46.139630",
+  "end_time": "2026-02-07T03:26:46.600131",
+  "duration_seconds": 60.460501,
+  "status": "completed"
+}
+{
+  "id": 1263,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_032646.webm",
+  "start_time": "2026-02-07T03:26:46.600131",
+  "end_time": "2026-02-07T03:27:47.150346",
+  "duration_seconds": 60.550215,
+  "status": "completed"
+}
+{
+  "id": 1265,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_032747.webm",
+  "start_time": "2026-02-07T03:27:47.150346",
+  "end_time": "2026-02-07T03:28:47.558656",
+  "duration_seconds": 60.40831,
+  "status": "completed"
+}
+{
+  "id": 1267,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_032847.webm",
+  "start_time": "2026-02-07T03:28:47.558656",
+  "end_time": "2026-02-07T03:29:47.886190",
+  "duration_seconds": 60.327534,
+  "status": "completed"
+}
+{
+  "id": 1269,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_032947.webm",
+  "start_time": "2026-02-07T03:29:47.886190",
+  "end_time": "2026-02-07T03:30:48.296988",
+  "duration_seconds": 60.410798,
+  "status": "completed"
+}
+{
+  "id": 1271,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_033048.webm",
+  "start_time": "2026-02-07T03:30:48.296988",
+  "end_time": "2026-02-07T03:31:48.844332",
+  "duration_seconds": 60.547344,
+  "status": "completed"
+}
+{
+  "id": 1273,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_033148.webm",
+  "start_time": "2026-02-07T03:31:48.844332",
+  "end_time": "2026-02-07T03:32:49.337314",
+  "duration_seconds": 60.492982,
+  "status": "completed"
+}
+{
+  "id": 1275,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_033249.webm",
+  "start_time": "2026-02-07T03:32:49.337314",
+  "end_time": "2026-02-07T03:33:49.762408",
+  "duration_seconds": 60.425094,
+  "status": "completed"
+}
+{
+  "id": 1277,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_033349.webm",
+  "start_time": "2026-02-07T03:33:49.762408",
+  "end_time": "2026-02-07T03:34:50.673891",
+  "duration_seconds": 60.911483,
+  "status": "completed"
+}
+{
+  "id": 1279,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_033450.webm",
+  "start_time": "2026-02-07T03:34:50.673891",
+  "end_time": "2026-02-07T03:35:51.468418",
+  "duration_seconds": 60.794527,
+  "status": "completed"
+}
+{
+  "id": 1281,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_033551.webm",
+  "start_time": "2026-02-07T03:35:51.468418",
+  "end_time": "2026-02-07T03:36:52.047681",
+  "duration_seconds": 60.579263,
+  "status": "completed"
+}
+{
+  "id": 1283,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_033652.webm",
+  "start_time": "2026-02-07T03:36:52.047681",
+  "end_time": "2026-02-07T03:37:52.547119",
+  "duration_seconds": 60.499438,
+  "status": "completed"
+}
+{
+  "id": 1285,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_033752.webm",
+  "start_time": "2026-02-07T03:37:52.547119",
+  "end_time": "2026-02-07T03:38:53.042782",
+  "duration_seconds": 60.495663,
+  "status": "completed"
+}
+{
+  "id": 1287,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_033853.webm",
+  "start_time": "2026-02-07T03:38:53.042782",
+  "end_time": "2026-02-07T03:39:53.611981",
+  "duration_seconds": 60.569199,
+  "status": "completed"
+}
+{
+  "id": 1289,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_033953.webm",
+  "start_time": "2026-02-07T03:39:53.611981",
+  "end_time": "2026-02-07T03:40:54.045485",
+  "duration_seconds": 60.433504,
+  "status": "completed"
+}
+{
+  "id": 1291,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_034054.webm",
+  "start_time": "2026-02-07T03:40:54.045485",
+  "end_time": "2026-02-07T03:41:54.497636",
+  "duration_seconds": 60.452151,
+  "status": "completed"
+}
+{
+  "id": 1293,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_034154.webm",
+  "start_time": "2026-02-07T03:41:54.497636",
+  "end_time": "2026-02-07T03:42:54.986374",
+  "duration_seconds": 60.488738,
+  "status": "completed"
+}
+{
+  "id": 1295,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_034254.webm",
+  "start_time": "2026-02-07T03:42:54.986374",
+  "end_time": "2026-02-07T03:43:55.375216",
+  "duration_seconds": 60.388842,
+  "status": "completed"
+}
+{
+  "id": 1297,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_034355.webm",
+  "start_time": "2026-02-07T03:43:55.375216",
+  "end_time": "2026-02-07T03:44:56.055967",
+  "duration_seconds": 60.680751,
+  "status": "completed"
+}
+{
+  "id": 1299,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_034456.webm",
+  "start_time": "2026-02-07T03:44:56.055967",
+  "end_time": "2026-02-07T03:45:56.474856",
+  "duration_seconds": 60.418889,
+  "status": "completed"
+}
+{
+  "id": 1301,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_034556.webm",
+  "start_time": "2026-02-07T03:45:56.474856",
+  "end_time": "2026-02-07T03:46:56.848676",
+  "duration_seconds": 60.37382,
+  "status": "completed"
+}
+{
+  "id": 1303,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_034656.webm",
+  "start_time": "2026-02-07T03:46:56.848676",
+  "end_time": "2026-02-07T03:47:57.569501",
+  "duration_seconds": 60.720825,
+  "status": "completed"
+}
+{
+  "id": 1305,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_034757.webm",
+  "start_time": "2026-02-07T03:47:57.569501",
+  "end_time": "2026-02-07T03:48:58.387011",
+  "duration_seconds": 60.81751,
+  "status": "completed"
+}
+{
+  "id": 1307,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_034858.webm",
+  "start_time": "2026-02-07T03:48:58.387011",
+  "end_time": "2026-02-07T03:49:59.012327",
+  "duration_seconds": 60.625316,
+  "status": "completed"
+}
+{
+  "id": 1309,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_034959.webm",
+  "start_time": "2026-02-07T03:49:59.012327",
+  "end_time": "2026-02-07T03:50:59.453944",
+  "duration_seconds": 60.441617,
+  "status": "completed"
+}
+{
+  "id": 1311,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_035059.webm",
+  "start_time": "2026-02-07T03:50:59.453944",
+  "end_time": "2026-02-07T03:52:00.035760",
+  "duration_seconds": 60.581816,
+  "status": "completed"
+}
+{
+  "id": 1313,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_035200.webm",
+  "start_time": "2026-02-07T03:52:00.035760",
+  "end_time": "2026-02-07T03:53:00.482212",
+  "duration_seconds": 60.446452,
+  "status": "completed"
+}
+{
+  "id": 1315,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_035300.webm",
+  "start_time": "2026-02-07T03:53:00.482212",
+  "end_time": "2026-02-07T03:54:00.950967",
+  "duration_seconds": 60.468755,
+  "status": "completed"
+}
+{
+  "id": 1317,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_035400.webm",
+  "start_time": "2026-02-07T03:54:00.950967",
+  "end_time": "2026-02-07T03:55:01.416081",
+  "duration_seconds": 60.465114,
+  "status": "completed"
+}
+{
+  "id": 1319,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_035501.webm",
+  "start_time": "2026-02-07T03:55:01.416081",
+  "end_time": "2026-02-07T03:56:01.862985",
+  "duration_seconds": 60.446904,
+  "status": "completed"
+}
+{
+  "id": 1321,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_035601.webm",
+  "start_time": "2026-02-07T03:56:01.862985",
+  "end_time": "2026-02-07T03:57:02.351622",
+  "duration_seconds": 60.488637,
+  "status": "completed"
+}
+{
+  "id": 1323,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_035702.webm",
+  "start_time": "2026-02-07T03:57:02.351622",
+  "end_time": "2026-02-07T03:58:02.876293",
+  "duration_seconds": 60.524671,
+  "status": "completed"
+}
+{
+  "id": 1325,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_035802.webm",
+  "start_time": "2026-02-07T03:58:02.876293",
+  "end_time": "2026-02-07T03:59:03.318180",
+  "duration_seconds": 60.441887,
+  "status": "completed"
+}
+{
+  "id": 1327,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_035903.webm",
+  "start_time": "2026-02-07T03:59:03.318180",
+  "end_time": "2026-02-07T04:00:03.771064",
+  "duration_seconds": 60.452884,
+  "status": "completed"
+}
+{
+  "id": 1329,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_040003.webm",
+  "start_time": "2026-02-07T04:00:03.771064",
+  "end_time": "2026-02-07T04:01:04.657328",
+  "duration_seconds": 60.886264,
+  "status": "completed"
+}
+{
+  "id": 1331,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_040104.webm",
+  "start_time": "2026-02-07T04:01:04.657328",
+  "end_time": "2026-02-07T04:02:05.313411",
+  "duration_seconds": 60.656083,
+  "status": "completed"
+}
+{
+  "id": 1333,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_040205.webm",
+  "start_time": "2026-02-07T04:02:05.313411",
+  "end_time": "2026-02-07T04:03:05.878832",
+  "duration_seconds": 60.565421,
+  "status": "completed"
+}
+{
+  "id": 1335,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_040305.webm",
+  "start_time": "2026-02-07T04:03:05.878832",
+  "end_time": "2026-02-07T04:04:06.374842",
+  "duration_seconds": 60.49601,
+  "status": "completed"
+}
+{
+  "id": 1337,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_040406.webm",
+  "start_time": "2026-02-07T04:04:06.374842",
+  "end_time": "2026-02-07T04:05:06.854840",
+  "duration_seconds": 60.479998,
+  "status": "completed"
+}
+{
+  "id": 1339,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_040506.webm",
+  "start_time": "2026-02-07T04:05:06.854840",
+  "end_time": "2026-02-07T04:06:07.274636",
+  "duration_seconds": 60.419796,
+  "status": "completed"
+}
+{
+  "id": 1341,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_040607.webm",
+  "start_time": "2026-02-07T04:06:07.274636",
+  "end_time": "2026-02-07T04:07:07.740419",
+  "duration_seconds": 60.465783,
+  "status": "completed"
+}
+{
+  "id": 1343,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_040707.webm",
+  "start_time": "2026-02-07T04:07:07.740419",
+  "end_time": "2026-02-07T04:08:08.087984",
+  "duration_seconds": 60.347565,
+  "status": "completed"
+}
+{
+  "id": 1345,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_040808.webm",
+  "start_time": "2026-02-07T04:08:08.087984",
+  "end_time": "2026-02-07T04:09:08.531765",
+  "duration_seconds": 60.443781,
+  "status": "completed"
+}
+{
+  "id": 1347,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_040908.webm",
+  "start_time": "2026-02-07T04:09:08.531765",
+  "end_time": "2026-02-07T04:10:08.977552",
+  "duration_seconds": 60.445787,
+  "status": "completed"
+}
+{
+  "id": 1349,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_041008.webm",
+  "start_time": "2026-02-07T04:10:08.977552",
+  "end_time": "2026-02-07T04:11:09.504343",
+  "duration_seconds": 60.526791,
+  "status": "completed"
+}
+{
+  "id": 1351,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_041109.webm",
+  "start_time": "2026-02-07T04:11:09.504343",
+  "end_time": "2026-02-07T04:12:09.976241",
+  "duration_seconds": 60.471898,
+  "status": "completed"
+}
+{
+  "id": 1353,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_041209.webm",
+  "start_time": "2026-02-07T04:12:09.976241",
+  "end_time": "2026-02-07T04:13:10.550905",
+  "duration_seconds": 60.574664,
+  "status": "completed"
+}
+{
+  "id": 1355,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_041310.webm",
+  "start_time": "2026-02-07T04:13:10.550905",
+  "end_time": "2026-02-07T04:14:11.444077",
+  "duration_seconds": 60.893172,
+  "status": "completed"
+}
+{
+  "id": 1357,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_041411.webm",
+  "start_time": "2026-02-07T04:14:11.444077",
+  "end_time": "2026-02-07T04:15:12.147655",
+  "duration_seconds": 60.703578,
+  "status": "completed"
+}
+{
+  "id": 1359,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_041512.webm",
+  "start_time": "2026-02-07T04:15:12.147655",
+  "end_time": "2026-02-07T04:16:12.715636",
+  "duration_seconds": 60.567981,
+  "status": "completed"
+}
+{
+  "id": 1361,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_041612.webm",
+  "start_time": "2026-02-07T04:16:12.715636",
+  "end_time": "2026-02-07T04:17:13.215628",
+  "duration_seconds": 60.499992,
+  "status": "completed"
+}
+{
+  "id": 1363,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_041713.webm",
+  "start_time": "2026-02-07T04:17:13.215628",
+  "end_time": "2026-02-07T04:18:13.731292",
+  "duration_seconds": 60.515664,
+  "status": "completed"
+}
+{
+  "id": 1365,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_041813.webm",
+  "start_time": "2026-02-07T04:18:13.731292",
+  "end_time": "2026-02-07T04:19:14.228395",
+  "duration_seconds": 60.497103,
+  "status": "completed"
+}
+{
+  "id": 1367,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_041914.webm",
+  "start_time": "2026-02-07T04:19:14.228395",
+  "end_time": "2026-02-07T04:20:14.619491",
+  "duration_seconds": 60.391096,
+  "status": "completed"
+}
+{
+  "id": 1369,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_042014.webm",
+  "start_time": "2026-02-07T04:20:14.619491",
+  "end_time": "2026-02-07T04:21:15.023306",
+  "duration_seconds": 60.403815,
+  "status": "completed"
+}
+{
+  "id": 1371,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_042115.webm",
+  "start_time": "2026-02-07T04:21:15.023306",
+  "end_time": "2026-02-07T04:22:15.459030",
+  "duration_seconds": 60.435724,
+  "status": "completed"
+}
+{
+  "id": 1373,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_042215.webm",
+  "start_time": "2026-02-07T04:22:15.459030",
+  "end_time": "2026-02-07T04:23:15.917810",
+  "duration_seconds": 60.45878,
+  "status": "completed"
+}
+{
+  "id": 1375,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_042315.webm",
+  "start_time": "2026-02-07T04:23:15.917810",
+  "end_time": "2026-02-07T04:24:16.425437",
+  "duration_seconds": 60.507627,
+  "status": "completed"
+}
+{
+  "id": 1377,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_042416.webm",
+  "start_time": "2026-02-07T04:24:16.425437",
+  "end_time": "2026-02-07T04:25:16.907571",
+  "duration_seconds": 60.482134,
+  "status": "completed"
+}
+{
+  "id": 1379,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_042516.webm",
+  "start_time": "2026-02-07T04:25:16.907571",
+  "end_time": "2026-02-07T04:26:17.642005",
+  "duration_seconds": 60.734434,
+  "status": "completed"
+}
+{
+  "id": 1381,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_042617.webm",
+  "start_time": "2026-02-07T04:26:17.642005",
+  "end_time": "2026-02-07T04:27:18.339264",
+  "duration_seconds": 60.697259,
+  "status": "completed"
+}
+{
+  "id": 1383,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_042718.webm",
+  "start_time": "2026-02-07T04:27:18.339264",
+  "end_time": "2026-02-07T04:28:18.978664",
+  "duration_seconds": 60.6394,
+  "status": "completed"
+}
+{
+  "id": 1385,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_042818.webm",
+  "start_time": "2026-02-07T04:28:18.978664",
+  "end_time": "2026-02-07T04:29:19.481780",
+  "duration_seconds": 60.503116,
+  "status": "completed"
+}
+{
+  "id": 1387,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_042919.webm",
+  "start_time": "2026-02-07T04:29:19.481780",
+  "end_time": "2026-02-07T04:30:20.072146",
+  "duration_seconds": 60.590366,
+  "status": "completed"
+}
+{
+  "id": 1389,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_043020.webm",
+  "start_time": "2026-02-07T04:30:20.072146",
+  "end_time": "2026-02-07T04:31:20.549557",
+  "duration_seconds": 60.477411,
+  "status": "completed"
+}
+{
+  "id": 1391,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_043120.webm",
+  "start_time": "2026-02-07T04:31:20.549557",
+  "end_time": "2026-02-07T04:32:21.044508",
+  "duration_seconds": 60.494951,
+  "status": "completed"
+}
+{
+  "id": 1393,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_043221.webm",
+  "start_time": "2026-02-07T04:32:21.044508",
+  "end_time": "2026-02-07T04:33:21.464763",
+  "duration_seconds": 60.420255,
+  "status": "completed"
+}
+{
+  "id": 1395,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_043321.webm",
+  "start_time": "2026-02-07T04:33:21.464763",
+  "end_time": "2026-02-07T04:34:21.892759",
+  "duration_seconds": 60.427996,
+  "status": "completed"
+}
+{
+  "id": 1397,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_043421.webm",
+  "start_time": "2026-02-07T04:34:21.892759",
+  "end_time": "2026-02-07T04:35:22.289202",
+  "duration_seconds": 60.396443,
+  "status": "completed"
+}
+{
+  "id": 1399,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_043522.webm",
+  "start_time": "2026-02-07T04:35:22.289202",
+  "end_time": "2026-02-07T04:36:22.881548",
+  "duration_seconds": 60.592346,
+  "status": "completed"
+}
+{
+  "id": 1401,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_043622.webm",
+  "start_time": "2026-02-07T04:36:22.881548",
+  "end_time": "2026-02-07T04:37:23.439476",
+  "duration_seconds": 60.557928,
+  "status": "completed"
+}
+{
+  "id": 1403,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_043723.webm",
+  "start_time": "2026-02-07T04:37:23.439476",
+  "end_time": "2026-02-07T04:38:23.947423",
+  "duration_seconds": 60.507947,
+  "status": "completed"
+}
+{
+  "id": 1405,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_043823.webm",
+  "start_time": "2026-02-07T04:38:23.947423",
+  "end_time": "2026-02-07T04:39:24.691763",
+  "duration_seconds": 60.74434,
+  "status": "completed"
+}
+{
+  "id": 1407,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_043924.webm",
+  "start_time": "2026-02-07T04:39:24.691763",
+  "end_time": "2026-02-07T04:40:25.496184",
+  "duration_seconds": 60.804421,
+  "status": "completed"
+}
+{
+  "id": 1409,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_044025.webm",
+  "start_time": "2026-02-07T04:40:25.496184",
+  "end_time": "2026-02-07T04:41:26.119863",
+  "duration_seconds": 60.623679,
+  "status": "completed"
+}
+{
+  "id": 1411,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_044126.webm",
+  "start_time": "2026-02-07T04:41:26.119863",
+  "end_time": "2026-02-07T04:42:26.661397",
+  "duration_seconds": 60.541534,
+  "status": "completed"
+}
+{
+  "id": 1413,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_044226.webm",
+  "start_time": "2026-02-07T04:42:26.661397",
+  "end_time": "2026-02-07T04:43:27.200137",
+  "duration_seconds": 60.53874,
+  "status": "completed"
+}
+{
+  "id": 1415,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_044327.webm",
+  "start_time": "2026-02-07T04:43:27.200137",
+  "end_time": "2026-02-07T04:44:27.756975",
+  "duration_seconds": 60.556838,
+  "status": "completed"
+}
+{
+  "id": 1417,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_044427.webm",
+  "start_time": "2026-02-07T04:44:27.756975",
+  "end_time": "2026-02-07T04:45:28.277403",
+  "duration_seconds": 60.520428,
+  "status": "completed"
+}
+{
+  "id": 1419,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_044528.webm",
+  "start_time": "2026-02-07T04:45:28.277403",
+  "end_time": "2026-02-07T04:46:28.769438",
+  "duration_seconds": 60.492035,
+  "status": "completed"
+}
+{
+  "id": 1421,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_044628.webm",
+  "start_time": "2026-02-07T04:46:28.769438",
+  "end_time": "2026-02-07T04:47:29.146773",
+  "duration_seconds": 60.377335,
+  "status": "completed"
+}
+{
+  "id": 1423,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_044729.webm",
+  "start_time": "2026-02-07T04:47:29.146773",
+  "end_time": "2026-02-07T04:48:29.488031",
+  "duration_seconds": 60.341258,
+  "status": "completed"
+}
+{
+  "id": 1425,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_044829.webm",
+  "start_time": "2026-02-07T04:48:29.488031",
+  "end_time": "2026-02-07T04:49:30.050329",
+  "duration_seconds": 60.562298,
+  "status": "completed"
+}
+{
+  "id": 1427,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_044930.webm",
+  "start_time": "2026-02-07T04:49:30.050329",
+  "end_time": "2026-02-07T04:50:30.575841",
+  "duration_seconds": 60.525512,
+  "status": "completed"
+}
+{
+  "id": 1429,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_045030.webm",
+  "start_time": "2026-02-07T04:50:30.575841",
+  "end_time": "2026-02-07T04:51:31.025372",
+  "duration_seconds": 60.449531,
+  "status": "completed"
+}
+{
+  "id": 1431,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_045131.webm",
+  "start_time": "2026-02-07T04:51:31.025372",
+  "end_time": "2026-02-07T04:52:31.712619",
+  "duration_seconds": 60.687247,
+  "status": "completed"
+}
+{
+  "id": 1433,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_045231.webm",
+  "start_time": "2026-02-07T04:52:31.712619",
+  "end_time": "2026-02-07T04:53:32.507965",
+  "duration_seconds": 60.795346,
+  "status": "completed"
+}
+{
+  "id": 1435,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_045332.webm",
+  "start_time": "2026-02-07T04:53:32.507965",
+  "end_time": "2026-02-07T04:54:32.964595",
+  "duration_seconds": 60.45663,
+  "status": "completed"
+}
+{
+  "id": 1437,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_045432.webm",
+  "start_time": "2026-02-07T04:54:32.964595",
+  "end_time": "2026-02-07T04:55:33.446503",
+  "duration_seconds": 60.481908,
+  "status": "completed"
+}
+{
+  "id": 1439,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_045533.webm",
+  "start_time": "2026-02-07T04:55:33.446503",
+  "end_time": "2026-02-07T04:56:34.030777",
+  "duration_seconds": 60.584274,
+  "status": "completed"
+}
+{
+  "id": 1441,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_045634.webm",
+  "start_time": "2026-02-07T04:56:34.030777",
+  "end_time": "2026-02-07T04:57:34.590100",
+  "duration_seconds": 60.559323,
+  "status": "completed"
+}
+{
+  "id": 1443,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_045734.webm",
+  "start_time": "2026-02-07T04:57:34.590100",
+  "end_time": "2026-02-07T04:58:35.035384",
+  "duration_seconds": 60.445284,
+  "status": "completed"
+}
+{
+  "id": 1445,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_045835.webm",
+  "start_time": "2026-02-07T04:58:35.035384",
+  "end_time": "2026-02-07T04:59:35.500596",
+  "duration_seconds": 60.465212,
+  "status": "completed"
+}
+{
+  "id": 1447,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_045935.webm",
+  "start_time": "2026-02-07T04:59:35.500596",
+  "end_time": "2026-02-07T05:00:35.908568",
+  "duration_seconds": 60.407972,
+  "status": "completed"
+}
+{
+  "id": 1449,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_050035.webm",
+  "start_time": "2026-02-07T05:00:35.908568",
+  "end_time": "2026-02-07T05:01:36.352563",
+  "duration_seconds": 60.443995,
+  "status": "completed"
+}
+{
+  "id": 1451,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_050136.webm",
+  "start_time": "2026-02-07T05:01:36.352563",
+  "end_time": "2026-02-07T05:02:36.894194",
+  "duration_seconds": 60.541631,
+  "status": "completed"
+}
+{
+  "id": 1453,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_050236.webm",
+  "start_time": "2026-02-07T05:02:36.894194",
+  "end_time": "2026-02-07T05:03:37.412298",
+  "duration_seconds": 60.518104,
+  "status": "completed"
+}
+{
+  "id": 1455,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_050337.webm",
+  "start_time": "2026-02-07T05:03:37.412298",
+  "end_time": "2026-02-07T05:04:37.924661",
+  "duration_seconds": 60.512363,
+  "status": "completed"
+}
+{
+  "id": 1457,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_050437.webm",
+  "start_time": "2026-02-07T05:04:37.924661",
+  "end_time": "2026-02-07T05:05:38.639712",
+  "duration_seconds": 60.715051,
+  "status": "completed"
+}
+{
+  "id": 1459,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_050538.webm",
+  "start_time": "2026-02-07T05:05:38.639712",
+  "end_time": "2026-02-07T05:06:39.490818",
+  "duration_seconds": 60.851106,
+  "status": "completed"
+}
+{
+  "id": 1461,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_050639.webm",
+  "start_time": "2026-02-07T05:06:39.490818",
+  "end_time": "2026-02-07T05:07:40.040899",
+  "duration_seconds": 60.550081,
+  "status": "completed"
+}
+{
+  "id": 1463,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_050740.webm",
+  "start_time": "2026-02-07T05:07:40.040899",
+  "end_time": "2026-02-07T05:08:40.592670",
+  "duration_seconds": 60.551771,
+  "status": "completed"
+}
+{
+  "id": 1465,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_050840.webm",
+  "start_time": "2026-02-07T05:08:40.592670",
+  "end_time": "2026-02-07T05:09:41.112678",
+  "duration_seconds": 60.520008,
+  "status": "completed"
+}
+{
+  "id": 1467,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_050941.webm",
+  "start_time": "2026-02-07T05:09:41.112678",
+  "end_time": "2026-02-07T05:10:41.582010",
+  "duration_seconds": 60.469332,
+  "status": "completed"
+}
+{
+  "id": 1469,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_051041.webm",
+  "start_time": "2026-02-07T05:10:41.582010",
+  "end_time": "2026-02-07T05:11:42.020485",
+  "duration_seconds": 60.438475,
+  "status": "completed"
+}
+{
+  "id": 1471,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_051142.webm",
+  "start_time": "2026-02-07T05:11:42.020485",
+  "end_time": "2026-02-07T05:12:42.459286",
+  "duration_seconds": 60.438801,
+  "status": "completed"
+}
+{
+  "id": 1473,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_051242.webm",
+  "start_time": "2026-02-07T05:12:42.459286",
+  "end_time": "2026-02-07T05:13:42.793342",
+  "duration_seconds": 60.334056,
+  "status": "completed"
+}
+{
+  "id": 1474,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_051342.webm",
+  "start_time": "2026-02-07T05:13:42.793342",
+  "end_time": "2026-02-07T05:14:43.138893",
+  "duration_seconds": 60.345551,
+  "status": "completed"
+}
+{
+  "id": 1475,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_051443.webm",
+  "start_time": "2026-02-07T05:14:43.138893",
+  "end_time": "2026-02-07T05:15:43.478307",
+  "duration_seconds": 60.339414,
+  "status": "completed"
+}
+{
+  "id": 1476,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_051543.webm",
+  "start_time": "2026-02-07T05:15:43.478307",
+  "end_time": "2026-02-07T05:16:43.831434",
+  "duration_seconds": 60.353127,
+  "status": "completed"
+}
+{
+  "id": 1477,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_051643.webm",
+  "start_time": "2026-02-07T05:16:43.831434",
+  "end_time": "2026-02-07T05:17:44.308471",
+  "duration_seconds": 60.477037,
+  "status": "completed"
+}
+{
+  "id": 1478,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_051744.webm",
+  "start_time": "2026-02-07T05:17:44.308471",
+  "end_time": "2026-02-07T05:18:44.888808",
+  "duration_seconds": 60.580337,
+  "status": "completed"
+}
+{
+  "id": 1479,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_051844.webm",
+  "start_time": "2026-02-07T05:18:44.888808",
+  "end_time": "2026-02-07T05:19:45.403959",
+  "duration_seconds": 60.515151,
+  "status": "completed"
+}
+{
+  "id": 1480,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_051945.webm",
+  "start_time": "2026-02-07T05:19:45.403959",
+  "end_time": "2026-02-07T05:20:45.760557",
+  "duration_seconds": 60.356598,
+  "status": "completed"
+}
+{
+  "id": 1481,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_052045.webm",
+  "start_time": "2026-02-07T05:20:45.760557",
+  "end_time": "2026-02-07T05:21:46.173850",
+  "duration_seconds": 60.413293,
+  "status": "completed"
+}
+{
+  "id": 1482,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_052146.webm",
+  "start_time": "2026-02-07T05:21:46.173850",
+  "end_time": "2026-02-07T05:22:46.640924",
+  "duration_seconds": 60.467074,
+  "status": "completed"
+}
+{
+  "id": 1483,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_052246.webm",
+  "start_time": "2026-02-07T05:22:46.640924",
+  "end_time": "2026-02-07T05:23:46.953552",
+  "duration_seconds": 60.312628,
+  "status": "completed"
+}
+{
+  "id": 1484,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_052346.webm",
+  "start_time": "2026-02-07T05:23:46.953552",
+  "end_time": "2026-02-07T05:24:47.229211",
+  "duration_seconds": 60.275659,
+  "status": "completed"
+}
+{
+  "id": 1485,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_052447.webm",
+  "start_time": "2026-02-07T05:24:47.229211",
+  "end_time": "2026-02-07T05:25:47.556029",
+  "duration_seconds": 60.326818,
+  "status": "completed"
+}
+{
+  "id": 1486,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_052547.webm",
+  "start_time": "2026-02-07T05:25:47.556029",
+  "end_time": "2026-02-07T05:26:47.903863",
+  "duration_seconds": 60.347834,
+  "status": "completed"
+}
+{
+  "id": 1487,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_052647.webm",
+  "start_time": "2026-02-07T05:26:47.903863",
+  "end_time": "2026-02-07T05:27:48.398047",
+  "duration_seconds": 60.494184,
+  "status": "completed"
+}
+{
+  "id": 1488,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_052748.webm",
+  "start_time": "2026-02-07T05:27:48.398047",
+  "end_time": "2026-02-07T05:28:48.758631",
+  "duration_seconds": 60.360584,
+  "status": "completed"
+}
+{
+  "id": 1489,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_052848.webm",
+  "start_time": "2026-02-07T05:28:48.758631",
+  "end_time": "2026-02-07T05:29:49.101305",
+  "duration_seconds": 60.342674,
+  "status": "completed"
+}
+{
+  "id": 1490,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_052949.webm",
+  "start_time": "2026-02-07T05:29:49.101305",
+  "end_time": "2026-02-07T05:30:49.665845",
+  "duration_seconds": 60.56454,
+  "status": "completed"
+}
+{
+  "id": 1491,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_053049.webm",
+  "start_time": "2026-02-07T05:30:49.665845",
+  "end_time": "2026-02-07T05:31:50.249171",
+  "duration_seconds": 60.583326,
+  "status": "completed"
+}
+{
+  "id": 1492,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_053150.webm",
+  "start_time": "2026-02-07T05:31:50.249171",
+  "end_time": "2026-02-07T05:32:50.710717",
+  "duration_seconds": 60.461546,
+  "status": "completed"
+}
+{
+  "id": 1493,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_053250.webm",
+  "start_time": "2026-02-07T05:32:50.710717",
+  "end_time": "2026-02-07T05:33:51.105087",
+  "duration_seconds": 60.39437,
+  "status": "completed"
+}
+{
+  "id": 1494,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_053351.webm",
+  "start_time": "2026-02-07T05:33:51.105087",
+  "end_time": "2026-02-07T05:34:51.463482",
+  "duration_seconds": 60.358395,
+  "status": "completed"
+}
+{
+  "id": 1495,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_053451.webm",
+  "start_time": "2026-02-07T05:34:51.463482",
+  "end_time": "2026-02-07T05:35:51.835135",
+  "duration_seconds": 60.371653,
+  "status": "completed"
+}
+{
+  "id": 1496,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_053551.webm",
+  "start_time": "2026-02-07T05:35:51.835135",
+  "end_time": "2026-02-07T05:36:52.147028",
+  "duration_seconds": 60.311893,
+  "status": "completed"
+}
+{
+  "id": 1497,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_053652.webm",
+  "start_time": "2026-02-07T05:36:52.147028",
+  "end_time": "2026-02-07T05:37:52.414000",
+  "duration_seconds": 60.266972,
+  "status": "completed"
+}
+{
+  "id": 1498,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_053752.webm",
+  "start_time": "2026-02-07T05:37:52.414000",
+  "end_time": "2026-02-07T05:38:52.738030",
+  "duration_seconds": 60.32403,
+  "status": "completed"
+}
+{
+  "id": 1499,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_053852.webm",
+  "start_time": "2026-02-07T05:38:52.738030",
+  "end_time": "2026-02-07T05:39:53.056794",
+  "duration_seconds": 60.318764,
+  "status": "completed"
+}
+{
+  "id": 1500,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_053953.webm",
+  "start_time": "2026-02-07T05:39:53.056794",
+  "end_time": "2026-02-07T05:40:53.484845",
+  "duration_seconds": 60.428051,
+  "status": "completed"
+}
+{
+  "id": 1501,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_054053.webm",
+  "start_time": "2026-02-07T05:40:53.484845",
+  "end_time": "2026-02-07T05:41:53.738032",
+  "duration_seconds": 60.253187,
+  "status": "completed"
+}
+{
+  "id": 1502,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_054153.webm",
+  "start_time": "2026-02-07T05:41:53.738032",
+  "end_time": "2026-02-07T05:42:54.084724",
+  "duration_seconds": 60.346692,
+  "status": "completed"
+}
+{
+  "id": 1503,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_054254.webm",
+  "start_time": "2026-02-07T05:42:54.084724",
+  "end_time": "2026-02-07T05:43:54.639680",
+  "duration_seconds": 60.554956,
+  "status": "completed"
+}
+{
+  "id": 1504,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_054354.webm",
+  "start_time": "2026-02-07T05:43:54.639680",
+  "end_time": "2026-02-07T05:44:55.292479",
+  "duration_seconds": 60.652799,
+  "status": "completed"
+}
+{
+  "id": 1505,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_054455.webm",
+  "start_time": "2026-02-07T05:44:55.292479",
+  "end_time": "2026-02-07T05:45:55.718585",
+  "duration_seconds": 60.426106,
+  "status": "completed"
+}
+{
+  "id": 1506,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_054555.webm",
+  "start_time": "2026-02-07T05:45:55.718585",
+  "end_time": "2026-02-07T05:46:56.049163",
+  "duration_seconds": 60.330578,
+  "status": "completed"
+}
+{
+  "id": 1507,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_054656.webm",
+  "start_time": "2026-02-07T05:46:56.049163",
+  "end_time": "2026-02-07T05:47:56.428373",
+  "duration_seconds": 60.37921,
+  "status": "completed"
+}
+{
+  "id": 1508,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_054756.webm",
+  "start_time": "2026-02-07T05:47:56.428373",
+  "end_time": "2026-02-07T05:48:56.785040",
+  "duration_seconds": 60.356667,
+  "status": "completed"
+}
+{
+  "id": 1509,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_054856.webm",
+  "start_time": "2026-02-07T05:48:56.785040",
+  "end_time": "2026-02-07T05:49:57.139754",
+  "duration_seconds": 60.354714,
+  "status": "completed"
+}
+{
+  "id": 1510,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_054957.webm",
+  "start_time": "2026-02-07T05:49:57.139754",
+  "end_time": "2026-02-07T05:50:57.445187",
+  "duration_seconds": 60.305433,
+  "status": "completed"
+}
+{
+  "id": 1511,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_055057.webm",
+  "start_time": "2026-02-07T05:50:57.445187",
+  "end_time": "2026-02-07T05:51:57.856202",
+  "duration_seconds": 60.411015,
+  "status": "completed"
+}
+{
+  "id": 1512,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_055157.webm",
+  "start_time": "2026-02-07T05:51:57.856202",
+  "end_time": "2026-02-07T05:52:58.225384",
+  "duration_seconds": 60.369182,
+  "status": "completed"
+}
+{
+  "id": 1513,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_055258.webm",
+  "start_time": "2026-02-07T05:52:58.225384",
+  "end_time": "2026-02-07T05:53:58.613646",
+  "duration_seconds": 60.388262,
+  "status": "completed"
+}
+{
+  "id": 1514,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_055358.webm",
+  "start_time": "2026-02-07T05:53:58.613646",
+  "end_time": "2026-02-07T05:54:58.983688",
+  "duration_seconds": 60.370042,
+  "status": "completed"
+}
+{
+  "id": 1515,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_055458.webm",
+  "start_time": "2026-02-07T05:54:58.983688",
+  "end_time": "2026-02-07T05:55:59.351155",
+  "duration_seconds": 60.367467,
+  "status": "completed"
+}
+{
+  "id": 1516,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_055559.webm",
+  "start_time": "2026-02-07T05:55:59.351155",
+  "end_time": "2026-02-07T05:56:59.979242",
+  "duration_seconds": 60.628087,
+  "status": "completed"
+}
+{
+  "id": 1517,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_055659.webm",
+  "start_time": "2026-02-07T05:56:59.979242",
+  "end_time": "2026-02-07T05:58:00.549944",
+  "duration_seconds": 60.570702,
+  "status": "completed"
+}
+{
+  "id": 1518,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_055800.webm",
+  "start_time": "2026-02-07T05:58:00.549944",
+  "end_time": "2026-02-07T05:59:00.965220",
+  "duration_seconds": 60.415276,
+  "status": "completed"
+}
+{
+  "id": 1519,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_055900.webm",
+  "start_time": "2026-02-07T05:59:00.965220",
+  "end_time": "2026-02-07T06:00:01.407776",
+  "duration_seconds": 60.442556,
+  "status": "completed"
+}
+{
+  "id": 1520,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_060001.webm",
+  "start_time": "2026-02-07T06:00:01.407776",
+  "end_time": "2026-02-07T06:01:01.848783",
+  "duration_seconds": 60.441007,
+  "status": "completed"
+}
+{
+  "id": 1521,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_060101.webm",
+  "start_time": "2026-02-07T06:01:01.848783",
+  "end_time": "2026-02-07T06:02:02.256849",
+  "duration_seconds": 60.408066,
+  "status": "completed"
+}
+{
+  "id": 1522,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_060202.webm",
+  "start_time": "2026-02-07T06:02:02.256849",
+  "end_time": "2026-02-07T06:03:02.628339",
+  "duration_seconds": 60.37149,
+  "status": "completed"
+}
+{
+  "id": 1523,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_060302.webm",
+  "start_time": "2026-02-07T06:03:02.628339",
+  "end_time": "2026-02-07T06:04:02.930550",
+  "duration_seconds": 60.302211,
+  "status": "completed"
+}
+{
+  "id": 1524,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_060402.webm",
+  "start_time": "2026-02-07T06:04:02.930550",
+  "end_time": "2026-02-07T06:05:03.250794",
+  "duration_seconds": 60.320244,
+  "status": "completed"
+}
+{
+  "id": 1525,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_060503.webm",
+  "start_time": "2026-02-07T06:05:03.250794",
+  "end_time": "2026-02-07T06:06:03.586077",
+  "duration_seconds": 60.335283,
+  "status": "completed"
+}
+{
+  "id": 1526,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_060603.webm",
+  "start_time": "2026-02-07T06:06:03.586077",
+  "end_time": "2026-02-07T06:07:03.904483",
+  "duration_seconds": 60.318406,
+  "status": "completed"
+}
+{
+  "id": 1527,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_060703.webm",
+  "start_time": "2026-02-07T06:07:03.904483",
+  "end_time": "2026-02-07T06:08:04.206161",
+  "duration_seconds": 60.301678,
+  "status": "completed"
+}
+{
+  "id": 1528,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_060804.webm",
+  "start_time": "2026-02-07T06:08:04.206161",
+  "end_time": "2026-02-07T06:09:04.616372",
+  "duration_seconds": 60.410211,
+  "status": "completed"
+}
+{
+  "id": 1529,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_060904.webm",
+  "start_time": "2026-02-07T06:09:04.616372",
+  "end_time": "2026-02-07T06:10:05.216365",
+  "duration_seconds": 60.599993,
+  "status": "completed"
+}
+{
+  "id": 1530,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_061005.webm",
+  "start_time": "2026-02-07T06:10:05.216365",
+  "end_time": "2026-02-07T06:11:05.763105",
+  "duration_seconds": 60.54674,
+  "status": "completed"
+}
+{
+  "id": 1531,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_061105.webm",
+  "start_time": "2026-02-07T06:11:05.763105",
+  "end_time": "2026-02-07T06:12:06.121576",
+  "duration_seconds": 60.358471,
+  "status": "completed"
+}
+{
+  "id": 1532,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_061206.webm",
+  "start_time": "2026-02-07T06:12:06.121576",
+  "end_time": "2026-02-07T06:13:06.563703",
+  "duration_seconds": 60.442127,
+  "status": "completed"
+}
+{
+  "id": 1533,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_061306.webm",
+  "start_time": "2026-02-07T06:13:06.563703",
+  "end_time": "2026-02-07T06:14:06.914401",
+  "duration_seconds": 60.350698,
+  "status": "completed"
+}
+{
+  "id": 1534,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_061406.webm",
+  "start_time": "2026-02-07T06:14:06.914401",
+  "end_time": "2026-02-07T06:15:07.190189",
+  "duration_seconds": 60.275788,
+  "status": "completed"
+}
+{
+  "id": 1535,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_061507.webm",
+  "start_time": "2026-02-07T06:15:07.190189",
+  "end_time": "2026-02-07T06:16:07.488376",
+  "duration_seconds": 60.298187,
+  "status": "completed"
+}
+{
+  "id": 1536,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_061607.webm",
+  "start_time": "2026-02-07T06:16:07.488376",
+  "end_time": "2026-02-07T06:17:07.771178",
+  "duration_seconds": 60.282802,
+  "status": "completed"
+}
+{
+  "id": 1537,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_061707.webm",
+  "start_time": "2026-02-07T06:17:07.771178",
+  "end_time": "2026-02-07T06:18:08.070261",
+  "duration_seconds": 60.299083,
+  "status": "completed"
+}
+{
+  "id": 1538,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_061808.webm",
+  "start_time": "2026-02-07T06:18:08.070261",
+  "end_time": "2026-02-07T06:19:08.457471",
+  "duration_seconds": 60.38721,
+  "status": "completed"
+}
+{
+  "id": 1539,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_061908.webm",
+  "start_time": "2026-02-07T06:19:08.457471",
+  "end_time": "2026-02-07T06:20:08.875182",
+  "duration_seconds": 60.417711,
+  "status": "completed"
+}
+{
+  "id": 1540,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_062008.webm",
+  "start_time": "2026-02-07T06:20:08.875182",
+  "end_time": "2026-02-07T06:21:09.193870",
+  "duration_seconds": 60.318688,
+  "status": "completed"
+}
+{
+  "id": 1541,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_062109.webm",
+  "start_time": "2026-02-07T06:21:09.193870",
+  "end_time": "2026-02-07T06:22:09.708358",
+  "duration_seconds": 60.514488,
+  "status": "completed"
+}
+{
+  "id": 1542,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_062209.webm",
+  "start_time": "2026-02-07T06:22:09.708358",
+  "end_time": "2026-02-07T06:23:10.283089",
+  "duration_seconds": 60.574731,
+  "status": "completed"
+}
+{
+  "id": 1543,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_062310.webm",
+  "start_time": "2026-02-07T06:23:10.283089",
+  "end_time": "2026-02-07T06:24:10.748302",
+  "duration_seconds": 60.465213,
+  "status": "completed"
+}
+{
+  "id": 1544,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_062410.webm",
+  "start_time": "2026-02-07T06:24:10.748302",
+  "end_time": "2026-02-07T06:25:11.086322",
+  "duration_seconds": 60.33802,
+  "status": "completed"
+}
+{
+  "id": 1545,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_062511.webm",
+  "start_time": "2026-02-07T06:25:11.086322",
+  "end_time": "2026-02-07T06:26:11.452630",
+  "duration_seconds": 60.366308,
+  "status": "completed"
+}
+{
+  "id": 1546,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_062611.webm",
+  "start_time": "2026-02-07T06:26:11.452630",
+  "end_time": "2026-02-07T06:27:11.898210",
+  "duration_seconds": 60.44558,
+  "status": "completed"
+}
+{
+  "id": 1547,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_062711.webm",
+  "start_time": "2026-02-07T06:27:11.898210",
+  "end_time": "2026-02-07T06:28:12.269662",
+  "duration_seconds": 60.371452,
+  "status": "completed"
+}
+{
+  "id": 1548,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_062812.webm",
+  "start_time": "2026-02-07T06:28:12.269662",
+  "end_time": "2026-02-07T06:29:12.576736",
+  "duration_seconds": 60.307074,
+  "status": "completed"
+}
+{
+  "id": 1549,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_062912.webm",
+  "start_time": "2026-02-07T06:29:12.576736",
+  "end_time": "2026-02-07T06:30:12.880606",
+  "duration_seconds": 60.30387,
+  "status": "completed"
+}
+{
+  "id": 1550,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_063012.webm",
+  "start_time": "2026-02-07T06:30:12.880606",
+  "end_time": "2026-02-07T06:31:13.097854",
+  "duration_seconds": 60.217248,
+  "status": "completed"
+}
+{
+  "id": 1551,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_063113.webm",
+  "start_time": "2026-02-07T06:31:13.097854",
+  "end_time": "2026-02-07T06:32:13.516790",
+  "duration_seconds": 60.418936,
+  "status": "completed"
+}
+{
+  "id": 1552,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_063213.webm",
+  "start_time": "2026-02-07T06:32:13.516790",
+  "end_time": "2026-02-07T06:33:13.819870",
+  "duration_seconds": 60.30308,
+  "status": "completed"
+}
+{
+  "id": 1553,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_063313.webm",
+  "start_time": "2026-02-07T06:33:13.819870",
+  "end_time": "2026-02-07T06:34:14.159125",
+  "duration_seconds": 60.339255,
+  "status": "completed"
+}
+{
+  "id": 1554,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_063414.webm",
+  "start_time": "2026-02-07T06:34:14.159125",
+  "end_time": "2026-02-07T06:35:14.790047",
+  "duration_seconds": 60.630922,
+  "status": "completed"
+}
+{
+  "id": 1555,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_063514.webm",
+  "start_time": "2026-02-07T06:35:14.790047",
+  "end_time": "2026-02-07T06:36:15.342065",
+  "duration_seconds": 60.552018,
+  "status": "completed"
+}
+{
+  "id": 1556,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_063615.webm",
+  "start_time": "2026-02-07T06:36:15.342065",
+  "end_time": "2026-02-07T06:37:15.776335",
+  "duration_seconds": 60.43427,
+  "status": "completed"
+}
+{
+  "id": 1557,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_063715.webm",
+  "start_time": "2026-02-07T06:37:15.776335",
+  "end_time": "2026-02-07T06:38:16.135015",
+  "duration_seconds": 60.35868,
+  "status": "completed"
+}
+{
+  "id": 1558,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_063816.webm",
+  "start_time": "2026-02-07T06:38:16.135015",
+  "end_time": "2026-02-07T06:39:16.483564",
+  "duration_seconds": 60.348549,
+  "status": "completed"
+}
+{
+  "id": 1559,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_063916.webm",
+  "start_time": "2026-02-07T06:39:16.483564",
+  "end_time": "2026-02-07T06:40:16.867678",
+  "duration_seconds": 60.384114,
+  "status": "completed"
+}
+{
+  "id": 1560,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_064016.webm",
+  "start_time": "2026-02-07T06:40:16.867678",
+  "end_time": "2026-02-07T06:41:17.204998",
+  "duration_seconds": 60.33732,
+  "status": "completed"
+}
+{
+  "id": 1561,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_064117.webm",
+  "start_time": "2026-02-07T06:41:17.204998",
+  "end_time": "2026-02-07T06:42:17.475882",
+  "duration_seconds": 60.270884,
+  "status": "completed"
+}
+{
+  "id": 1562,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_064217.webm",
+  "start_time": "2026-02-07T06:42:17.475882",
+  "end_time": "2026-02-07T06:43:17.816124",
+  "duration_seconds": 60.340242,
+  "status": "completed"
+}
+{
+  "id": 1563,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_064317.webm",
+  "start_time": "2026-02-07T06:43:17.816124",
+  "end_time": "2026-02-07T06:44:18.106931",
+  "duration_seconds": 60.290807,
+  "status": "completed"
+}
+{
+  "id": 1564,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_064418.webm",
+  "start_time": "2026-02-07T06:44:18.106931",
+  "end_time": "2026-02-07T06:45:18.505451",
+  "duration_seconds": 60.39852,
+  "status": "completed"
+}
+{
+  "id": 1565,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_064518.webm",
+  "start_time": "2026-02-07T06:45:18.505451",
+  "end_time": "2026-02-07T06:46:18.834600",
+  "duration_seconds": 60.329149,
+  "status": "completed"
+}
+{
+  "id": 1566,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_064618.webm",
+  "start_time": "2026-02-07T06:46:18.834600",
+  "end_time": "2026-02-07T06:47:19.146716",
+  "duration_seconds": 60.312116,
+  "status": "completed"
+}
+{
+  "id": 1567,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_064719.webm",
+  "start_time": "2026-02-07T06:47:19.146716",
+  "end_time": "2026-02-07T06:48:19.657053",
+  "duration_seconds": 60.510337,
+  "status": "completed"
+}
+{
+  "id": 1568,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_064819.webm",
+  "start_time": "2026-02-07T06:48:19.657053",
+  "end_time": "2026-02-07T06:49:20.321011",
+  "duration_seconds": 60.663958,
+  "status": "completed"
+}
+{
+  "id": 1569,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_064920.webm",
+  "start_time": "2026-02-07T06:49:20.321011",
+  "end_time": "2026-02-07T06:50:20.757089",
+  "duration_seconds": 60.436078,
+  "status": "completed"
+}
+{
+  "id": 1570,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_065020.webm",
+  "start_time": "2026-02-07T06:50:20.757089",
+  "end_time": "2026-02-07T06:51:21.123311",
+  "duration_seconds": 60.366222,
+  "status": "completed"
+}
+{
+  "id": 1571,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_065121.webm",
+  "start_time": "2026-02-07T06:51:21.123311",
+  "end_time": "2026-02-07T06:52:21.465605",
+  "duration_seconds": 60.342294,
+  "status": "completed"
+}
+{
+  "id": 1572,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_065221.webm",
+  "start_time": "2026-02-07T06:52:21.465605",
+  "end_time": "2026-02-07T06:53:21.842707",
+  "duration_seconds": 60.377102,
+  "status": "completed"
+}
+{
+  "id": 1573,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_065321.webm",
+  "start_time": "2026-02-07T06:53:21.842707",
+  "end_time": "2026-02-07T06:54:22.169215",
+  "duration_seconds": 60.326508,
+  "status": "completed"
+}
+{
+  "id": 1574,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_065422.webm",
+  "start_time": "2026-02-07T06:54:22.169215",
+  "end_time": "2026-02-07T06:55:22.509332",
+  "duration_seconds": 60.340117,
+  "status": "completed"
+}
+{
+  "id": 1575,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_065522.webm",
+  "start_time": "2026-02-07T06:55:22.509332",
+  "end_time": "2026-02-07T06:56:22.827331",
+  "duration_seconds": 60.317999,
+  "status": "completed"
+}
+{
+  "id": 1576,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_065622.webm",
+  "start_time": "2026-02-07T06:56:22.827331",
+  "end_time": "2026-02-07T06:57:23.171367",
+  "duration_seconds": 60.344036,
+  "status": "completed"
+}
+{
+  "id": 1577,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_065723.webm",
+  "start_time": "2026-02-07T06:57:23.171367",
+  "end_time": "2026-02-07T06:58:23.618573",
+  "duration_seconds": 60.447206,
+  "status": "completed"
+}
+{
+  "id": 1578,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_065823.webm",
+  "start_time": "2026-02-07T06:58:23.618573",
+  "end_time": "2026-02-07T06:59:24.012231",
+  "duration_seconds": 60.393658,
+  "status": "completed"
+}
+{
+  "id": 1579,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_065924.webm",
+  "start_time": "2026-02-07T06:59:24.012231",
+  "end_time": "2026-02-07T07:00:24.284896",
+  "duration_seconds": 60.272665,
+  "status": "completed"
+}
+{
+  "id": 1580,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_070024.webm",
+  "start_time": "2026-02-07T07:00:24.284896",
+  "end_time": "2026-02-07T07:01:24.818928",
+  "duration_seconds": 60.534032,
+  "status": "completed"
+}
+{
+  "id": 1581,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_070124.webm",
+  "start_time": "2026-02-07T07:01:24.818928",
+  "end_time": "2026-02-07T07:02:25.407132",
+  "duration_seconds": 60.588204,
+  "status": "completed"
+}
+{
+  "id": 1582,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_070225.webm",
+  "start_time": "2026-02-07T07:02:25.407132",
+  "end_time": "2026-02-07T07:03:25.769267",
+  "duration_seconds": 60.362135,
+  "status": "completed"
+}
+{
+  "id": 1583,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_070325.webm",
+  "start_time": "2026-02-07T07:03:25.769267",
+  "end_time": "2026-02-07T07:04:26.165493",
+  "duration_seconds": 60.396226,
+  "status": "completed"
+}
+{
+  "id": 1584,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_070426.webm",
+  "start_time": "2026-02-07T07:04:26.165493",
+  "end_time": "2026-02-07T07:05:26.513617",
+  "duration_seconds": 60.348124,
+  "status": "completed"
+}
+{
+  "id": 1585,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_070526.webm",
+  "start_time": "2026-02-07T07:05:26.513617",
+  "end_time": "2026-02-07T07:06:26.835868",
+  "duration_seconds": 60.322251,
+  "status": "completed"
+}
+{
+  "id": 1586,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_070626.webm",
+  "start_time": "2026-02-07T07:06:26.835868",
+  "end_time": "2026-02-07T07:07:27.183615",
+  "duration_seconds": 60.347747,
+  "status": "completed"
+}
+{
+  "id": 1587,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_070727.webm",
+  "start_time": "2026-02-07T07:07:27.183615",
+  "end_time": "2026-02-07T07:08:27.469377",
+  "duration_seconds": 60.285762,
+  "status": "completed"
+}
+{
+  "id": 1588,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_070827.webm",
+  "start_time": "2026-02-07T07:08:27.469377",
+  "end_time": "2026-02-07T07:09:27.806728",
+  "duration_seconds": 60.337351,
+  "status": "completed"
+}
+{
+  "id": 1589,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_070927.webm",
+  "start_time": "2026-02-07T07:09:27.806728",
+  "end_time": "2026-02-07T07:10:28.129574",
+  "duration_seconds": 60.322846,
+  "status": "completed"
+}
+{
+  "id": 1590,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_071028.webm",
+  "start_time": "2026-02-07T07:10:28.129574",
+  "end_time": "2026-02-07T07:11:28.575775",
+  "duration_seconds": 60.446201,
+  "status": "completed"
+}
+{
+  "id": 1591,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_071128.webm",
+  "start_time": "2026-02-07T07:11:28.575775",
+  "end_time": "2026-02-07T07:12:28.985906",
+  "duration_seconds": 60.410131,
+  "status": "completed"
+}
+{
+  "id": 1592,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_071228.webm",
+  "start_time": "2026-02-07T07:12:28.985906",
+  "end_time": "2026-02-07T07:13:29.366006",
+  "duration_seconds": 60.3801,
+  "status": "completed"
+}
+{
+  "id": 1593,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_071329.webm",
+  "start_time": "2026-02-07T07:13:29.366006",
+  "end_time": "2026-02-07T07:14:29.925165",
+  "duration_seconds": 60.559159,
+  "status": "completed"
+}
+{
+  "id": 1594,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_071429.webm",
+  "start_time": "2026-02-07T07:14:29.925165",
+  "end_time": "2026-02-07T07:15:30.505594",
+  "duration_seconds": 60.580429,
+  "status": "completed"
+}
+{
+  "id": 1595,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_071530.webm",
+  "start_time": "2026-02-07T07:15:30.505594",
+  "end_time": "2026-02-07T07:16:30.847240",
+  "duration_seconds": 60.341646,
+  "status": "completed"
+}
+{
+  "id": 1596,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_071630.webm",
+  "start_time": "2026-02-07T07:16:30.847240",
+  "end_time": "2026-02-07T07:17:31.235166",
+  "duration_seconds": 60.387926,
+  "status": "completed"
+}
+{
+  "id": 1597,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_071731.webm",
+  "start_time": "2026-02-07T07:17:31.235166",
+  "end_time": "2026-02-07T07:18:31.680651",
+  "duration_seconds": 60.445485,
+  "status": "completed"
+}
+{
+  "id": 1598,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_071831.webm",
+  "start_time": "2026-02-07T07:18:31.680651",
+  "end_time": "2026-02-07T07:19:32.005125",
+  "duration_seconds": 60.324474,
+  "status": "completed"
+}
+{
+  "id": 1599,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_071932.webm",
+  "start_time": "2026-02-07T07:19:32.005125",
+  "end_time": "2026-02-07T07:20:32.315140",
+  "duration_seconds": 60.310015,
+  "status": "completed"
+}
+{
+  "id": 1600,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_072032.webm",
+  "start_time": "2026-02-07T07:20:32.315140",
+  "end_time": "2026-02-07T07:21:32.693862",
+  "duration_seconds": 60.378722,
+  "status": "completed"
+}
+{
+  "id": 1601,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_072132.webm",
+  "start_time": "2026-02-07T07:21:32.693862",
+  "end_time": "2026-02-07T07:22:33.016987",
+  "duration_seconds": 60.323125,
+  "status": "completed"
+}
+{
+  "id": 1602,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_072233.webm",
+  "start_time": "2026-02-07T07:22:33.016987",
+  "end_time": "2026-02-07T07:23:33.406067",
+  "duration_seconds": 60.38908,
+  "status": "completed"
+}
+{
+  "id": 1603,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_072333.webm",
+  "start_time": "2026-02-07T07:23:33.406067",
+  "end_time": "2026-02-07T07:28:03.893573",
+  "duration_seconds": 270.487506,
+  "status": "completed"
+}
+{
+  "id": 1604,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_072803.webm",
+  "start_time": "2026-02-07T07:28:03.893573",
+  "end_time": "2026-02-07T07:29:04.181417",
+  "duration_seconds": 60.287844,
+  "status": "completed"
+}
+{
+  "id": 1605,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_072904.webm",
+  "start_time": "2026-02-07T07:29:04.181417",
+  "end_time": "2026-02-07T07:30:04.705050",
+  "duration_seconds": 60.523633,
+  "status": "completed"
+}
+{
+  "id": 1606,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_073004.webm",
+  "start_time": "2026-02-07T07:30:04.705050",
+  "end_time": "2026-02-07T07:31:05.191066",
+  "duration_seconds": 60.486016,
+  "status": "completed"
+}
+{
+  "id": 1607,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_073105.webm",
+  "start_time": "2026-02-07T07:31:05.191066",
+  "end_time": "2026-02-07T07:32:05.824133",
+  "duration_seconds": 60.633067,
+  "status": "completed"
+}
+{
+  "id": 1608,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_073205.webm",
+  "start_time": "2026-02-07T07:32:05.824133",
+  "end_time": "2026-02-07T07:33:06.553994",
+  "duration_seconds": 60.729861,
+  "status": "completed"
+}
+{
+  "id": 1609,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_073306.webm",
+  "start_time": "2026-02-07T07:33:06.553994",
+  "end_time": "2026-02-07T07:34:07.256169",
+  "duration_seconds": 60.702175,
+  "status": "completed"
+}
+{
+  "id": 1610,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_073407.webm",
+  "start_time": "2026-02-07T07:34:07.256169",
+  "end_time": "2026-02-07T07:35:07.793842",
+  "duration_seconds": 60.537673,
+  "status": "completed"
+}
+{
+  "id": 1611,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_073507.webm",
+  "start_time": "2026-02-07T07:35:07.793842",
+  "end_time": "2026-02-07T07:36:08.380450",
+  "duration_seconds": 60.586608,
+  "status": "completed"
+}
+{
+  "id": 1612,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_073608.webm",
+  "start_time": "2026-02-07T07:36:08.380450",
+  "end_time": "2026-02-07T07:37:08.904994",
+  "duration_seconds": 60.524544,
+  "status": "completed"
+}
+{
+  "id": 1613,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_073708.webm",
+  "start_time": "2026-02-07T07:37:08.904994",
+  "end_time": "2026-02-07T07:38:09.376548",
+  "duration_seconds": 60.471554,
+  "status": "completed"
+}
+{
+  "id": 1614,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_073809.webm",
+  "start_time": "2026-02-07T07:38:09.376548",
+  "end_time": "2026-02-07T07:39:09.821557",
+  "duration_seconds": 60.445009,
+  "status": "completed"
+}
+{
+  "id": 1615,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_073909.webm",
+  "start_time": "2026-02-07T07:39:09.821557",
+  "end_time": "2026-02-07T07:40:10.288250",
+  "duration_seconds": 60.466693,
+  "status": "completed"
+}
+{
+  "id": 1616,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_074010.webm",
+  "start_time": "2026-02-07T07:40:10.288250",
+  "end_time": "2026-02-07T07:41:10.858411",
+  "duration_seconds": 60.570161,
+  "status": "completed"
+}
+{
+  "id": 1617,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_074110.webm",
+  "start_time": "2026-02-07T07:41:10.858411",
+  "end_time": "2026-02-07T07:42:10.980978",
+  "duration_seconds": 60.122567,
+  "status": "completed"
+}
+{
+  "id": 1618,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_074210.webm",
+  "start_time": "2026-02-07T07:42:10.980978",
+  "end_time": "2026-02-07T07:43:11.842789",
+  "duration_seconds": 60.861811,
+  "status": "completed"
+}
+{
+  "id": 1619,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_074311.webm",
+  "start_time": "2026-02-07T07:43:11.842789",
+  "end_time": "2026-02-07T07:44:12.378897",
+  "duration_seconds": 60.536108,
+  "status": "completed"
+}
+{
+  "id": 1620,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_074412.webm",
+  "start_time": "2026-02-07T07:44:12.378897",
+  "end_time": "2026-02-07T07:45:12.566431",
+  "duration_seconds": 60.187534,
+  "status": "completed"
+}
+{
+  "id": 1621,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_074512.webm",
+  "start_time": "2026-02-07T07:45:12.566431",
+  "end_time": "2026-02-07T07:46:13.477551",
+  "duration_seconds": 60.91112,
+  "status": "completed"
+}
+{
+  "id": 1622,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_074613.webm",
+  "start_time": "2026-02-07T07:46:13.477551",
+  "end_time": "2026-02-07T07:47:14.333181",
+  "duration_seconds": 60.85563,
+  "status": "completed"
+}
+{
+  "id": 1623,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_074714.webm",
+  "start_time": "2026-02-07T07:47:14.333181",
+  "end_time": "2026-02-07T07:48:15.317088",
+  "duration_seconds": 60.983907,
+  "status": "completed"
+}
+{
+  "id": 1624,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_074815.webm",
+  "start_time": "2026-02-07T07:48:15.317088",
+  "end_time": "2026-02-07T07:49:16.295631",
+  "duration_seconds": 60.978543,
+  "status": "completed"
+}
+{
+  "id": 1625,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_074916.webm",
+  "start_time": "2026-02-07T07:49:16.295631",
+  "end_time": "2026-02-07T07:50:16.891187",
+  "duration_seconds": 60.595556,
+  "status": "completed"
+}
+{
+  "id": 1626,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_075016.webm",
+  "start_time": "2026-02-07T07:50:16.891187",
+  "end_time": "2026-02-07T07:51:17.414547",
+  "duration_seconds": 60.52336,
+  "status": "completed"
+}
+{
+  "id": 1627,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_075117.webm",
+  "start_time": "2026-02-07T07:51:17.414547",
+  "end_time": "2026-02-07T07:52:17.751659",
+  "duration_seconds": 60.337112,
+  "status": "completed"
+}
+{
+  "id": 1628,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_075217.webm",
+  "start_time": "2026-02-07T07:52:17.751659",
+  "end_time": "2026-02-07T07:53:18.250128",
+  "duration_seconds": 60.498469,
+  "status": "completed"
+}
+{
+  "id": 1629,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_075318.webm",
+  "start_time": "2026-02-07T07:53:18.250128",
+  "end_time": "2026-02-07T07:54:18.642128",
+  "duration_seconds": 60.392,
+  "status": "completed"
+}
+{
+  "id": 1630,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_075418.webm",
+  "start_time": "2026-02-07T07:54:18.642128",
+  "end_time": "2026-02-07T07:55:19.217109",
+  "duration_seconds": 60.574981,
+  "status": "completed"
+}
+{
+  "id": 1631,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_075519.webm",
+  "start_time": "2026-02-07T07:55:19.217109",
+  "end_time": "2026-02-07T07:56:19.632532",
+  "duration_seconds": 60.415423,
+  "status": "completed"
+}
+{
+  "id": 1632,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_075619.webm",
+  "start_time": "2026-02-07T07:56:19.632532",
+  "end_time": "2026-02-07T07:57:20.037972",
+  "duration_seconds": 60.40544,
+  "status": "completed"
+}
+{
+  "id": 1633,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_075720.webm",
+  "start_time": "2026-02-07T07:57:20.037972",
+  "end_time": "2026-02-07T07:58:20.753050",
+  "duration_seconds": 60.715078,
+  "status": "completed"
+}
+{
+  "id": 1634,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_075820.webm",
+  "start_time": "2026-02-07T07:58:20.753050",
+  "end_time": "2026-02-07T07:59:21.611352",
+  "duration_seconds": 60.858302,
+  "status": "completed"
+}
+{
+  "id": 1635,
+  "session_id": 82,
+  "file_path": "/home/pongsak/projects/yolov11_inference_cpu/videos/output/session_82/20260207_075921.webm",
+  "start_time": "2026-02-07T07:59:21.611352",
+  "end_time": "2026-02-07T08:00:22.315160",
+  "duration_seconds": 60.703808,
+  "status": "completed"
+}

@@ -191,7 +191,7 @@ export function EditSessionModal({ session, onClose, onUpdate }: { session: Sess
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Recording Mode</label>
                         <select
-                            value={formData.save_video ? (formData.recording_mode || "annotated") : "none"}
+                            value={formData.save_video ? (formData.recording_mode || "clean") : "none"}
                             onChange={(e) => {
                                 const mode = e.target.value;
                                 setFormData({

@@ -105,12 +105,14 @@ export default function DashboardPage() {
                     <div className="xl:col-span-2 space-y-6">
                         <div className="flex items-center justify-between">
                             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Live Operations</h2>
-                            <button
-                                onClick={() => setIsFormOpen(!isFormOpen)}
-                                className="xl:hidden flex items-center gap-2 text-sm font-medium text-blue-600"
-                            >
-                                <Plus size={16} /> New Session
-                            </button>
+                            {isAdmin && (
+                                <button
+                                    onClick={() => setIsFormOpen(!isFormOpen)}
+                                    className="xl:hidden flex items-center gap-2 text-sm font-medium text-blue-600"
+                                >
+                                    <Plus size={16} /> New Session
+                                </button>
+                            )}
                         </div>
 
                         {isLoading ? (
@@ -145,40 +147,44 @@ export default function DashboardPage() {
                                 {sessionsData?.sessions.length === 0 && (
                                     <div className="col-span-full py-12 text-center bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
                                         <p className="text-slate-500">No active sessions.</p>
-                                        <button
-                                            onClick={() => setIsFormOpen(true)}
-                                            className="mt-2 text-blue-600 font-medium hover:underline"
-                                        >
-                                            Create one now
-                                        </button>
+                                        {isAdmin && (
+                                            <button
+                                                onClick={() => setIsFormOpen(true)}
+                                                className="mt-2 text-blue-600 font-medium hover:underline"
+                                            >
+                                                Create one now
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>
                         )}
                     </div>
 
-                    {/* Right Column: Config Form (Sticky on desktop) */}
-                    <div className="xl:block">
-                        <div className={`
-                        fixed inset-0 z-50 bg-black/50 p-4 flex items-center justify-center xl:static xl:bg-transparent xl:p-0 xl:block
-                        ${isFormOpen ? 'block' : 'hidden'}
-                     `}>
-                            <div className="w-full max-w-md xl:max-w-none relative">
-                                {/* Close button for mobile modal */}
-                                <button
-                                    onClick={() => setIsFormOpen(false)}
-                                    className="absolute -top-12 right-0 text-white xl:hidden p-2"
-                                >
-                                    <X size={24} />
-                                </button>
+                    {/* Right Column: Config Form (Admin Only) */}
+                    {isAdmin && (
+                        <div className="xl:block">
+                            <div className={`
+                            fixed inset-0 z-50 bg-black/50 p-4 flex items-center justify-center xl:static xl:bg-transparent xl:p-0 xl:block
+                            ${isFormOpen ? 'block' : 'hidden'}
+                         `}>
+                                <div className="w-full max-w-md xl:max-w-none relative">
+                                    {/* Close button for mobile modal */}
+                                    <button
+                                        onClick={() => setIsFormOpen(false)}
+                                        className="absolute -top-12 right-0 text-white xl:hidden p-2"
+                                    >
+                                        <X size={24} />
+                                    </button>
 
-                                <NewSessionForm
-                                    onSubmit={(data) => createSessionMutation.mutate(data)}
-                                    isLoading={createSessionMutation.isPending}
-                                />
+                                    <NewSessionForm
+                                        onSubmit={(data) => createSessionMutation.mutate(data)}
+                                        isLoading={createSessionMutation.isPending}
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Modals */}

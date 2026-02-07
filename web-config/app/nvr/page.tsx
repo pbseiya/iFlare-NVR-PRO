@@ -77,7 +77,7 @@ export default function NVRPage() {
         setActiveSegment(null);
         // Default to Live if running, else Playback (clips or empty)
         setIsLiveMode(session.status === 'running');
-        setSidebarTab('clips'); // Auto-switch to clips view
+        // setSidebarTab('clips'); // Auto-switch removed per user request
     };
 
     // Handle Clip Selection
@@ -242,7 +242,7 @@ export default function NVRPage() {
     }, [selectedSession, detections, showBoxes, showLabels, showConfidence, isLiveMode, activeSegment]);
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white flex flex-col">
+        <div className="h-screen bg-gray-900 text-white flex flex-col overflow-hidden">
             {/* Header */}
             <div className="bg-gray-800 border-b border-gray-700 p-4 flex items-center gap-3 shadow-md z-10">
                 <div className="bg-blue-600 p-2 rounded-lg">
@@ -275,9 +275,9 @@ export default function NVRPage() {
                 </div>
             </div>
 
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 overflow-hidden h-full">
                 {/* Main Content (Video Player) */}
-                <div className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto bg-gray-950 relative">
+                <div className="flex-1 p-6 flex flex-col gap-4 bg-gray-950 relative overflow-hidden">
                     {selectedSession ? (
                         <div className="flex flex-col gap-4 h-full">
                             {/* Player Container */}
@@ -285,6 +285,7 @@ export default function NVRPage() {
                                 {isLiveMode && selectedSession.status === 'running' ? (
                                     <>
                                         <LiveView
+                                            key={selectedSession.id}
                                             sessionId={selectedSession.id}
                                             toggles={{ showBoxes, showLabels, showConfidence }}
                                         />
@@ -399,7 +400,7 @@ export default function NVRPage() {
                 </div>
 
                 {/* Sidebar */}
-                <div className="w-80 bg-gray-800 border-l border-gray-700 flex flex-col">
+                <div className="w-80 bg-gray-800 border-l border-gray-700 flex flex-col h-full">
                     {/* Sidebar Tabs */}
                     <div className="flex border-b border-gray-700">
                         <button

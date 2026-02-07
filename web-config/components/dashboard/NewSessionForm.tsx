@@ -17,9 +17,9 @@ export function NewSessionForm({ onSubmit, isLoading }: NewSessionFormProps) {
         fps_target: 1,
         conf_threshold: 0.25,
         iou_threshold: 0.45,
-        save_video: false,
+        save_video: true,
         video_output_path: null,
-        recording_mode: "none",
+        recording_mode: "clean",
         render_mode: "pipeline",
     });
 
@@ -165,7 +165,7 @@ export function NewSessionForm({ onSubmit, isLoading }: NewSessionFormProps) {
                 <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Recording Mode</label>
                     <select
-                        value={formData.save_video ? (formData.recording_mode || "annotated") : "none"}
+                        value={formData.save_video ? (formData.recording_mode || "clean") : "none"}
                         onChange={(e) => {
                             const mode = e.target.value;
                             setFormData({

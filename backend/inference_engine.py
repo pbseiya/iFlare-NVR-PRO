@@ -121,6 +121,10 @@ class InferenceEngine:
         if session_id not in self.frame_queues:
             return
 
+        queues = self.frame_queues[session_id]
+        if not queues:
+            return
+
         try:
             # Encode RAW frame to JPEG (No drawing)
             ret, buffer = cv2.imencode(".jpg", frame)
@@ -499,12 +503,20 @@ class InferenceEngine:
                         cap.read
                     )  # Already wrapped in asyncio.to_thread
                     if not ret or frame is None:
-                        print(
-                            f"⚠️ Frame read failed/ended. Reconnecting..."
-                            if is_live
-                            else "🎉 Video ended."
-                        )
-                        break  # Break inner loop -> Reconnect or Finish
+                        if not is_live and source_type == "video":
+                            # Video ended - loop back to start
+                            print(f"🔄 Video ended. Looping back to start...")
+                            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                            frame_num = 0
+                            continue
+                        else:
+                            # Live stream ended or other source
+                            print(
+                                f"⚠️ Frame read failed/ended. Reconnecting..."
+                                if is_live
+                                else "🎉 Stream ended."
+                            )
+                            break  # Break inner loop -> Reconnect or Finish
 
                     t1 = time.perf_counter()
 
@@ -573,13 +585,19 @@ class InferenceEngine:
                     else:
                         annotated_frame = frame
 
-                    # Save Video Segment
                     if should_record and segment_manager:
                         frame_to_write = frame if recording_mode == "clean" else annotated_frame
-                        # Fix: write_frame is async, call it directly. It handles threading internally.
-                        await segment_manager.write_frame(
-                            frame_to_write
-                        )  # Already wrapped in await
+                        await segment_manager.write_frame(frame_to_write)
+
+                    # Frame Skipping for Video Files (to match Real-Dime Duration)
+                    if not is_live and fps_target > 0:
+                        source_fps = cap.get(cv2.CAP_PROP_FPS)
+                        if source_fps > 0:
+                            stride = int(source_fps / fps_target)
+                            if stride > 1:
+                                current_pos = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+                                next_pos = current_pos + stride - 1  # -1 because we just read one
+                                await asyncio.to_thread(cap.set, cv2.CAP_PROP_POS_FRAMES, next_pos)
 
                     t3 = time.perf_counter()
 

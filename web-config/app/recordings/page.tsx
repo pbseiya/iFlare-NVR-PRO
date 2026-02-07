@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api, SessionInfo, Detection } from '@/lib/api';
 import TimelineScrubber from '@/components/dashboard/TimelineScrubber';
+import SynchronizedPlayer from '@/components/dashboard/SynchronizedPlayer';
 import { Play, Pause, SkipBack, SkipForward, Clock, Calendar as CalendarIcon, ZoomIn, ZoomOut, ChevronDown, Check } from 'lucide-react';
 
 const ZOOM_SCALES = [
@@ -71,25 +72,14 @@ export default function RecordingsPage() {
             const name = s.name || s.source_path;
             if (!selectedCameras.includes(name)) return false;
 
-            const sessionTime = new Date(s.created_at).getTime();
-            return sessionTime >= start && sessionTime <= end;
+            const sessionStart = new Date(s.created_at).getTime();
+            // If running, assume it extends to "now" (or at least the end of the query window)
+            const sessionEnd = s.ended_at ? new Date(s.ended_at).getTime() : Date.now();
+
+            // Check for overlap: Session starts before window ends AND ends after window starts
+            return sessionStart <= end && sessionEnd >= start;
         });
     }, [allSessions, selectedCameras, startDate, endDate]);
-
-    // Fetch detections only for visible time range (simplified: fetch for all filtered sessions)
-    const { data: detections = [] } = useQuery({
-        queryKey: ['detections', selectedCameras, startDate, endDate],
-        queryFn: async () => {
-            if (filteredSessions.length === 0) return [];
-            // Optimize: Limit concurrent fetches or only fetch for sessions near currentTime
-            // For now, fetching first 20 sessions to avoid overload
-            const recentSessions = filteredSessions.slice(0, 20);
-            const promises = recentSessions.map(s => api.getDetections(s.id, 500));
-            const results = await Promise.all(promises);
-            return results.flat();
-        },
-        enabled: filteredSessions.length > 0,
-    });
 
     // Timeline View Window (calculated from currentTime and zoomLevel)
     const { viewStart, viewEnd } = useMemo(() => {
@@ -103,12 +93,70 @@ export default function RecordingsPage() {
         };
     }, [currentTime, zoomLevel]);
 
+    // Fetch detections only for visible time range (simplified: fetch for all filtered sessions)
+    // Fetch detections based on selected Date Range (startDate, endDate)
+    const { data: detections = [] } = useQuery({
+        queryKey: ['detections', selectedCameras, startDate, endDate],
+        queryFn: async () => {
+            if (filteredSessions.length === 0) return [];
+
+            // Limit to first 10 sessions to avoid overload if selecting many cameras/days
+            const recentSessions = filteredSessions.slice(0, 10);
+
+            // Use Local Time strings for fetching to match DB (which stores Local Time)
+            const startDay = new Date(startDate);
+            const endDay = new Date(endDate);
+
+            // Construct Local ISO string: YYYY-MM-DDTHH:mm:ss
+            // We want 00:00:00 on startDate to 23:59:59 on endDate
+            const toLocalISO = (date: Date, timeStr: string) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}T${timeStr}`;
+            };
+
+            const fetchStart = toLocalISO(startDay, '00:00:00');
+            const fetchEnd = toLocalISO(endDay, '23:59:59.999');
+
+            // Fetch with high limit to cover the full range
+            const promises = recentSessions.map(s => api.getDetections(s.id, 50000, fetchStart, fetchEnd));
+            const results = await Promise.all(promises);
+            const flatResults = results.flat();
+            console.log(`[Recordings] Fetched ${flatResults.length} detections for range ${fetchStart} - ${fetchEnd}`);
+            if (flatResults.length > 0) {
+                console.log('[Recordings] First Detection:', flatResults[0]);
+                console.log('[Recordings] Last Detection:', flatResults[flatResults.length - 1]);
+            }
+            return flatResults;
+        },
+        enabled: filteredSessions.length > 0,
+        refetchOnWindowFocus: false,
+        staleTime: 60000,
+    });
+
     // Auto-select first camera if none selected
     useEffect(() => {
         if (selectedCameras.length === 0 && cameras.length > 0) {
             setSelectedCameras([cameras[0]]);
         }
     }, [cameras, selectedCameras.length]);
+
+    // Playback Loop
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (isPlaying) {
+            interval = setInterval(() => {
+                setCurrentTime(prev => {
+                    // Increment time by 100ms * playbackSpeed
+                    // Real-time updates: if we update every 100ms, we add 100ms * speed
+                    const delta = 100 * playbackSpeed;
+                    return new Date(prev.getTime() + delta);
+                });
+            }, 100);
+        }
+        return () => clearInterval(interval);
+    }, [isPlaying, playbackSpeed]);
 
     const handleSpeedChange = (speed: number) => setPlaybackSpeed(speed);
 
@@ -234,30 +282,47 @@ export default function RecordingsPage() {
                     <div className="flex-1 bg-black rounded-2xl border border-gray-800 relative overflow-hidden">
                         {selectedCameras.length > 0 ? (
                             <div className={`grid h-full gap-1 ${selectedCameras.length === 1 ? 'grid-cols-1' :
-                                    selectedCameras.length <= 2 ? 'grid-cols-2' :
-                                        selectedCameras.length <= 4 ? 'grid-cols-2 grid-rows-2' :
-                                            'grid-cols-3 grid-rows-3'
+                                selectedCameras.length <= 2 ? 'grid-cols-2' :
+                                    selectedCameras.length <= 4 ? 'grid-cols-2 grid-rows-2' :
+                                        'grid-cols-3 grid-rows-3'
                                 }`}>
-                                {selectedCameras.map(cam => (
-                                    <div key={cam} className="relative bg-gray-900 border border-gray-900 flex items-center justify-center overflow-hidden">
-                                        <div className="absolute top-2 left-2 bg-black/50 px-2 py-1 rounded text-xs font-mono text-gray-200 z-10">
-                                            {cam}
-                                        </div>
+                                {selectedCameras.map(cam => {
+                                    // Filter sessions for this specific camera
+                                    const cameraSessions = allSessions.filter(s => {
+                                        const name = s.name || s.source_path;
+                                        // Just filter by name. Time filtering happens inside player (or we pass all and let player pick)
+                                        // Actually, player needs the full list to find the right one for ANY time.
+                                        return name === cam;
+                                    });
 
-                                        {/* Mock Video Content */}
-                                        <div className="text-center opacity-50">
-                                            <p className="text-4xl font-bold text-gray-800 mb-2">{cam}</p>
-                                            <p className="text-sm text-gray-600">
-                                                {currentTime.toLocaleTimeString()}
-                                            </p>
-                                        </div>
+                                    return (
+                                        <div key={cam} className="relative bg-black border border-gray-900 overflow-hidden group">
+                                            {/* Player Component */}
+                                            <SynchronizedPlayer
+                                                cameraName={cam}
+                                                sessions={cameraSessions}
+                                                currentTime={currentTime}
+                                                isPlaying={isPlaying}
+                                                playbackSpeed={playbackSpeed}
+                                                detections={detections}
+                                                showBBox={showBBox}
+                                                showLabels={showLabels}
+                                                showConfidence={showConfidence}
+                                                isMaster={false}
+                                            />
 
-                                        {/* Overlay Info (Mock) */}
-                                        <div className="absolute bottom-2 left-2 text-[10px] text-gray-500 font-mono text-left">
-                                            IDs: {showBBox ? 'ON' : 'OFF'} | Labels: {showLabels ? 'ON' : 'OFF'}
+                                            {/* Camera Name Label */}
+                                            <div className="absolute top-2 left-2 bg-black/60 px-2 py-1 rounded text-xs font-mono text-gray-200 z-10 pointer-events-none">
+                                                {cam}
+                                            </div>
+
+                                            {/* Overlay Info */}
+                                            <div className="absolute bottom-2 left-2 text-[10px] text-gray-400 font-mono text-left bg-black/40 px-1 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                                                IDs: {showBBox ? 'ON' : 'OFF'} | Labels: {showLabels ? 'ON' : 'OFF'}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         ) : (
                             <div className="flex h-full items-center justify-center text-center text-gray-600">
