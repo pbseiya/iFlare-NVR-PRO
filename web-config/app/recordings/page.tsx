@@ -5,6 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { api, SessionInfo, Detection } from '@/lib/api';
 import TimelineScrubber from '@/components/dashboard/TimelineScrubber';
+import { useDetectionFilter } from '@/hooks/useDetectionFilter';
+import { DetectionToggles } from '@/components/shared/DetectionToggles';
 import SynchronizedPlayer from '@/components/dashboard/SynchronizedPlayer';
 import { Play, Pause, SkipBack, SkipForward, Clock, Calendar as CalendarIcon, ZoomIn, ZoomOut, ChevronDown, Check } from 'lucide-react';
 
@@ -60,10 +62,8 @@ export default function RecordingsPage() {
     const [isCamDropdownOpen, setIsCamDropdownOpen] = useState(false);
     const camDropdownRef = useRef<HTMLDivElement>(null);
 
-    // Overlay State
-    const [showBBox, setShowBBox] = useState(true);
-    const [showLabels, setShowLabels] = useState(true);
-    const [showConfidence, setShowConfidence] = useState(true);
+    // Overlay State - Standardized Hook
+    const detectionFilter = useDetectionFilter();
 
     // Playback State
     const [currentTime, setCurrentTime] = useState<Date>(new Date());
@@ -162,7 +162,9 @@ export default function RecordingsPage() {
             const endDay = new Date(endDate);
 
             // Construct Local ISO string: YYYY-MM-DDTHH:mm:ss
-            // We want 00:00:00 on startDate to 23:59:59 on endDate
+            // We want to cover the full selected range PLUS a buffer for overnight events.
+            // Many sessions might run past midnight (e.g. 10 PM to 2 AM).
+            // If user selects "Feb 8", they expect to see the night shift of Feb 8, which extends into Feb 9 am.
             const toLocalISO = (date: Date, timeStr: string) => {
                 const year = date.getFullYear();
                 const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -171,7 +173,11 @@ export default function RecordingsPage() {
             };
 
             const fetchStart = toLocalISO(startDay, '00:00:00');
-            const fetchEnd = toLocalISO(endDay, '23:59:59.999');
+
+            // Extend fetchEnd by 1 day to handle overnight sessions
+            const bufferedEndDay = new Date(endDay);
+            bufferedEndDay.setDate(bufferedEndDay.getDate() + 1);
+            const fetchEnd = toLocalISO(bufferedEndDay, '23:59:59.999');
 
             // Fetch with high limit to cover the full range
             const promises = recentSessions.map(s => api.getDetections(s.id, 50000, fetchStart, fetchEnd));
@@ -329,54 +335,11 @@ export default function RecordingsPage() {
                         <div className="flex flex-col ml-2">
                             <span className="text-xs text-gray-500 mb-1">Overlays</span>
                             <div className="flex bg-gray-800 rounded-lg p-1 border border-gray-700 h-[38px] items-center gap-3 px-3">
-                                {[
-                                    {
-                                        id: 'bbox',
-                                        label: 'Boxes',
-                                        state: showBBox,
-                                        setter: (val: boolean) => {
-                                            setShowBBox(val);
-                                            if (!val) {
-                                                setShowLabels(false);
-                                                setShowConfidence(false);
-                                            }
-                                        }
-                                    },
-                                    {
-                                        id: 'class',
-                                        label: 'Labels',
-                                        state: showLabels,
-                                        setter: (val: boolean) => {
-                                            if (val && !showBBox) setShowBBox(true); // Auto-enable box if label checked
-                                            setShowLabels(val);
-                                        }
-                                    },
-                                    {
-                                        id: 'conf',
-                                        label: 'Confidence',
-                                        state: showConfidence,
-                                        setter: (val: boolean) => {
-                                            if (val && !showBBox) setShowBBox(true); // Auto-enable box if conf checked
-                                            setShowConfidence(val);
-                                        }
-                                    },
-                                ].map(opt => (
-                                    <label key={opt.id} className="flex items-center gap-1.5 cursor-pointer text-sm select-none">
-                                        <div className={`
-                                            w-4 h-4 rounded border flex items-center justify-center transition-colors
-                                            ${opt.state ? 'bg-blue-600 border-blue-600' : 'border-gray-500 hover:border-gray-400'}
-                                        `}>
-                                            {opt.state && <Check size={12} className="text-white" />}
-                                        </div>
-                                        <input
-                                            type="checkbox"
-                                            className="hidden"
-                                            checked={opt.state}
-                                            onChange={(e) => opt.setter(e.target.checked)}
-                                        />
-                                        <span className={opt.state ? 'text-gray-200' : 'text-gray-400'}>{opt.label}</span>
-                                    </label>
-                                ))}
+                                <DetectionToggles
+                                    filterState={detectionFilter}
+                                    actions={detectionFilter}
+                                    className="border-0 p-0"
+                                />
                             </div>
                         </div>
                     </div>
@@ -411,9 +374,9 @@ export default function RecordingsPage() {
                                                 isPlaying={isPlaying}
                                                 playbackSpeed={playbackSpeed}
                                                 detections={detections}
-                                                showBBox={showBBox}
-                                                showLabels={showLabels}
-                                                showConfidence={showConfidence}
+                                                showBBox={detectionFilter.showBoxes}
+                                                showLabels={detectionFilter.showLabels}
+                                                showConfidence={detectionFilter.showConfidence}
                                                 isMaster={false}
                                             />
 
@@ -424,7 +387,7 @@ export default function RecordingsPage() {
 
                                             {/* Overlay Info */}
                                             <div className="absolute bottom-2 left-2 text-[10px] text-gray-400 font-mono text-left bg-black/40 px-1 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                                                IDs: {showBBox ? 'ON' : 'OFF'} | Labels: {showLabels ? 'ON' : 'OFF'}
+                                                IDs: {detectionFilter.showBoxes ? 'ON' : 'OFF'} | Labels: {detectionFilter.showLabels ? 'ON' : 'OFF'}
                                             </div>
                                         </div>
                                     );

@@ -173,6 +173,7 @@ export default function TimelineScrubber({
         // --- 4. Draw Events (Detections) per Lane ---
         const getPriority = (cls: string = '') => {
             const c = cls.toLowerCase();
+            // Higher number = Higher Priority (Drawn last, on top)
             if (c.includes('fire_smoke') || c.includes('firesmoke')) return 4;
             if (c.includes('smoke')) return 3;
             if (c.includes('fire')) return 2;
@@ -180,6 +181,7 @@ export default function TimelineScrubber({
             return 0;
         };
 
+        // Sort ascending, so high priority is drawn last (on top)
         const sortedEvents = [...events].sort((a, b) => getPriority(a.class_name) - getPriority(b.class_name));
 
         sortedEvents.forEach(event => {
@@ -189,6 +191,9 @@ export default function TimelineScrubber({
 
             // Find which session this event belongs to to identify camera
             const session = sessions.find(s => s.id === event.session_id);
+            // If session not found in visible list, try legacy matching or skip?
+            // If we have 'All' lane, we might want to plot it anyway if we can guess the camera?
+            // But strict strict session matching is safer.
             if (!session) return;
 
             const camName = session.name || session.source_path;
@@ -200,16 +205,22 @@ export default function TimelineScrubber({
 
             // Color Coding
             const cls = (event.class_name || '').toLowerCase();
-            let color = '#22C55E';
-            if (cls.includes('fire_smoke') || cls.includes('firesmoke')) color = '#EF4444';
-            else if (cls.includes('smoke')) color = '#A855F7';
-            else if (cls.includes('fire')) color = '#EAB308';
-            else if (cls.includes('steam')) color = '#22C55E';
+            const priority = getPriority(cls);
+
+            let color = '#3B82F6'; // Default Blue
+            if (priority === 4) color = '#EF4444'; // FireSmoke (Red)
+            else if (priority === 3) color = '#A855F7'; // Smoke (Purple)
+            else if (priority === 2) color = '#EAB308'; // Fire (Yellow)
+            else if (priority === 1) color = '#22C55E'; // Steam (Green)
 
             ctx.fillStyle = color;
-            ctx.globalAlpha = 0.9;
-            ctx.fillRect(x - 1, y + 2, 2, laneHeight - 4);
-            ctx.globalAlpha = 1.0;
+
+            // Draw wider ticks for higher priority for visibility?
+            // Standard width 2px, maybe 3px?
+            const width = 3;
+
+            ctx.globalAlpha = 1.0; // Solid color
+            ctx.fillRect(x - (width / 2), y + 2, width, laneHeight - 4);
         });
 
         // --- 5. Draw Lane Separators & Labels ---

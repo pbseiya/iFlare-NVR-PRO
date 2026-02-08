@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { api, SessionInfo, VideoSegment, Detection } from '@/lib/api';
-import { Loader2, AlertTriangle } from 'lucide-react';
 import { useSettings } from '@/components/SettingsContext';
+import { drawDetections, getClassColor } from '@/lib/detection-utils';
 
 interface SynchronizedPlayerProps {
     cameraName: string;
@@ -33,6 +33,7 @@ export default function SynchronizedPlayer({
     showConfidence = true,
 }: SynchronizedPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [segments, setSegments] = useState<VideoSegment[]>([]);
 
@@ -45,14 +46,25 @@ export default function SynchronizedPlayer({
         ? getSettingsForCamera(cameraName)
         : DEFAULT_SETTINGS;
 
-    const { overlayScale, strokeScale } = effectiveSettings;
-
     // 1. Find the active session for the current time
     const currentSession = useMemo(() => {
         const timeMs = currentTime.getTime();
 
+        // Strategy 1: Check if any detection in the buffer is VERY close (correlated)
+        // This helps when session times might be slightly off or gaps exist
+        const relevantDetection = detections.find(d => {
+            if (!d.timestamp) return false;
+            const dt = new Date(d.timestamp).getTime();
+            return Math.abs(dt - timeMs) < 2000; // 2s tolerance
+        });
+
+        if (relevantDetection) {
+            const sessionMatch = sessions.find(s => s.id === relevantDetection.session_id);
+            if (sessionMatch) return sessionMatch;
+        }
+
+        // Strategy 2: Standard Time Range Check
         const found = sessions.find(s => {
-            // User confirmed DB stores Local Time. Browser treats ISO w/o Z as Local.
             const startStr = s.created_at;
             const start = new Date(startStr).getTime();
 
@@ -62,57 +74,26 @@ export default function SynchronizedPlayer({
                 end = new Date(endStr).getTime();
             }
 
-            // Add tolerance for matching (e.g. 30 minutes)
-            // This handles cases where detections exist slightly outside the reported session bounds
-            const TOLERANCE = 30 * 60 * 1000;
+            const TOLERANCE = 30 * 60 * 1000; // 30m tolerance for late starts/ends
 
             const effectiveStart = start - TOLERANCE;
-            const effectiveEnd = end ? end + TOLERANCE : null;
+            // If running, effectively infinite end? Or rely on no ended_at.
+            const effectiveEnd = end ? end + TOLERANCE : (s.status === 'running' ? Date.now() + 86400000 : null);
 
             return timeMs >= effectiveStart && (effectiveEnd ? timeMs <= effectiveEnd : true);
         });
 
-        // 2. Fallback: Detection-based matching
-        // If the session metadata (start/end) is wrong but we have detections at this time,
-        // trust the detections to identify the active session.
-        if (!found && detections.length > 0) {
-            const nearbyDetection = detections.find(d => {
-                if (!d.timestamp) return false;
-                // Detections from API might be UTC or Local.
-                // If backend sends ISO without Z (Local Naive), new Date() treats as Local.
-                // If backend sends ISO with Z (UTC), new Date() treats as UTC.
-                // Let's assume they match the timeline's coordinate system.
-                const t = new Date(d.timestamp).getTime();
-                return Math.abs(t - timeMs) < 60000; // Within 1 minute
-            });
-
-            if (nearbyDetection) {
-                // Return matching session if found
-                const sessionMatch = sessions.find(s => s.id === nearbyDetection.session_id);
-                if (sessionMatch) return sessionMatch;
-            }
-        }
-
-        if (found) console.log(`[SyncPlayer ${cameraName}] Matched Session: ${found.id}`);
-        else console.warn(`[SyncPlayer ${cameraName}] No matching session found!`);
-
         return found;
-    }, [sessions, currentTime, cameraName, detections]);
+    }, [sessions, currentTime, detections]);
 
-    // Store video intrinsic dimensions for SVG coordinate system
+    // Store video intrinsic dimensions for Canvas
     const [videoDims, setVideoDims] = useState<{ width: number, height: number } | null>(null);
 
     // Filter detections for this session only (Optimization)
-    // Memoize the filtering of detections for the current session to avoid re-filtering on every tick
     const sessionDetections = useMemo(() => {
         if (!currentSession) return [];
-        const filtered = detections.filter(d => d.session_id === currentSession.id);
-        console.log(`[SyncPlayer ${cameraName}] Session ${currentSession.id} has ${filtered.length} detections (Total: ${detections.length})`);
-        if (detections.length > 0 && filtered.length === 0) {
-            console.log('[SyncPlayer] Mismatch? First det session:', detections[0].session_id, 'Current:', currentSession.id);
-        }
-        return filtered;
-    }, [currentSession?.id, detections]); // removed detections from dep if it's stable, but it might change
+        return detections.filter(d => d.session_id === currentSession.id);
+    }, [currentSession?.id, detections]);
 
     // 2. Fetch Segments when Session Changes
     useEffect(() => {
@@ -127,7 +108,6 @@ export default function SynchronizedPlayer({
                 if (!cancelled) setSegments(data);
             })
             .catch(err => {
-                console.warn("Failed to fetch segments", err);
                 if (!cancelled) setSegments([]);
             });
 
@@ -138,40 +118,41 @@ export default function SynchronizedPlayer({
     const activeSource = useMemo(() => {
         if (!currentSession) return null;
 
-        // A. Check segments first
         if (segments.length > 0) {
             const timeMs = currentTime.getTime();
 
-            // Filter segments that start <= currentTime
-            // FIX: Exclude 'recording' segments as they are 0-byte and not playable yet.
-            const candidates = segments.filter(s =>
-                new Date(s.start_time).getTime() <= timeMs && s.status === 'completed'
-            );
-
-            console.log(`[SyncPlayer ${cameraName}] Active Source Check: Time=${timeMs}, Candidates=${candidates.length}`);
+            const candidates = segments.filter(s => {
+                const start = new Date(s.start_time).getTime();
+                // Allow any segment with a file path unless explicitly failed
+                const isValidStatus = !!s.file_path && s.status !== 'failed';
+                // Tolerance + 1000ms just in case of drift
+                return start <= timeMs + 1000 && isValidStatus;
+            });
 
             if (candidates.length > 0) {
                 const seg = candidates[candidates.length - 1];
                 if (seg.end_time) {
                     const end = new Date(seg.end_time).getTime();
-                    // Tolerance for gaps? 
-                    if (timeMs > end + 5000) { // Increased gap tolerance to 5s
-                        return null; // Gap?
+                    // If segment has explicit end, respect it with tolerance
+                    if (timeMs > end + 5000) {
+                        return null;
+                    }
+                } else if (seg.duration_seconds) {
+                    // Fallback to duration if end_time missing
+                    const end = new Date(seg.start_time).getTime() + (seg.duration_seconds * 1000);
+                    if (timeMs > end + 5000) {
+                        return null;
                     }
                 }
+
                 return { type: 'segment', data: seg };
             }
-            return null; // Before first segment?
+            return null;
         }
 
-        // B. Fallback to Legacy Session File or Live RTSP
-        // If we have a video_output_path, use it. If not, but it's an RTSP source, we might need a direct stream URL.
-        // For now, assuming video_output_path is the source of truth for "recording file".
         if (currentSession.video_output_path || currentSession.source_type === 'rtsp') {
-            // Validate start time. If invalid, default to currentTime to avoid "1970" jumps.
             let start = currentSession.created_at;
             if (!start || isNaN(new Date(start).getTime())) {
-                console.warn(`[SyncPlayer ${cameraName}] Invalid session start time: ${start}. Defaulting to now.`);
                 start = new Date().toISOString();
             }
 
@@ -182,8 +163,8 @@ export default function SynchronizedPlayer({
             };
         }
 
-        return null; // No video source found
-    }, [currentSession, segments, currentTime, cameraName]);
+        return null;
+    }, [currentSession, segments, currentTime]);
 
     // 4. Resolve Video URL
     const videoSrc = useMemo(() => {
@@ -196,13 +177,10 @@ export default function SynchronizedPlayer({
     }, [activeSource]);
 
     // 5. Smooth Animation Loop for Overlays
-    // Use a local time state that updates on every animation frame for smooth overlays
     const [currentRenderTime, setCurrentRenderTime] = useState<number>(currentTime.getTime());
-    // Debug State
     const [showDebug, setShowDebug] = useState(false);
     const requestRef = useRef<number | null>(null);
 
-    // Video Animation Loop (Running only when playing)
     useEffect(() => {
         const animate = () => {
             if (videoRef.current && !videoRef.current.paused && isPlaying) {
@@ -213,14 +191,11 @@ export default function SynchronizedPlayer({
                     } else {
                         const startStr = activeSource.start as string;
                         sourceStartMs = new Date(startStr).getTime();
-                        if (isNaN(sourceStartMs)) sourceStartMs = Date.now(); // Fallback
+                        if (isNaN(sourceStartMs)) sourceStartMs = Date.now();
                     }
                     const nowMs = sourceStartMs + (videoRef.current.currentTime * 1000);
                     setCurrentRenderTime(nowMs);
                 } else {
-                    // Gap handling: If no video source, rely on the main clock (currentTime)
-                    // We can't smooth-interpolate easily without a reference, so sync to target.
-                    // Or ideally, the parent updates currentTime, and we display it.
                     setCurrentRenderTime(currentTime.getTime());
                 }
             }
@@ -234,28 +209,20 @@ export default function SynchronizedPlayer({
         return () => {
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
         };
-    }, [isPlaying, activeSource]);
+    }, [isPlaying, activeSource, currentTime]);
 
-    // Sync render time when paused (so seeking updates overlay)
     useEffect(() => {
         if (!isPlaying) {
             setCurrentRenderTime(currentTime.getTime());
         }
     }, [currentTime, isPlaying]);
 
-    // Find detections for the current frame (e.g., +/- 100ms)
+    // Find detections for the current frame
     const activeDetections = useMemo(() => {
         if (!currentSession || sessionDetections.length === 0) return [];
-
-        // Use the smooth render time instead of the prop time
-        // The prop time (currentTime) might jump in 1s intervals, causing stutter
         const timeMs = currentRenderTime;
+        const TOLERANCE = 2000;
 
-        // Tolerance: We use a wide window to find candidates, but then pick the closest one per class.
-        // Increased to handle potential drift between video stream and DB timestamps (observed ~2 mins).
-        const TOLERANCE = 2000; // Reduced to 2s for tighter matching, but still generous for drift
-
-        // 1. Find all candidates within tolerance
         const candidates = sessionDetections.filter(d => {
             if (!d.timestamp) return false;
             const detTime = new Date(d.timestamp).getTime();
@@ -263,14 +230,6 @@ export default function SynchronizedPlayer({
             return diff <= TOLERANCE;
         });
 
-        // Debug Log only if we expect detections but find none
-        if (candidates.length === 0 && sessionDetections.length > 0 && Math.random() < 0.01) {
-            // Sample checking
-            const firstDet = new Date(sessionDetections[0].timestamp!).getTime();
-            console.log(`[SyncPlayer] No candidate detections. Current: ${timeMs}, FirstDet: ${firstDet}, Diff: ${firstDet - timeMs}`);
-        }
-
-        // 2. Group by class and pick the closest one
         const closestByClass = new Map<string, { diff: number, det: Detection }>();
 
         candidates.forEach(d => {
@@ -286,21 +245,18 @@ export default function SynchronizedPlayer({
         return Array.from(closestByClass.values()).map(v => v.det);
     }, [currentRenderTime, currentSession, sessionDetections]);
 
-    // Color Mapping
-    const getColor = (className: string) => {
-        const cls = className.toLowerCase();
-        if (cls.includes('fire_smoke') || cls.includes('firesmoke')) return '#EF4444'; // Red
-        if (cls.includes('smoke')) return '#A855F7'; // Purple
-        if (cls.includes('fire')) return '#EAB308'; // Yellow
-        if (cls.includes('steam')) return '#22C55E'; // Green
-        return '#22C55E'; // Default
-    };
+    const lastSeekTime = useRef<number>(0);
 
     // 6. Master Clock Logic
     const handleTimeUpdate = () => {
         if (!isMaster || !onTimeUpdate || !videoRef.current || !activeSource) return;
 
         const video = videoRef.current;
+
+        // Prevent updates while seeking to avoid "rebound"
+        // This is the standard way to handle seek-updates
+        if (video.seeking) return;
+
         let sourceStartMs = 0;
         if (activeSource.type === 'segment') {
             const seg = activeSource.data as VideoSegment;
@@ -309,8 +265,12 @@ export default function SynchronizedPlayer({
             sourceStartMs = new Date(activeSource.start as string).getTime();
         }
 
-        const newTimeMs = sourceStartMs + (video.currentTime * 1000);
-        onTimeUpdate(new Date(newTimeMs));
+        const currentVideoTimeMs = sourceStartMs + (video.currentTime * 1000);
+
+        // Removed Drift Guard: It causes stuck timeline if keyframe snap is large.
+        // We trust the video time (once not seeking) to be the source of truth.
+
+        onTimeUpdate(new Date(currentVideoTimeMs));
     };
 
     const handleLoadedMetadata = () => {
@@ -322,8 +282,9 @@ export default function SynchronizedPlayer({
         }
     };
 
-    // Ensure video dims are set if metadata was already loaded (e.g. cached)
     useEffect(() => {
+        // Reset dims when source changes to prevent stale layout/bbox
+        setVideoDims(null);
         if (videoRef.current && videoRef.current.readyState >= 1) {
             setVideoDims({
                 width: videoRef.current.videoWidth,
@@ -332,19 +293,22 @@ export default function SynchronizedPlayer({
         }
     }, [videoSrc]);
 
-    // 7. Video Controls Sync (Play/Pause)
+    // 7. Video Controls Sync
     useEffect(() => {
         if (!videoRef.current) return;
         if (isPlaying) {
-            videoRef.current.play().catch(e => console.warn("Play failed", e));
+            const playPromise = videoRef.current.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => console.warn("Play failed", e));
+            }
         } else {
             videoRef.current.pause();
         }
-    }, [isPlaying]);
+    }, [isPlaying, videoSrc]);
 
-    // 8. Video Time Sync (Seek/Drift Correction)
+    // 8. Video Time Sync
     useEffect(() => {
-        if (!videoRef.current || !activeSource || isMaster) return; // Master drives itself
+        if (!videoRef.current || !activeSource) return;
 
         const video = videoRef.current;
         let sourceStartMs = 0;
@@ -358,13 +322,11 @@ export default function SynchronizedPlayer({
         const targetTimeMs = currentTime.getTime();
         const drift = Math.abs(currentVideoTimeMs - targetTimeMs);
 
-        // If drift is significant (> 500ms), seek
         if (drift > 500) {
             const seekTime = (targetTimeMs - sourceStartMs) / 1000;
             if (seekTime >= 0 && isFinite(seekTime)) {
-                // Check if seekTime is within video duration if metadata loaded
                 if (!isNaN(video.duration) && seekTime > video.duration) {
-                    // gap or end of segment handling could go here
+                    // gap logic
                 } else {
                     video.currentTime = seekTime;
                 }
@@ -372,11 +334,49 @@ export default function SynchronizedPlayer({
         }
     }, [currentTime, activeSource, isMaster]);
 
+    // Canvas Draw Effect
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas || !videoDims) return;
 
-    // Replace render with overlay support
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Match canvas resolution to its display size (clientWidth/Height)
+        // This ensures the drawing context matches the rendered size on screen,
+        // correcting for any CSS scaling or aspect ratio adjustments.
+        const displayWidth = canvas.clientWidth;
+        const displayHeight = canvas.clientHeight;
+
+        if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+            canvas.width = displayWidth;
+            canvas.height = displayHeight;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (activeDetections.length > 0) {
+            // Note: drawDetections expects showBoxes/showLabels, mapped from props
+            drawDetections(
+                ctx,
+                canvas,
+                activeDetections,
+                videoDims,
+                {
+                    showBoxes: showBBox,
+                    showLabels,
+                    showConfidence,
+                    overlayScale: effectiveSettings.overlayScale,
+                    strokeScale: effectiveSettings.strokeScale
+                }
+            );
+        }
+    }, [activeDetections, videoDims, showBBox, showLabels, showConfidence]);
+
+
     return (
         <div className="relative w-full h-full bg-black group flex items-center justify-center">
-            {/* Debug Toggle Button (Top-Right of Player) */}
+            {/* Debug Toggle Button */}
             <button
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowDebug(!showDebug); }}
                 className={`absolute top-2 right-2 z-50 p-1.5 rounded-md transition-colors shadow-lg cursor-pointer ${showDebug ? 'bg-red-600 text-white' : 'bg-black/50 text-gray-400 hover:bg-black/80'}`}
@@ -385,6 +385,7 @@ export default function SynchronizedPlayer({
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 2 1.88 1.88" /><path d="M14.12 3.88 16 2" /><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" /><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6" /><path d="M12 20v-9" /><path d="M6.53 9C4.6 8.8 3 7.1 3 5" /><path d="M6 13H2" /><path d="M3 21c0-2.1 1.7-3.9 3.8-4" /><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4" /><path d="M22 13h-4" /><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4" /></svg>
             </button>
 
+            {/* Debug Overlay Panel */}
             {/* Debug Overlay Panel */}
             {showDebug && (
                 <div className="absolute top-10 right-2 z-40 w-80 bg-black/90 border border-gray-700 rounded-lg p-2 text-[10px] font-mono text-gray-200 overflow-hidden shadow-xl" onClick={e => e.stopPropagation()}>
@@ -409,7 +410,7 @@ export default function SynchronizedPlayer({
                         <span>{videoRef.current?.currentTime.toFixed(3)}s</span>
 
                         <span className="text-gray-400">Source:</span>
-                        <span className="truncate">{activeSource?.type === 'segment' ? 'Segment' : 'Legacy'}</span>
+                        <span className="truncate">{activeSource ? (activeSource.type === 'segment' ? 'Segment' : 'Legacy') : 'None'}</span>
 
                         <span className="text-gray-400">Master?:</span>
                         <span className={isMaster ? 'text-green-400' : 'text-yellow-400'}>{isMaster ? 'YES' : 'NO'}</span>
@@ -460,10 +461,11 @@ export default function SynchronizedPlayer({
                             </div>
                         ) : (
                             activeDetections.map((d, i) => {
-                                const color = getColor(d.class_name || '');
+                                const cls = d.class_name || 'Unknown';
+                                const color = getClassColor(cls);
                                 return (
                                     <div key={i} className="grid grid-cols-4 gap-1 items-center border-b border-gray-800 pb-0.5 last:border-0">
-                                        <span style={{ color }}>{d.class_name}</span>
+                                        <span style={{ color }}>{cls}</span>
                                         <span>{(d.confidence * 100).toFixed(0)}%</span>
                                         <span className="truncate" title={d.timestamp || undefined}>{d.timestamp?.split('T')[1].replace('Z', '')}</span>
                                         <span className="truncate" title={`[${d.bbox_x1},${d.bbox_y1},${d.bbox_x2},${d.bbox_y2}]`}>
@@ -481,26 +483,12 @@ export default function SynchronizedPlayer({
                 </div>
             )}
 
-            {/* 
-                Container for Video + Overlay 
-                We use aspect-ratio logic or just centered layout. 
-                Ideally, we want the overlay to match the video size exactly.
-                If video is object-contain, it might have letterboxing.
-                We can position the overlay using a wrapper that has the same aspect ratio as the video.
-            */}
-
-            <div className="relative" style={{
-                aspectRatio: videoDims ? `${videoDims.width}/${videoDims.height}` : 'auto',
-                height: '100%',
-                maxHeight: '100%',
-                maxWidth: '100%',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center'
+            <div className="relative w-full max-w-full max-h-full flex items-center justify-center" style={{
+                aspectRatio: videoDims ? `${videoDims.width}/${videoDims.height}` : 'auto'
             }}>
                 <video
                     ref={videoRef}
-                    className="w-full h-full object-contain block"
+                    className={`w-full h-full object-contain block ${!activeSource ? 'hidden' : ''}`}
                     src={videoSrc || undefined}
                     controls={false}
                     muted
@@ -512,105 +500,21 @@ export default function SynchronizedPlayer({
                     onError={() => console.log("Video Playback Error")}
                 />
 
-                {/* SVG Overlay */}
-                {videoDims && videoDims.width > 0 && videoDims.height > 0 && activeDetections.length > 0 && (
-                    <svg
+                {!activeSource && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black z-20">
+                        <div className="text-gray-500 flex flex-col items-center">
+                            <span className="text-4xl font-mono animate-pulse">NO SIGNAL</span>
+                            <span className="text-xs mt-2">{currentTime.toLocaleTimeString()}</span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Canvas Overlay using drawDetections */}
+                {videoDims && activeDetections.length > 0 && (
+                    <canvas
+                        ref={canvasRef}
                         className="absolute top-0 left-0 w-full h-full pointer-events-none z-10"
-                        viewBox={`0 0 ${videoDims.width} ${videoDims.height}`}
-                        preserveAspectRatio="xMidYMid meet" // Match object-contain behavior
-                    >
-                        {(() => {
-                            // Calculate Dynamic Scale Factor based on Height (Percentage)
-                            // Goal: Consistent visual size regardless of resolution (VGA vs 2K vs 4K)
-                            // Best Practice Reference: 640x480 (VGA) -> Font size ~14-16px looks good (~3% of height)
-
-                            const videoHeight = videoDims.height;
-
-                            // Configuration constants (Dynamic from Settings)
-                            const FONT_HEIGHT_PERCENT = overlayScale;
-                            const STROKE_WIDTH_PERCENT = strokeScale;
-
-                            // Calculate pixel values
-                            const fontSize = Math.max(12, videoHeight * FONT_HEIGHT_PERCENT); // Min 12px for tiny videos
-                            const strokeWidth = Math.max(1, videoHeight * STROKE_WIDTH_PERCENT); // Min 1px
-
-                            const textPaddingX = fontSize * 0.3; // Relative padding
-                            const textPaddingY = fontSize * 0.15;
-                            const textHeight = fontSize + (textPaddingY * 2);
-
-                            // Sort detections by priority for Z-index (Low -> High)
-                            const getPriority = (cls: string = '') => {
-                                const c = cls.toLowerCase();
-                                if (c.includes('fire_smoke') || c.includes('firesmoke')) return 4;
-                                if (c.includes('smoke')) return 3;
-                                if (c.includes('fire')) return 2;
-                                if (c.includes('steam')) return 1;
-                                return 0;
-                            };
-
-                            const sortedDetections = [...activeDetections].sort((a, b) => {
-                                const pA = getPriority((a.class_name || '').toLowerCase());
-                                const pB = getPriority((b.class_name || '').toLowerCase());
-                                return pA - pB;
-                            });
-
-                            return sortedDetections.map((det, idx) => {
-                                const color = getColor(det.class_name || '');
-                                // Only show label/conf if Box is ON (redundant check if parent handles it, but safe)
-                                const shouldShowText = showBBox && (showLabels || showConfidence);
-
-                                const labelParts = [];
-                                if (showLabels) labelParts.push(det.class_name);
-                                if (showConfidence) labelParts.push(`${Math.round(det.confidence * 100)}%`);
-                                const labelText = labelParts.join(' ');
-
-                                // Estimate text width (rough char width approximation)
-                                const charWidth = fontSize * 0.6;
-                                const textWidth = (labelText.length * charWidth) + (textPaddingX * 2);
-
-                                return (
-                                    <g key={idx}>
-                                        {showBBox && (
-                                            <rect
-                                                x={det.bbox_x1}
-                                                y={det.bbox_y1}
-                                                width={det.bbox_x2 - det.bbox_x1}
-                                                height={det.bbox_y2 - det.bbox_y1}
-                                                fill="none"
-                                                stroke={color}
-                                                strokeWidth={strokeWidth}
-                                                vectorEffect="non-scaling-stroke"
-                                            />
-                                        )}
-                                        {shouldShowText && labelText.length > 0 && (
-                                            <g>
-                                                {/* Background Rect for Label - Positioned above box */}
-                                                <rect
-                                                    x={det.bbox_x1}
-                                                    y={det.bbox_y1 - textHeight}
-                                                    width={textWidth}
-                                                    height={textHeight}
-                                                    fill={color}
-                                                />
-                                                {/* Text Label */}
-                                                <text
-                                                    x={det.bbox_x1 + textPaddingX}
-                                                    y={det.bbox_y1 - textPaddingY - (fontSize * 0.15)} // Fine-tune baseline
-                                                    fill="white"
-                                                    fontWeight="bold"
-                                                    fontSize={fontSize}
-                                                    style={{ textShadow: 'none' }}
-                                                    dominantBaseline="auto"
-                                                >
-                                                    {labelText}
-                                                </text>
-                                            </g>
-                                        )}
-                                    </g>
-                                );
-                            });
-                        })()}
-                    </svg>
+                    />
                 )}
             </div>
         </div>

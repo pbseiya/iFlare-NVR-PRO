@@ -1,39 +1,39 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { api, SessionInfo, Detection, SessionConfig } from '@/lib/api';
-import { Play, Pause, FastForward, Rewind, Maximize, AlertTriangle, Monitor, Calendar, Clock, ChevronRight, Video, Tv, ArrowLeft, Film, Radio } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { api, SessionInfo, Detection } from '@/lib/api';
+import { Play, Pause, AlertTriangle, Monitor, Clock, Film, Radio, Tv } from 'lucide-react';
 import { useSettings, OverlaySettings } from '@/components/SettingsContext';
+import { useDetectionFilter } from '@/hooks/useDetectionFilter';
+import { DetectionToggles } from '@/components/shared/DetectionToggles';
+import { drawDetections } from '@/lib/detection-utils';
+import SynchronizedPlayer from '@/components/dashboard/SynchronizedPlayer';
 
 export default function NVRPage() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const initialSessionId = searchParams.get('session_id') ? parseInt(searchParams.get('session_id')!) : null;
 
     const [selectedSessionId, setSelectedSessionId] = useState<number | null>(initialSessionId);
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
+    // Removed manual video/canvas refs
     const [isPlaying, setIsPlaying] = useState(false);
-    const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
-    const [editSession, setEditSession] = useState<SessionInfo | null>(null);
-    const queryClient = useQueryClient();
+    const [currentTime, setCurrentTime] = useState<Date>(new Date()); // Changed to Date object
+    const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
     // Playback State
     const [activeSegment, setActiveSegment] = useState<any | null>(null); // Specific clip
     const [isLiveMode, setIsLiveMode] = useState(true); // Preference for Live vs Playback
 
-    // Visibility Toggles
-    const [showBoxes, setShowBoxes] = useState(true);
-    const [showLabels, setShowLabels] = useState(true);
-    const [showConfidence, setShowConfidence] = useState(true);
+    // Visibility Toggles managed by custom hook
+    const detectionFilter = useDetectionFilter();
 
     // Sidebar Tab
     const [sidebarTab, setSidebarTab] = useState<'sessions' | 'clips'>('sessions');
 
     // Fetch sessions
-    const { data: sessionsData, isLoading: isLoadingSessions } = useQuery({
+    const { data: sessionsData } = useQuery({
         queryKey: ['sessions'],
         queryFn: () => api.listSessions({ limit: 100 }),
         refetchInterval: 5000,
@@ -45,13 +45,30 @@ export default function NVRPage() {
         return sessionsData.sessions.find(s => s.id === selectedSessionId) || null;
     }, [sessionsData, selectedSessionId]);
 
-    // Fetch detections for selected session
+    // Fetch detections for selected session OR active segment
+    // SynchronizedPlayer handles its own fetching based on time, but if we want to pass them in, we can.
+    // However, SynchronizedPlayer expects full session detections or handles fetching internally if we improved it.
+    // For now, let's keep fetching here but optimize it for the player.
     const { data: detections = [] } = useQuery({
-        queryKey: ['detections', selectedSessionId],
-        queryFn: () => selectedSessionId ? api.getDetections(selectedSessionId, 1000) : Promise.resolve([]),
+        queryKey: ['detections', selectedSessionId, activeSegment?.id],
+        queryFn: async () => {
+            if (!selectedSessionId) return [];
+            // Fetching full session detections for now to ensure SynchronizedPlayer has context
+            // Optimization: Fetch only relevant window? SynchronizedPlayer filters anyway.
+            // We can stick to the previous optimized logic:
+            if (activeSegment) {
+                return api.getDetections(
+                    selectedSessionId,
+                    2000,
+                    activeSegment.start_time,
+                    activeSegment.end_time || undefined
+                );
+            }
+            return api.getDetections(selectedSessionId, 1000);
+        },
         enabled: !!selectedSessionId,
         refetchInterval: (query) => {
-            return selectedSession?.status === 'running' ? 2000 : false;
+            return selectedSession?.status === 'running' && isLiveMode ? 2000 : false;
         }
     });
 
@@ -73,12 +90,18 @@ export default function NVRPage() {
     // Handle Session Selection
     const handleSessionSelect = (session: SessionInfo) => {
         setSelectedSessionId(session.id);
+        // Update URL
+        router.push(`/nvr?session_id=${session.id}`);
+
         setIsPlaying(false);
-        setCurrentTime(0);
         setActiveSegment(null);
         // Default to Live if running, else Playback (clips or empty)
         setIsLiveMode(session.status === 'running');
-        // setSidebarTab('clips'); // Auto-switch removed per user request
+        if (session.status === 'running') {
+            setCurrentTime(new Date()); // Liveish
+        } else {
+            setCurrentTime(new Date(session.created_at)); // Start of session
+        }
     };
 
     // Handle Clip Selection
@@ -86,169 +109,41 @@ export default function NVRPage() {
         setActiveSegment(segment);
         setIsLiveMode(false); // Force Playback mode
         setIsPlaying(true); // Auto-play
+        setCurrentTime(new Date(segment.start_time)); // Jump to clip start
     };
 
     const handleGoLive = () => {
         setActiveSegment(null);
         setIsLiveMode(true);
+        setIsPlaying(true);
     };
 
-    // Video Source Logic
-    const videoSrc = useMemo(() => {
-        if (activeSegment) {
-            return `http://localhost:8000/api/video/stream?path=${encodeURIComponent(activeSegment.file_path)}`;
-        }
-        // Fallback for Legacy Single-File Recordings
-        if (!selectedSession?.source_path) return '';
-        if (selectedSession.save_video && selectedSession.video_output_path) {
-            return `http://localhost:8000/api/video/stream?path=${encodeURIComponent(selectedSession.video_output_path)}`;
-        }
-        return '';
-    }, [selectedSession, activeSegment]);
+    // Removed videoSrc memo
 
+    // Removed manual canvas render logic (useEffect)
 
-    // Video Events
-    const handleTimeUpdate = () => {
-        if (videoRef.current) {
-            setCurrentTime(videoRef.current.currentTime);
-        }
-    };
-
-    const handleLoadedMetadata = () => {
-        if (videoRef.current) {
-            setDuration(videoRef.current.duration);
-        }
-    };
-
-    const togglePlay = () => {
-        if (videoRef.current) {
-            if (isPlaying) {
-                videoRef.current.pause();
-            } else {
-                videoRef.current.play();
-            }
-            setIsPlaying(!isPlaying);
-        }
-    };
-
-    const seek = (time: number) => {
-        if (videoRef.current) {
-            videoRef.current.currentTime = time;
-            setCurrentTime(time);
-        }
-    };
-
-    // Canvas Render Logic
-    useEffect(() => {
-        let animationFrameId: number;
-
-        const render = () => {
-            if (videoRef.current && canvasRef.current && selectedSession) {
-                const video = videoRef.current;
-                const canvas = canvasRef.current;
-                const ctx = canvas.getContext('2d');
-
-                if (ctx) {
-                    if (canvas.width !== video.clientWidth || canvas.height !== video.clientHeight) {
-                        canvas.width = video.clientWidth;
-                        canvas.height = video.clientHeight;
-                    }
-
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-                    // Logic: find detections for current frame (mapped by timestamp?)
-                    // For now, simpler frame mapping if possible, or timestamp matching
-                    // Segments have 'start_time'.
-                    // Frame matching in segmented files is tricky without absolute timestamps.
-                    // Fallback to simple logic: Just draw nothing if complex?
-                    // Or improved logic: segment start + video.currentTime = session absolute time.
-                    // Detections have 'timestamp'. Match!
-
-                    // Use the earliest detection as reference time instead of segment start
-                    // This handles cases where video segment starts after detections begin
-                    let referenceTime = 0;
-                    if (detections.length > 0) {
-                        // Find earliest detection timestamp
-                        const earliestDetection = detections.reduce((earliest, d) => {
-                            if (!d.timestamp) return earliest;
-                            const dTime = new Date(d.timestamp).getTime();
-                            return !earliest || dTime < earliest ? dTime : earliest;
-                        }, null as number | null);
-
-                        if (earliestDetection) {
-                            referenceTime = earliestDetection;
-                        } else if (activeSegment) {
-                            referenceTime = new Date(activeSegment.start_time).getTime();
-                        } else if (selectedSession.created_at) {
-                            referenceTime = new Date(selectedSession.created_at).getTime();
-                        }
-                    } else if (activeSegment) {
-                        referenceTime = new Date(activeSegment.start_time).getTime();
-                    } else if (selectedSession.created_at) {
-                        referenceTime = new Date(selectedSession.created_at).getTime();
-                    }
-
-                    const currentAbsTime = referenceTime + (video.currentTime * 1000);
-
-                    // Find best matching frame within 3s window
-                    const bestMatch = detections.reduce((best, d) => {
-                        if (!d.timestamp) return best;
-                        const dTime = new Date(d.timestamp).getTime();
-                        const diff = Math.abs(dTime - currentAbsTime);
-
-                        if (diff < 3000) { // Check within 3s window (hold longer)
-                            if (!best.closestTime || diff < best.diff) {
-                                return { closestTime: dTime, diff: diff };
-                            }
-                        }
-                        return best;
-                    }, { closestTime: null as number | null, diff: Infinity });
-
-                    const activeDetections = bestMatch.closestTime
-                        ? detections.filter(d => d.timestamp && new Date(d.timestamp).getTime() === bestMatch.closestTime)
-                        : [];
-
-                    // Debug logging (throttled)
-                    if (Math.random() < 0.01) {
-                        console.log('Time Sync:', {
-                            videoTime: video.currentTime,
-                            referenceTime: new Date(referenceTime).toISOString(),
-                            absTime: new Date(currentAbsTime).toISOString(),
-                            bestMatchTime: bestMatch.closestTime ? new Date(bestMatch.closestTime).toISOString() : 'none',
-                            count: activeDetections.length
-                        });
-                    }
-
-                    // Draw
-                    if (activeDetections.length > 0) {
-                        drawDetections(ctx, canvas, activeDetections, {
-                            width: video.videoWidth,
-                            height: video.videoHeight
-                        }, {
-                            showBoxes, showLabels, showConfidence
-                        });
-                    }
-                }
-            }
-            animationFrameId = requestAnimationFrame(render);
-        };
-
-        if (!isLiveMode) {
-            render();
-        }
-
-        return () => {
-            cancelAnimationFrame(animationFrameId);
-        };
-    }, [selectedSession, detections, showBoxes, showLabels, showConfidence, isLiveMode, activeSegment]);
-
-    const { getSettingsForCamera, scopeSettings, globalSettings } = useSettings();
-
-    // Determine settings to pass: 
-    // If scope.nvr is active -> use custom settings (global + camera override)
-    // If scope.nvr is inactive -> use default settings (hardcoded fallback or "clean" default)
-    // Default to strict defaults if scope is off to match user expectation of "Factory Default" effect
+    const { getSettingsForCamera, scopeSettings } = useSettings();
     const DEFAULT_SETTINGS = { overlayScale: 0.035, strokeScale: 0.003 };
+
+    // Let's implement the `onTimeUpdate` handler to update our local state from the player's progress.
+    const handlePlayerTimeUpdate = (time: Date) => {
+        setCurrentTime(time);
+
+        // Auto-update active segment based on time for timeline/sidebar sync
+        if (segments && segments.length > 0) {
+            const timeMs = time.getTime();
+            const currentSeg = segments.find(s => {
+                const start = new Date(s.start_time).getTime();
+                const end = start + ((s.duration_seconds || 0) * 1000);
+                // Simple inclusion check
+                return timeMs >= start && timeMs <= end;
+            });
+
+            if (currentSeg && activeSegment?.id !== currentSeg.id) {
+                setActiveSegment(currentSeg);
+            }
+        }
+    };
 
     return (
         <div className="h-screen bg-gray-900 text-white flex flex-col overflow-hidden">
@@ -263,19 +158,27 @@ export default function NVRPage() {
                 </div>
 
                 <div className="ml-8 flex items-center gap-4 bg-gray-900/50 px-4 py-2 rounded-lg border border-gray-700">
-                    <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-                        <input type="checkbox" checked={showBoxes} onChange={e => setShowBoxes(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500 bg-gray-700 border-gray-600" />
-                        Show Boxes
-                    </label>
-                    <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-                        <input type="checkbox" checked={showLabels} onChange={e => setShowLabels(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500 bg-gray-700 border-gray-600" />
-                        Show Labels
-                    </label>
-                    <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-                        <input type="checkbox" checked={showConfidence} onChange={e => setShowConfidence(e.target.checked)} className="rounded text-blue-500 focus:ring-blue-500 bg-gray-700 border-gray-600" />
-                        Show Confidence
-                    </label>
+                    <DetectionToggles
+                        filterState={detectionFilter}
+                        actions={detectionFilter}
+                        className="bg-transparent border-none p-0 border-0"
+                    />
                 </div>
+
+                {/* Playback Controls (Scope-aware?) - Maybe just speed? */}
+                {!isLiveMode && (
+                    <div className="ml-4 flex items-center gap-2 bg-gray-800 rounded p-1">
+                        {[1, 2, 4, 8].map(speed => (
+                            <button
+                                key={speed}
+                                onClick={() => setPlaybackSpeed(speed)} // Start playback if clicked?
+                                className={`px-2 py-1 text-xs font-bold rounded ${playbackSpeed === speed ? 'bg-blue-600' : 'text-gray-400 hover:text-white'}`}
+                            >
+                                {speed}x
+                            </button>
+                        ))}
+                    </div>
+                )}
 
                 <div className="ml-auto">
                     <a href="/" className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition-colors">
@@ -286,7 +189,7 @@ export default function NVRPage() {
 
             <div className="flex flex-1 overflow-hidden h-full">
                 {/* Main Content (Video Player) */}
-                <div className="flex-1 p-6 flex flex-col gap-4 bg-gray-950 relative overflow-hidden">
+                <div className="flex-1 p-6 flex flex-col gap-4 bg-gray-950 relative overflow-hidden min-w-0">
                     {selectedSession ? (
                         <div className="flex flex-col gap-4 h-full">
                             {/* Player Container */}
@@ -296,7 +199,7 @@ export default function NVRPage() {
                                         <LiveView
                                             key={selectedSession.id}
                                             sessionId={selectedSession.id}
-                                            toggles={{ showBoxes, showLabels, showConfidence }}
+                                            detectionFilter={detectionFilter}
                                             settings={scopeSettings.nvr
                                                 ? getSettingsForCamera(selectedSession.name || undefined)
                                                 : DEFAULT_SETTINGS
@@ -309,66 +212,56 @@ export default function NVRPage() {
                                     </>
                                 ) : (
                                     <>
-                                        {/* Playback Mode (File) */}
-                                        {videoSrc ? (
-                                            <>
-                                                <video
-                                                    ref={videoRef}
-                                                    src={videoSrc}
-                                                    className="w-full h-full object-contain"
-                                                    onTimeUpdate={handleTimeUpdate}
-                                                    onLoadedMetadata={handleLoadedMetadata}
-                                                    onPlay={() => setIsPlaying(true)}
-                                                    onPause={() => setIsPlaying(false)}
-                                                    onClick={togglePlay}
-                                                    autoPlay
-                                                />
-                                                <canvas
-                                                    ref={canvasRef}
-                                                    className="absolute inset-0 w-full h-full pointer-events-none"
-                                                />
-                                                {/* Start/Pause Overlay */}
-                                                {!isPlaying && (
-                                                    <div
-                                                        className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer group-hover:bg-black/20 transition-colors"
-                                                        onClick={togglePlay}
-                                                    >
-                                                        <div className="p-4 bg-white/10 backdrop-blur-md rounded-full border border-white/20 hover:scale-110 transition-transform">
-                                                            <Play className="w-12 h-12 text-white fill-white" />
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {/* Status Overlay */}
-                                                <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">
-                                                    <div className="flex items-center gap-3">
-                                                        <span className={`
+                                        {/* Playback Mode - USE SYNCHRONIZED PLAYER */}
+                                        <SynchronizedPlayer
+                                            cameraName={selectedSession.name || selectedSession.model_name}
+                                            sessions={[selectedSession]} // Pass singular session in array
+                                            currentTime={currentTime}
+                                            isPlaying={isPlaying}
+                                            playbackSpeed={playbackSpeed}
+                                            detections={detections}
+                                            showBBox={detectionFilter.showBoxes}
+                                            showLabels={detectionFilter.showLabels}
+                                            showConfidence={detectionFilter.showConfidence}
+                                            isMaster={true} // NVR is always master of its own timeline
+                                            onTimeUpdate={handlePlayerTimeUpdate}
+                                        />
+
+                                        {/* Start/Pause Overlay - Control Synchronized Player state */}
+                                        {!isPlaying && (
+                                            <div
+                                                className="absolute inset-0 flex items-center justify-center bg-black/10 cursor-pointer group-hover:bg-black/20 transition-colors z-20"
+                                                onClick={() => setIsPlaying(true)}
+                                            >
+                                                <div className="p-4 bg-white/10 backdrop-blur-md rounded-full border border-white/20 hover:scale-110 transition-transform">
+                                                    <Play className="w-12 h-12 text-white fill-white" />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Status Overlay */}
+                                        <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">
+                                            <div className="flex items-center gap-3">
+                                                <span className={`
                                 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider shadow-lg backdrop-blur-md flex items-center gap-2
                                 ${isPlaying ? 'bg-blue-500/80 text-white' : 'bg-red-500/80 text-white animate-pulse'}
                             `}>
-                                                            {isPlaying ? <Play size={12} className="fill-current" /> : <div className="w-2 h-2 bg-white rounded-full animate-ping" />}
-                                                            {isPlaying ? `Playback: ${new Date(activeSegment?.start_time || 0).toLocaleTimeString()}` : "Live Feed"}
-                                                        </span>
+                                                    {isPlaying ? <Play size={12} className="fill-current" /> : <div className="w-2 h-2 bg-white rounded-full animate-ping" />}
+                                                    {isPlaying ? `Playback: ${currentTime.toLocaleTimeString()}` : "Paused"}
+                                                </span>
 
-                                                        {/* Session Name Badge */}
-                                                        <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-black/60 text-white backdrop-blur-md border border-white/10 shadow-lg">
-                                                            {selectedSession?.name || "Unnamed Session"}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <div className="flex flex-col items-center justify-center text-gray-500">
-                                                <AlertTriangle className="w-12 h-12 mb-2 text-yellow-500" />
-                                                <p>No video source selected.</p>
-                                                <p className="text-xs">Select a clip from the sidebar to play.</p>
+                                                {/* Session Name Badge */}
+                                                <span className="px-3 py-1.5 rounded-lg text-xs font-bold bg-black/60 text-white backdrop-blur-md border border-white/10 shadow-lg">
+                                                    {selectedSession?.name || "Unnamed Session"}
+                                                </span>
                                             </div>
-                                        )}
+                                        </div>
 
                                         {/* Go Live Float Button */}
                                         {selectedSession.status === 'running' && (
                                             <button
                                                 onClick={handleGoLive}
-                                                className="absolute bottom-4 right-4 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-transform hover:scale-105"
+                                                className="absolute bottom-4 right-4 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-transform hover:scale-105 z-30"
                                             >
                                                 <Radio className="w-4 h-4" /> Go Live
                                             </button>
@@ -380,24 +273,50 @@ export default function NVRPage() {
                             {/* Controls Bar */}
                             <div className="bg-gray-800 p-4 rounded-xl shadow-lg border border-gray-700 flex flex-col gap-3 shrink-0">
                                 <div className="flex items-center gap-4">
-                                    <button onClick={togglePlay} disabled={isLiveMode} className={`p-2 rounded-full transition-colors text-white ${isLiveMode ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-700'}`}>
+                                    <button onClick={() => setIsPlaying(!isPlaying)} disabled={isLiveMode} className={`p-2 rounded-full transition-colors text-white ${isLiveMode ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-700'}`}>
                                         {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
                                     </button>
-                                    <span className="text-sm font-mono text-gray-300">
-                                        {formatTime(currentTime)} / {formatTime(duration)}
+
+                                    {/* Current Time Display */}
+                                    <span className="text-sm font-mono text-gray-300 min-w-[80px]">
+                                        {currentTime.toLocaleTimeString()}
                                     </span>
-                                    <div className="flex-1 relative h-2 bg-gray-700 rounded-full cursor-pointer group"
-                                        onClick={(e) => {
-                                            if (isLiveMode) return;
-                                            const rect = e.currentTarget.getBoundingClientRect();
-                                            const pct = (e.clientX - rect.left) / rect.width;
-                                            seek(pct * duration);
-                                        }}
-                                    >
-                                        <div
-                                            className="absolute top-0 left-0 h-full bg-blue-500 rounded-full group-hover:bg-blue-400 transition-colors"
-                                            style={{ width: `${(currentTime / duration) * 100}%` }}
-                                        />
+
+                                    {/* Timeline Container */}
+                                    <div className="flex-1 flex items-center gap-3">
+                                        <span className="text-xs text-gray-500 font-mono w-16 text-right">
+                                            {activeSegment ? new Date(activeSegment.start_time).toLocaleTimeString() : "--:--:--"}
+                                        </span>
+
+                                        {/* Seek Bar */}
+                                        <div className="flex-1 relative h-3 bg-gray-700 rounded-full cursor-pointer group"
+                                            onClick={(e) => {
+                                                if (isLiveMode || !activeSegment) return;
+                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                                                const start = new Date(activeSegment.start_time).getTime();
+                                                const duration = activeSegment.duration_seconds * 1000;
+                                                const targetTime = new Date(start + (pct * duration));
+                                                setCurrentTime(targetTime);
+                                            }}
+                                        >
+                                            {/* Progress Fill */}
+                                            <div
+                                                className="absolute top-0 left-0 h-full bg-blue-500 rounded-full group-hover:bg-blue-400 transition-all relative overflow-visible"
+                                                style={{
+                                                    width: activeSegment
+                                                        ? `${Math.min(100, Math.max(0, (currentTime.getTime() - new Date(activeSegment.start_time).getTime()) / (activeSegment.duration_seconds * 1000) * 100))}%`
+                                                        : '0%'
+                                                }}
+                                            >
+                                                {/* Handle Knob */}
+                                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity translate-x-1/2" />
+                                            </div>
+                                        </div>
+
+                                        <span className="text-xs text-gray-500 font-mono w-16">
+                                            {activeSegment ? new Date(new Date(activeSegment.start_time).getTime() + (activeSegment.duration_seconds * 1000)).toLocaleTimeString() : "--:--:--"}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -413,17 +332,17 @@ export default function NVRPage() {
                 </div>
 
                 {/* Sidebar */}
-                <div className="w-80 bg-gray-800 border-l border-gray-700 flex flex-col h-full">
+                <div className="w-80 bg-gray-900 border-l border-gray-800 flex flex-col h-full shrink-0">
                     {/* Sidebar Tabs */}
-                    <div className="flex border-b border-gray-700">
+                    <div className="flex border-b border-gray-800 bg-gray-900">
                         <button
-                            className={`flex-1 p-3 text-sm font-medium ${sidebarTab === 'sessions' ? 'bg-gray-700 text-white border-b-2 border-blue-500' : 'text-gray-400 hover:text-gray-200'}`}
+                            className={`flex-1 p-4 text-sm font-semibold transition-all ${sidebarTab === 'sessions' ? 'text-blue-400 border-b-2 border-blue-500 bg-gray-800/50' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/30 border-b-2 border-transparent'}`}
                             onClick={() => setSidebarTab('sessions')}
                         >
                             Sessions
                         </button>
                         <button
-                            className={`flex-1 p-3 text-sm font-medium ${sidebarTab === 'clips' ? 'bg-gray-700 text-white border-b-2 border-blue-500' : 'text-gray-400 hover:text-gray-200'}
+                            className={`flex-1 p-4 text-sm font-semibold transition-all ${sidebarTab === 'clips' ? 'text-blue-400 border-b-2 border-blue-500 bg-gray-800/50' : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/30 border-b-2 border-transparent'}
                             ${!selectedSession ? 'opacity-50 cursor-not-allowed' : ''}`}
                             onClick={() => selectedSession && setSidebarTab('clips')}
                             disabled={!selectedSession}
@@ -432,38 +351,40 @@ export default function NVRPage() {
                         </button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                    <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar">
                         {sidebarTab === 'sessions' ? (
                             // SESSIONS LIST
                             sessionsData?.sessions.map((session: SessionInfo) => (
                                 <div
                                     key={session.id}
                                     onClick={() => handleSessionSelect(session)}
-                                    className={`p-3 rounded-lg cursor-pointer transition-colors border ${selectedSession?.id === session.id
-                                        ? 'bg-blue-600/20 border-blue-500/50'
-                                        : 'bg-gray-700/30 border-transparent hover:bg-gray-700'
+                                    className={`p-4 rounded-xl cursor-pointer transition-all border group relative overflow-hidden ${selectedSession?.id === session.id
+                                        ? 'bg-blue-600/10 border-blue-500/50 shadow-[0_0_15px_rgba(37,99,235,0.2)]'
+                                        : 'bg-gray-800/40 border-gray-700/50 hover:bg-gray-800'
                                         }`}
                                 >
-                                    <div className="flex justify-between items-start mb-1">
-                                        <span className={`text-xs px-1.5 py-0.5 rounded ${session.status === 'running' ? 'bg-green-500/20 text-green-400' : 'text-gray-400 border border-gray-600'}`}>
+                                    {selectedSession?.id === session.id && <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent pointer-events-none" />}
+                                    <div className="flex justify-between items-start mb-2 relative z-10">
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${session.status === 'running' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-gray-700 text-gray-400 border border-gray-600'}`}>
                                             {session.status}
                                         </span>
-                                        <span className="text-xs text-gray-500">#{session.id}</span>
+                                        <span className="text-[10px] text-gray-500 font-mono">#{session.id}</span>
                                     </div>
-                                    <div className="font-medium text-sm truncate text-white mb-1">
+                                    <div className="font-semibold text-sm truncate text-gray-200 mb-1 group-hover:text-white transition-colors relative z-10">
                                         {session.name ? session.name : session.model_name.split('/').pop()}
                                     </div>
-                                    <div className="text-xs text-gray-500 flex items-center gap-1">
-                                        <Clock className="w-3 h-3" />
+                                    <div className="text-xs text-gray-500 flex items-center gap-1.5 relative z-10">
+                                        <Clock className="w-3.5 h-3.5" />
                                         {new Date(session.created_at).toLocaleTimeString()}
                                     </div>
                                 </div>
                             ))
                         ) : (
                             // CLIPS LIST
-                            <div className="space-y-2">
-                                <div className="px-2 py-1 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                    Recordings ({selectedSession?.fps_target} FPS)
+                            <div className="space-y-3">
+                                <div className="px-1 flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-widest">
+                                    <span>Recordings</span>
+                                    <span className="bg-gray-800 px-2 py-0.5 rounded text-gray-400">{selectedSession?.fps_target} FPS</span>
                                 </div>
                                 <div className="space-y-2">
                                     {(() => {
@@ -488,36 +409,35 @@ export default function NVRPage() {
                                                         key={segment.id}
                                                         onClick={() => handleSegmentSelect(segment)}
                                                         className={`
-                                                    w-full text-left p-3 rounded-lg border transition-all flex items-center gap-3
+                                                    w-full text-left p-3 rounded-xl border transition-all flex items-center gap-3 group relative overflow-hidden
                                                     ${isActive
-                                                                ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-900/20'
-                                                                : 'bg-slate-800/50 border-slate-700 hover:bg-slate-800 hover:border-slate-600'
+                                                                ? 'bg-blue-600 border-blue-500 shadow-lg shadow-blue-500/30'
+                                                                : 'bg-gray-800/40 border-gray-700/50 hover:bg-gray-800 hover:border-gray-600'
                                                             }
                                                 `}
                                                     >
+                                                        {isActive && <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent pointer-events-none" />}
                                                         <div className={`
-                                                    p-2 rounded-lg 
-                                                    ${isActive ? 'bg-white/20' : 'bg-slate-700'}
+                                                    p-2.5 rounded-lg shrink-0 transition-colors
+                                                    ${isActive ? 'bg-white/20 text-white' : 'bg-gray-700/50 text-gray-500 group-hover:text-gray-300'}
                                                 `}>
-                                                            <Film size={16} className={isActive ? 'text-white' : 'text-slate-400'} />
+                                                            <Film size={18} />
                                                         </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className={`text-sm font-medium truncate ${isActive ? 'text-white' : 'text-slate-200'}`}>
+                                                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                            <div className={`text-sm font-semibold truncate transition-colors ${isActive ? 'text-white' : 'text-gray-300 group-hover:text-white'}`}>
                                                                 {startTime.toLocaleTimeString()}
                                                             </div>
-                                                            <div className={`text-xs truncate ${isActive ? 'text-blue-100' : 'text-slate-400'}`}>
-                                                                {duration}
+                                                            <div className={`text-xs truncate font-mono ${isActive ? 'text-blue-100' : 'text-gray-500'}`}>
+                                                                {duration} • {startTime.toLocaleDateString()}
                                                             </div>
-                                                        </div>
-                                                        <div className={`text-xs ${isActive ? 'text-blue-200' : 'text-slate-500'}`}>
-                                                            {startTime.toLocaleDateString()}
                                                         </div>
                                                     </button>
                                                 );
                                             })
                                         ) : (
-                                            <div className="text-center py-8 text-slate-500">
-                                                No recordings found for this session.
+                                            <div className="text-center py-10 flex flex-col items-center justify-center text-gray-500 border-2 border-dashed border-gray-800 rounded-xl bg-gray-900/50">
+                                                <Film className="w-8 h-8 opacity-20 mb-2" />
+                                                <p>No clips found</p>
                                             </div>
                                         );
                                     })()}
@@ -531,67 +451,6 @@ export default function NVRPage() {
     );
 }
 
-// Helpers
-const getClassColor = (className: string) => {
-    const lower = className.toLowerCase();
-    if (lower.includes('fire_smoke')) return '#ef4444'; // Red
-    if (lower.includes('smoke')) return '#a855f7'; // Purple
-    if (lower.includes('fire')) return '#eab308'; // Yellow
-    if (lower.includes('steam')) return '#3b82f6'; // Blue
-    return '#ef4444'; // Default Red
-};
-
-function drawDetections(
-    ctx: CanvasRenderingContext2D,
-    canvas: HTMLCanvasElement,
-    detections: any[],
-    sourceDim: { width: number, height: number },
-    options: { showBoxes: boolean, showLabels: boolean, showConfidence: boolean }
-) {
-    if (!options.showBoxes) return;
-
-    // Calculate scaling to match object-fit: contain behavior
-    const hRatio = canvas.width / sourceDim.width;
-    const vRatio = canvas.height / sourceDim.height;
-    const ratio = Math.min(hRatio, vRatio);
-
-    // Calculate letterbox offsets (centering)
-    const offsetX = (canvas.width - sourceDim.width * ratio) / 2;
-    const offsetY = (canvas.height - sourceDim.height * ratio) / 2;
-
-    detections.forEach(d => {
-        const bbox = d.bbox_x1 !== undefined ? [d.bbox_x1, d.bbox_y1, d.bbox_x2, d.bbox_y2] : d.bbox;
-        const className = d.class_name || d.class;
-        const conf = d.confidence || d.conf;
-
-        // Apply scaling and offset
-        const x = bbox[0] * ratio + offsetX;
-        const y = bbox[1] * ratio + offsetY;
-        const w = (bbox[2] - bbox[0]) * ratio;
-        const h = (bbox[3] - bbox[1]) * ratio;
-
-        const color = getClassColor(className);
-
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x, y, w, h);
-
-        if (options.showLabels) {
-            ctx.fillStyle = color;
-            let text = `${className}`;
-            if (options.showConfidence) {
-                text += ` ${Math.round(conf * 100)}%`;
-            }
-            ctx.font = 'bold 12px sans-serif';
-            const textMetrics = ctx.measureText(text);
-            ctx.fillRect(x, y - 20, textMetrics.width + 10, 20);
-
-            ctx.fillStyle = 'white';
-            ctx.fillText(text, x + 5, y - 5);
-        }
-    });
-}
-
 const formatTime = (seconds: number) => {
     if (!seconds || isNaN(seconds)) return "00:00";
     const mins = Math.floor(seconds / 60);
@@ -600,43 +459,29 @@ const formatTime = (seconds: number) => {
 };
 
 // Canvas-based Live View Component
-const LiveView = ({ sessionId, toggles, settings }: { sessionId: number, toggles: any, settings: OverlaySettings }) => {
+const LiveView = ({ sessionId, detectionFilter, settings }: { sessionId: number, detectionFilter: any, settings: OverlaySettings }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const wsRef = useRef<WebSocket | null>(null);
     const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const latestDataRef = useRef<any>(null);
     const imgRef = useRef<HTMLImageElement | null>(null);
-    const togglesRef = useRef(toggles);
-
-    // Check Scope Logic
-    // const { scopeSettings } = useSettings(); // Assuming useSettings is imported and available
-    // If scopeSettings.nvr is false, use hardcoded defaults (legacy behavior) or context defaults?
-    // Let's use the context defaults if scope is disabled. 
-    // Wait, the settings prop passed here is alreayd resolved.
-    // We should resolve the "effective" settings inside the component using the hook + scope.
-    // BUT, the prop is passed from NVRPage. 
-    // Strategy: Update NVRPage to pass the right settings based on scope.
-
-    // Actually, let's keep logic simple: 
-    // The `settings` prop is what we use.
-    // The PARENT (NVRPage) should decide what `settings` to pass.
-
+    const detectionFilterRef = useRef(detectionFilter);
     const settingsRef = useRef(settings);
 
     useEffect(() => {
-        togglesRef.current = toggles;
+        detectionFilterRef.current = detectionFilter;
         settingsRef.current = settings;
         if (latestDataRef.current) {
             draw();
         }
-    }, [toggles, settings]);
+    }, [detectionFilter, settings]);
 
     const draw = () => {
         const canvas = canvasRef.current;
         const data = latestDataRef.current;
         const img = imgRef.current;
-        const currentToggles = togglesRef.current;
+        const currentToggles = detectionFilterRef.current;
         const currentSettings = settingsRef.current;
 
         if (canvas && data && img) {
@@ -656,53 +501,15 @@ const LiveView = ({ sessionId, toggles, settings }: { sessionId: number, toggles
                 ctx.drawImage(img, 0, 0, img.width, img.height,
                     centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
 
-                ctx.save();
-                ctx.translate(centerShift_x, centerShift_y);
-                ctx.scale(ratio, ratio);
-
-                const videoHeight = img.height;
-                // Scope Check: Done at parent level or here?
-                // Parent passed `settings`. Parent should handle checking scope.
-                const fontSize = Math.max(12, videoHeight * currentSettings.overlayScale);
-                const strokeWidth = Math.max(1, videoHeight * currentSettings.strokeScale);
-
-                if (currentToggles.showBoxes && data.detections) {
-                    data.detections.forEach((d: any) => {
-                        const bbox = d.bbox;
-                        const className = d.class;
-                        const conf = d.conf;
-
-                        const x = bbox[0];
-                        const y = bbox[1];
-                        const w = bbox[2] - bbox[0];
-                        const h = bbox[3] - bbox[1];
-
-                        const color = getClassColor(className);
-
-                        ctx.strokeStyle = color;
-                        ctx.lineWidth = strokeWidth;
-                        ctx.strokeRect(x, y, w, h);
-
-                        if (currentToggles.showLabels) {
-                            ctx.fillStyle = color;
-                            let text = `${className}`;
-                            if (currentToggles.showConfidence) {
-                                text += ` ${Math.round(conf * 100)}%`;
-                            }
-
-                            ctx.font = `bold ${fontSize}px sans-serif`;
-                            const padding = fontSize * 0.3;
-                            const textMetrics = ctx.measureText(text);
-                            const bgHeight = fontSize + padding * 0.5;
-
-                            ctx.fillRect(x, y - bgHeight - (padding * 0.5), textMetrics.width + padding, bgHeight + (padding * 0.5));
-
-                            ctx.fillStyle = 'white';
-                            ctx.fillText(text, x + (padding * 0.5), y - (padding * 0.5));
-                        }
-                    });
+                if (data.detections) {
+                    drawDetections(
+                        ctx,
+                        canvas,
+                        data.detections,
+                        { width: img.width, height: img.height },
+                        currentToggles
+                    );
                 }
-                ctx.restore();
             }
         }
     };
@@ -710,7 +517,6 @@ const LiveView = ({ sessionId, toggles, settings }: { sessionId: number, toggles
     useEffect(() => {
         const connect = () => {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            // Use window.location.hostname to avoid hardcoded localhost
             const wsUrl = `${protocol}//${window.location.hostname}:8000/ws/live/${sessionId}`;
             const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
