@@ -125,8 +125,8 @@ export default function DashboardPage() {
                                         session,
                                         onStop: (id: number) => stopSessionMutation.mutate(id),
                                         onResume: (id: number) => resumeSessionMutation.mutate(id),
-                                        isStopping: stopSessionMutation.isPending,
-                                        isResuming: resumeSessionMutation.isPending,
+                                        isStopping: stopSessionMutation.isPending && stopSessionMutation.variables === session.id,
+                                        isResuming: resumeSessionMutation.isPending && resumeSessionMutation.variables === session.id,
                                     };
 
                                     // Admin sees full SessionCard with Edit/Delete

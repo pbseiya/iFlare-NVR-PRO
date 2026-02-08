@@ -94,8 +94,8 @@ export default function TimelineScrubber({
         };
         updateGrid();
 
-        // Draw Session Blocks (Green/Blue background where video exists)
-        ctx.fillStyle = '#1e3a8a'; // blue-900 with opacity
+        // Draw Session Blocks (Blue background where video exists)
+        ctx.fillStyle = '#3B82F6'; // Blue-500
         sessions.forEach(session => {
             const sTime = new Date(session.created_at).getTime();
             const eTime = session.ended_at ? new Date(session.ended_at).getTime() : Date.now();
@@ -113,12 +113,14 @@ export default function TimelineScrubber({
         });
 
         // Draw events (Detections)
-        // Priority: fire_smoke > smoke > fire > steam
+        // Priority (High to Low): fire_smoke > smoke > fire > steam
+        // Draw Order (Low -> High priority): steam (1) -> fire (2) -> smoke (3) -> fire_smoke (4)
         const getPriority = (cls: string = '') => {
-            if (cls.includes('fire_smoke')) return 4;
-            if (cls.includes('smoke')) return 3;
-            if (cls.includes('fire')) return 2;
-            if (cls.includes('steam')) return 1;
+            const c = cls.toLowerCase();
+            if (c.includes('fire_smoke') || c.includes('firesmoke')) return 4;
+            if (c.includes('smoke')) return 3;
+            if (c.includes('fire')) return 2;
+            if (c.includes('steam')) return 1;
             return 0;
         };
 
@@ -136,14 +138,14 @@ export default function TimelineScrubber({
 
             const x = (t - viewStart) * pixelsPerMs;
 
-            // Color based on class
-            let color = '#22C55E'; // Green (default / steam)
+            // Color based on class (User defined)
+            let color = '#22C55E'; // Default Green (Steam)
             const cls = (event.class_name || '').toLowerCase();
 
-            if (cls.includes('fire_smoke')) color = '#EF4444';      // Red
+            if (cls.includes('fire_smoke') || cls.includes('firesmoke')) color = '#EF4444';      // Red
             else if (cls.includes('smoke')) color = '#A855F7';      // Purple
-            else if (cls.includes('steam')) color = '#3B82F6';      // Blue
             else if (cls.includes('fire')) color = '#EAB308';       // Yellow
+            else if (cls.includes('steam')) color = '#22C55E';      // Green
 
             ctx.fillStyle = color;
             ctx.globalAlpha = 0.8;

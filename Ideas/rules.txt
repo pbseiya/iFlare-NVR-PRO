@@ -23,3 +23,12 @@ rtspที่ใช้ทดสอบ rtsp://localhost:8554/iflare, fps=1
 7. web ui แบบ nvr สำหรับแสดงผลแบบ realtim หรือย้อนหลัง ซึ่งสามารถเลือกที่ให้แสดง bbox ที่บันทึกไว้ใน database ได้
 8. การติดตั้ง package ให้ใช้ uv add  และ echo "Seiya010" | sudo -S
 ช่วยออกแบบระบบให้หน่อยว่าต้องแยกส่วนประกอบอะไรบ้าง
+
+
+ถ้ามีข้อมูลให้แสดงด้วยแถบสีน้ำเงิน ถ้าเป็นช่วงเวลาที่ class ต่างๆให้สีดังนี้ และใช้สีเดียวกันสำหรับ bbox
+fire=เหลือง
+smoke=purple
+fire_smoke=red
+steam=green
+เฉพาะ timeline ถ้าช่วงเวลาเดียวกันมีมากกว่า 1 class ให้แสดงสีตาม priority จากสำคัญมากไปน้อยดังนี้
+fire_smoke, smoke, fire, steam

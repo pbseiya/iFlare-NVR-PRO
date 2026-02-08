@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { api, SessionInfo, Detection } from '@/lib/api';
 import TimelineScrubber from '@/components/dashboard/TimelineScrubber';
 import SynchronizedPlayer from '@/components/dashboard/SynchronizedPlayer';
@@ -17,15 +18,47 @@ const ZOOM_SCALES = [
 ];
 
 export default function RecordingsPage() {
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+
+    // Initialize state from URL or defaults
     const today = new Date().toISOString().split('T')[0];
+    const urlStart = searchParams.get('start');
+    const urlEnd = searchParams.get('end');
+    const urlCams = searchParams.get('cams');
+
+    const [startDate, setStartDate] = useState<string>(urlStart || today);
+    const [endDate, setEndDate] = useState<string>(urlEnd || today);
+    const [selectedCameras, setSelectedCameras] = useState<string[]>(urlCams ? urlCams.split(',') : []);
+
+    // Update URL when state changes
+    const updateUrl = useCallback((start: string, end: string, cams: string[]) => {
+        const currentStart = searchParams.get('start');
+        const currentEnd = searchParams.get('end');
+        const currentCams = searchParams.get('cams');
+        const newCamsStr = cams.length > 0 ? cams.join(',') : null;
+
+        if (currentStart === start && currentEnd === end && currentCams === newCamsStr) {
+            return; // No change needed
+        }
+
+        const params = new URLSearchParams(searchParams);
+        params.set('start', start);
+        params.set('end', end);
+        if (cams.length > 0) params.set('cams', cams.join(','));
+        else params.delete('cams');
+
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }, [pathname, router, searchParams]);
+
+    useEffect(() => {
+        updateUrl(startDate, endDate, selectedCameras);
+    }, [startDate, endDate, selectedCameras, updateUrl]);
 
     // Controls State
-    const [selectedCameras, setSelectedCameras] = useState<string[]>([]);
     const [isCamDropdownOpen, setIsCamDropdownOpen] = useState(false);
     const camDropdownRef = useRef<HTMLDivElement>(null);
-
-    const [startDate, setStartDate] = useState<string>(today);
-    const [endDate, setEndDate] = useState<string>(today);
 
     // Overlay State
     const [showBBox, setShowBBox] = useState(true);
@@ -92,6 +125,27 @@ export default function RecordingsPage() {
             viewEnd: new Date(currentMs + halfZoom)
         };
     }, [currentTime, zoomLevel]);
+
+    // Sync Date Range with Current Time to ensure we have data
+    useEffect(() => {
+        const currentStr = currentTime.toISOString().split('T')[0];
+
+        // Only auto-expand if we are playing and move out of range
+        if (isPlaying) {
+            if (currentStr < startDate) {
+                setStartDate(currentStr);
+            } else if (currentStr > endDate) {
+                setEndDate(currentStr);
+            }
+        }
+    }, [currentTime, startDate, endDate, isPlaying]);
+
+    // URL State Verification
+    useEffect(() => {
+        // Simple URL param check to restore state if needed (Implementation stub for future)
+        // For now, we rely on the manual selectors which the user requested to persist.
+        // A full URL sync would require `useSearchParams` and `useRouter` from next/navigation.
+    }, []);
 
     // Fetch detections only for visible time range (simplified: fetch for all filtered sessions)
     // Fetch detections based on selected Date Range (startDate, endDate)

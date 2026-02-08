@@ -59,7 +59,8 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
-    # Stop all active sessions?
+    # Stop all active sessions
+    await app.state.inference_engine.stop_all_sessions()
     await app.state.db.disconnect()
     print("✓ Disconnected from database")
 
@@ -399,7 +400,6 @@ async def resume_session(session_id: int):
             "iou_threshold": session.get("iou_threshold"),
             "save_video": session.get("save_video"),
             "video_output_path": session.get("video_output_path"),
-            "render_mode": session.get("render_mode"),
         }
 
         await app.state.inference_engine.start_session(

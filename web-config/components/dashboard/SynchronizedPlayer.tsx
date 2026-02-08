@@ -241,14 +241,22 @@ export default function SynchronizedPlayer({
 
         // Tolerance: We use a wide window to find candidates, but then pick the closest one per class.
         // Increased to handle potential drift between video stream and DB timestamps (observed ~2 mins).
-        const TOLERANCE = 150 * 1000;
+        const TOLERANCE = 2000; // Reduced to 2s for tighter matching, but still generous for drift
 
         // 1. Find all candidates within tolerance
         const candidates = sessionDetections.filter(d => {
             if (!d.timestamp) return false;
             const detTime = new Date(d.timestamp).getTime();
-            return Math.abs(detTime - timeMs) <= TOLERANCE;
+            const diff = Math.abs(detTime - timeMs);
+            return diff <= TOLERANCE;
         });
+
+        // Debug Log only if we expect detections but find none
+        if (candidates.length === 0 && sessionDetections.length > 0 && Math.random() < 0.01) {
+            // Sample checking
+            const firstDet = new Date(sessionDetections[0].timestamp!).getTime();
+            console.log(`[SyncPlayer] No candidate detections. Current: ${timeMs}, FirstDet: ${firstDet}, Diff: ${firstDet - timeMs}`);
+        }
 
         // 2. Group by class and pick the closest one
         const closestByClass = new Map<string, { diff: number, det: Detection }>();
@@ -269,11 +277,11 @@ export default function SynchronizedPlayer({
     // Color Mapping
     const getColor = (className: string) => {
         const cls = className.toLowerCase();
-        if (cls.includes('fire_smoke')) return '#EF4444'; // Red
+        if (cls.includes('fire_smoke') || cls.includes('firesmoke')) return '#EF4444'; // Red
         if (cls.includes('smoke')) return '#A855F7'; // Purple
-        if (cls.includes('steam')) return '#3B82F6'; // Blue
         if (cls.includes('fire')) return '#EAB308'; // Yellow
-        return '#22C55E'; // Green (default)
+        if (cls.includes('steam')) return '#22C55E'; // Green
+        return '#22C55E'; // Default
     };
 
     // 6. Master Clock Logic
@@ -356,10 +364,10 @@ export default function SynchronizedPlayer({
     // Replace render with overlay support
     return (
         <div className="relative w-full h-full bg-black group flex items-center justify-center">
-            {/* Debug Toggle Button (Top-Right of Player, moved down to avoid Live Sync overlap) */}
+            {/* Debug Toggle Button (Top-Right of Player) */}
             <button
-                onClick={(e) => { e.stopPropagation(); setShowDebug(!showDebug); }}
-                className={`absolute top-16 right-2 z-50 p-1.5 rounded-md transition-colors shadow-lg ${showDebug ? 'bg-red-600 text-white' : 'bg-black/50 text-gray-400 hover:bg-black/80'}`}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowDebug(!showDebug); }}
+                className={`absolute top-2 right-2 z-50 p-1.5 rounded-md transition-colors shadow-lg cursor-pointer ${showDebug ? 'bg-red-600 text-white' : 'bg-black/50 text-gray-400 hover:bg-black/80'}`}
                 title="Toggle Debug Info"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m8 2 1.88 1.88" /><path d="M14.12 3.88 16 2" /><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1" /><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6" /><path d="M12 20v-9" /><path d="M6.53 9C4.6 8.8 3 7.1 3 5" /><path d="M6 13H2" /><path d="M3 21c0-2.1 1.7-3.9 3.8-4" /><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4" /><path d="M22 13h-4" /><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4" /></svg>
@@ -367,7 +375,7 @@ export default function SynchronizedPlayer({
 
             {/* Debug Overlay Panel */}
             {showDebug && (
-                <div className="absolute top-10 right-2 z-20 w-80 bg-black/90 border border-gray-700 rounded-lg p-2 text-[10px] font-mono text-gray-200 overflow-hidden shadow-xl" onClick={e => e.stopPropagation()}>
+                <div className="absolute top-10 right-2 z-40 w-80 bg-black/90 border border-gray-700 rounded-lg p-2 text-[10px] font-mono text-gray-200 overflow-hidden shadow-xl" onClick={e => e.stopPropagation()}>
                     <div className="flex justify-between items-center mb-1 border-b border-gray-700 pb-1">
                         <span className="font-bold text-blue-400">Debug Inspection</span>
                         <div className="text-right">
@@ -493,19 +501,20 @@ export default function SynchronizedPlayer({
                 />
 
                 {/* SVG Overlay */}
-                {videoDims && activeDetections.length > 0 && (
+                {videoDims && videoDims.width > 0 && videoDims.height > 0 && activeDetections.length > 0 && (
                     <svg
-                        className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                        className="absolute top-0 left-0 w-full h-full pointer-events-none z-10"
                         viewBox={`0 0 ${videoDims.width} ${videoDims.height}`}
                         preserveAspectRatio="xMidYMid meet" // Match object-contain behavior
                     >
                         {(() => {
                             // Sort detections by priority for Z-index (Low -> High)
                             const getPriority = (cls: string = '') => {
-                                if (cls.includes('fire_smoke')) return 4;
-                                if (cls.includes('smoke')) return 3;
-                                if (cls.includes('fire')) return 2;
-                                if (cls.includes('steam')) return 1;
+                                const c = cls.toLowerCase();
+                                if (c.includes('fire_smoke') || c.includes('firesmoke')) return 4;
+                                if (c.includes('smoke')) return 3;
+                                if (c.includes('fire')) return 2;
+                                if (c.includes('steam')) return 1;
                                 return 0;
                             };
 
@@ -517,6 +526,13 @@ export default function SynchronizedPlayer({
 
                             return sortedDetections.map((det, idx) => {
                                 const color = getColor(det.class_name || '');
+                                const labelText = `${showLabels ? det.class_name : ''}${showLabels && showConfidence ? ' ' : ''}${showConfidence ? Math.round(det.confidence * 100) + '%' : ''}`;
+
+                                // Approx text width for background (font-size 14px * 0.6 + padding)
+                                const charCount = labelText.length;
+                                const textWidth = charCount * 9 + 4; // Estimate
+                                const textHeight = 20;
+
                                 return (
                                     <g key={idx}>
                                         {showBBox && (
@@ -528,21 +544,31 @@ export default function SynchronizedPlayer({
                                                 fill="none"
                                                 stroke={color}
                                                 strokeWidth="2"
+                                                vectorEffect="non-scaling-stroke"
                                             />
                                         )}
                                         {(showLabels || showConfidence) && (
-                                            <text
-                                                x={det.bbox_x1}
-                                                y={det.bbox_y1 - 5}
-                                                fill={color}
-                                                fontWeight="bold"
-                                                fontSize="14" // Larger font for readability
-                                                style={{ textShadow: '1px 1px 2px black' }}
-                                            >
-                                                {showLabels ? det.class_name : ''}
-                                                {showLabels && showConfidence ? ' ' : ''}
-                                                {showConfidence ? `${Math.round(det.confidence * 100)}%` : ''}
-                                            </text>
+                                            <g>
+                                                {/* Background Rect for Label */}
+                                                <rect
+                                                    x={det.bbox_x1}
+                                                    y={det.bbox_y1 - textHeight}
+                                                    width={textWidth}
+                                                    height={textHeight}
+                                                    fill={color}
+                                                />
+                                                {/* Text Label */}
+                                                <text
+                                                    x={det.bbox_x1 + 2}
+                                                    y={det.bbox_y1 - 5}
+                                                    fill="white"
+                                                    fontWeight="bold"
+                                                    fontSize="14"
+                                                    style={{ textShadow: 'none' }}
+                                                >
+                                                    {labelText}
+                                                </text>
+                                            </g>
                                         )}
                                     </g>
                                 );
