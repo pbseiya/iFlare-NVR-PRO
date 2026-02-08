@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { api, SessionInfo, VideoSegment, Detection } from '@/lib/api';
 import { Loader2, AlertTriangle } from 'lucide-react';
+import { useSettings } from '@/components/SettingsContext';
 
 interface SynchronizedPlayerProps {
     cameraName: string;
@@ -34,6 +35,17 @@ export default function SynchronizedPlayer({
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [segments, setSegments] = useState<VideoSegment[]>([]);
+
+    // Global Settings with Camera Override
+    const { getSettingsForCamera, scopeSettings } = useSettings();
+
+    const DEFAULT_SETTINGS = { overlayScale: 0.035, strokeScale: 0.003 };
+
+    const effectiveSettings = scopeSettings.recordings
+        ? getSettingsForCamera(cameraName)
+        : DEFAULT_SETTINGS;
+
+    const { overlayScale, strokeScale } = effectiveSettings;
 
     // 1. Find the active session for the current time
     const currentSession = useMemo(() => {
@@ -508,17 +520,22 @@ export default function SynchronizedPlayer({
                         preserveAspectRatio="xMidYMid meet" // Match object-contain behavior
                     >
                         {(() => {
-                            // Calculate Dynamic Scale Factor
-                            // Base reference: 1920x1080 -> scale 1.0 (stroke 2px, font 14px)
-                            // For 2K (2560x1440) -> scale ~1.33
-                            // For 4K (3840x2160) -> scale ~2.0
-                            const baseWidth = 1920;
-                            const scaleFactor = Math.max(0.8, videoDims.width / baseWidth); // Min scale 0.8 to not get too small on tiny videos
+                            // Calculate Dynamic Scale Factor based on Height (Percentage)
+                            // Goal: Consistent visual size regardless of resolution (VGA vs 2K vs 4K)
+                            // Best Practice Reference: 640x480 (VGA) -> Font size ~14-16px looks good (~3% of height)
 
-                            const strokeWidth = 2 * scaleFactor;
-                            const fontSize = 16 * scaleFactor;
-                            const textPaddingX = 4 * scaleFactor;
-                            const textPaddingY = 2 * scaleFactor;
+                            const videoHeight = videoDims.height;
+
+                            // Configuration constants (Dynamic from Settings)
+                            const FONT_HEIGHT_PERCENT = overlayScale;
+                            const STROKE_WIDTH_PERCENT = strokeScale;
+
+                            // Calculate pixel values
+                            const fontSize = Math.max(12, videoHeight * FONT_HEIGHT_PERCENT); // Min 12px for tiny videos
+                            const strokeWidth = Math.max(1, videoHeight * STROKE_WIDTH_PERCENT); // Min 1px
+
+                            const textPaddingX = fontSize * 0.3; // Relative padding
+                            const textPaddingY = fontSize * 0.15;
                             const textHeight = fontSize + (textPaddingY * 2);
 
                             // Sort detections by priority for Z-index (Low -> High)
@@ -595,11 +612,6 @@ export default function SynchronizedPlayer({
                         })()}
                     </svg>
                 )}
-            </div>
-
-            {/* Overlay Info (Top Right) */}
-            <div className="absolute top-2 right-2 bg-black/60 px-2 py-1 rounded text-[10px] text-gray-300 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                {activeSource?.type === 'segment' ? 'SEG' : 'FILE'} | {new Date(currentTime).toLocaleTimeString()}
             </div>
         </div>
     );

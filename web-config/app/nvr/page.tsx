@@ -5,6 +5,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { api, SessionInfo, Detection, SessionConfig } from '@/lib/api';
 import { Play, Pause, FastForward, Rewind, Maximize, AlertTriangle, Monitor, Calendar, Clock, ChevronRight, Video, Tv, ArrowLeft, Film, Radio } from 'lucide-react';
+import { useSettings, OverlaySettings } from '@/components/SettingsContext';
 
 export default function NVRPage() {
     const searchParams = useSearchParams();
@@ -241,6 +242,14 @@ export default function NVRPage() {
         };
     }, [selectedSession, detections, showBoxes, showLabels, showConfidence, isLiveMode, activeSegment]);
 
+    const { getSettingsForCamera, scopeSettings, globalSettings } = useSettings();
+
+    // Determine settings to pass: 
+    // If scope.nvr is active -> use custom settings (global + camera override)
+    // If scope.nvr is inactive -> use default settings (hardcoded fallback or "clean" default)
+    // Default to strict defaults if scope is off to match user expectation of "Factory Default" effect
+    const DEFAULT_SETTINGS = { overlayScale: 0.035, strokeScale: 0.003 };
+
     return (
         <div className="h-screen bg-gray-900 text-white flex flex-col overflow-hidden">
             {/* Header */}
@@ -288,6 +297,10 @@ export default function NVRPage() {
                                             key={selectedSession.id}
                                             sessionId={selectedSession.id}
                                             toggles={{ showBoxes, showLabels, showConfidence }}
+                                            settings={scopeSettings.nvr
+                                                ? getSettingsForCamera(selectedSession.name || undefined)
+                                                : DEFAULT_SETTINGS
+                                            }
                                         />
                                         <div className="absolute top-4 right-4 bg-red-600 text-white text-xs px-2 py-1 rounded-full animate-pulse flex items-center gap-1 z-10 shadow-lg">
                                             <div className="w-2 h-2 bg-white rounded-full" />
@@ -587,7 +600,7 @@ const formatTime = (seconds: number) => {
 };
 
 // Canvas-based Live View Component
-const LiveView = ({ sessionId, toggles }: { sessionId: number, toggles: any }) => {
+const LiveView = ({ sessionId, toggles, settings }: { sessionId: number, toggles: any, settings: OverlaySettings }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const wsRef = useRef<WebSocket | null>(null);
     const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -596,18 +609,35 @@ const LiveView = ({ sessionId, toggles }: { sessionId: number, toggles: any }) =
     const imgRef = useRef<HTMLImageElement | null>(null);
     const togglesRef = useRef(toggles);
 
+    // Check Scope Logic
+    // const { scopeSettings } = useSettings(); // Assuming useSettings is imported and available
+    // If scopeSettings.nvr is false, use hardcoded defaults (legacy behavior) or context defaults?
+    // Let's use the context defaults if scope is disabled. 
+    // Wait, the settings prop passed here is alreayd resolved.
+    // We should resolve the "effective" settings inside the component using the hook + scope.
+    // BUT, the prop is passed from NVRPage. 
+    // Strategy: Update NVRPage to pass the right settings based on scope.
+
+    // Actually, let's keep logic simple: 
+    // The `settings` prop is what we use.
+    // The PARENT (NVRPage) should decide what `settings` to pass.
+
+    const settingsRef = useRef(settings);
+
     useEffect(() => {
         togglesRef.current = toggles;
+        settingsRef.current = settings;
         if (latestDataRef.current) {
             draw();
         }
-    }, [toggles]);
+    }, [toggles, settings]);
 
     const draw = () => {
         const canvas = canvasRef.current;
         const data = latestDataRef.current;
         const img = imgRef.current;
         const currentToggles = togglesRef.current;
+        const currentSettings = settingsRef.current;
 
         if (canvas && data && img) {
             const ctx = canvas.getContext('2d');
@@ -630,6 +660,12 @@ const LiveView = ({ sessionId, toggles }: { sessionId: number, toggles: any }) =
                 ctx.translate(centerShift_x, centerShift_y);
                 ctx.scale(ratio, ratio);
 
+                const videoHeight = img.height;
+                // Scope Check: Done at parent level or here?
+                // Parent passed `settings`. Parent should handle checking scope.
+                const fontSize = Math.max(12, videoHeight * currentSettings.overlayScale);
+                const strokeWidth = Math.max(1, videoHeight * currentSettings.strokeScale);
+
                 if (currentToggles.showBoxes && data.detections) {
                     data.detections.forEach((d: any) => {
                         const bbox = d.bbox;
@@ -644,7 +680,7 @@ const LiveView = ({ sessionId, toggles }: { sessionId: number, toggles: any }) =
                         const color = getClassColor(className);
 
                         ctx.strokeStyle = color;
-                        ctx.lineWidth = 2 / ratio;
+                        ctx.lineWidth = strokeWidth;
                         ctx.strokeRect(x, y, w, h);
 
                         if (currentToggles.showLabels) {
@@ -653,15 +689,16 @@ const LiveView = ({ sessionId, toggles }: { sessionId: number, toggles: any }) =
                             if (currentToggles.showConfidence) {
                                 text += ` ${Math.round(conf * 100)}%`;
                             }
-                            const fontSize = Math.max(12, 12 / ratio);
+
                             ctx.font = `bold ${fontSize}px sans-serif`;
-                            const padding = 5 / ratio;
+                            const padding = fontSize * 0.3;
                             const textMetrics = ctx.measureText(text);
-                            const bgHeight = fontSize + padding * 2;
-                            ctx.fillRect(x, y - bgHeight, textMetrics.width + padding * 2, bgHeight);
+                            const bgHeight = fontSize + padding * 0.5;
+
+                            ctx.fillRect(x, y - bgHeight - (padding * 0.5), textMetrics.width + padding, bgHeight + (padding * 0.5));
 
                             ctx.fillStyle = 'white';
-                            ctx.fillText(text, x + padding, y - padding);
+                            ctx.fillText(text, x + (padding * 0.5), y - (padding * 0.5));
                         }
                     });
                 }
@@ -673,7 +710,8 @@ const LiveView = ({ sessionId, toggles }: { sessionId: number, toggles: any }) =
     useEffect(() => {
         const connect = () => {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//localhost:8000/ws/live/${sessionId}`;
+            // Use window.location.hostname to avoid hardcoded localhost
+            const wsUrl = `${protocol}//${window.location.hostname}:8000/ws/live/${sessionId}`;
             const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
 

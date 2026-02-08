@@ -4,6 +4,7 @@ import { useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api, SessionInfo } from '@/lib/api';
 import { getClassColor, DrawDetectionsOptions } from '@/lib/detection-utils';
+import { useSettings } from '../SettingsContext';
 
 interface LiveCameraFeedProps {
     session: SessionInfo;
@@ -19,13 +20,29 @@ export default function LiveCameraFeed({ session, options }: LiveCameraFeedProps
     const togglesRef = useRef(options);
     const isRunning = session.status === 'running';
 
-    // Update toggles ref when options change
+    // Settings
+    const { getSettingsForCamera, scopeSettings } = useSettings();
+    // Derive camera name from session
+    const cameraName = session.name || `Camera ${session.id}`;
+
+    // Default settings to fall back to if scope is disabled
+    const DEFAULT_SETTINGS = { overlayScale: 0.035, strokeScale: 0.003 };
+
+    // Resolve settings based on scope
+    const settings = scopeSettings.cameras
+        ? getSettingsForCamera(cameraName)
+        : DEFAULT_SETTINGS;
+
+    const settingsRef = useRef(settings);
+
+    // Update refs when props/settings change
     useEffect(() => {
         togglesRef.current = options;
+        settingsRef.current = settings; // Keep settings ref updated
         if (latestDataRef.current) {
             draw();
         }
-    }, [options]);
+    }, [options, settings]);
 
     // Draw function - renders frame and detections on canvas
     const draw = () => {
@@ -34,6 +51,7 @@ export default function LiveCameraFeed({ session, options }: LiveCameraFeedProps
             const data = latestDataRef.current;
             const img = imgRef.current;
             const currentToggles = togglesRef.current;
+            const currentSettings = settingsRef.current;
 
             if (canvas && data && img) {
                 const ctx = canvas.getContext('2d');
@@ -61,6 +79,10 @@ export default function LiveCameraFeed({ session, options }: LiveCameraFeedProps
                         ctx.translate(centerShift_x, centerShift_y);
                         ctx.scale(ratio, ratio);
 
+                        const videoHeight = img.height;
+                        const fontSize = Math.max(12, videoHeight * currentSettings.overlayScale);
+                        const strokeWidth = Math.max(1, videoHeight * currentSettings.strokeScale);
+
                         data.detections.forEach((d: any) => {
                             const bbox = d.bbox;
                             const className = d.class;
@@ -75,7 +97,7 @@ export default function LiveCameraFeed({ session, options }: LiveCameraFeedProps
 
                             // Draw bounding box
                             ctx.strokeStyle = color;
-                            ctx.lineWidth = 2 / ratio;
+                            ctx.lineWidth = strokeWidth;
                             ctx.strokeRect(x, y, w, h);
 
                             // Draw label
@@ -85,15 +107,16 @@ export default function LiveCameraFeed({ session, options }: LiveCameraFeedProps
                                 if (currentToggles.showConfidence) {
                                     text += ` ${Math.round(conf * 100)}%`;
                                 }
-                                const fontSize = Math.max(12, 12 / ratio);
+
                                 ctx.font = `bold ${fontSize}px sans-serif`;
-                                const padding = 5 / ratio;
+                                const padding = fontSize * 0.3;
                                 const textMetrics = ctx.measureText(text);
-                                const bgHeight = fontSize + padding * 2;
-                                ctx.fillRect(x, y - bgHeight, textMetrics.width + padding * 2, bgHeight);
+                                const bgHeight = fontSize + padding * 0.5;
+
+                                ctx.fillRect(x, y - bgHeight - (padding * 0.5), textMetrics.width + padding, bgHeight + (padding * 0.5));
 
                                 ctx.fillStyle = 'white';
-                                ctx.fillText(text, x + padding, y - padding);
+                                ctx.fillText(text, x + (padding * 0.5), y - (padding * 0.5));
                             }
                         });
 
@@ -112,6 +135,7 @@ export default function LiveCameraFeed({ session, options }: LiveCameraFeedProps
 
         const connect = () => {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            // Use window.location.hostname to avoid hardcoded localhost
             const wsUrl = `${protocol}//${window.location.hostname}:8000/ws/live/${session.id}`;
             const ws = new WebSocket(wsUrl);
             wsRef.current = ws;
