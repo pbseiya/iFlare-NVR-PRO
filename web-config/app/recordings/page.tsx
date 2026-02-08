@@ -189,6 +189,31 @@ export default function RecordingsPage() {
         staleTime: 60000,
     });
 
+    // Fetch video segments for visible sessions
+    const { data: segmentsBySession = {} } = useQuery({
+        queryKey: ['segments', filteredSessions.map(s => s.id)],
+        queryFn: async () => {
+            const map: Record<number, any[]> = {};
+            // Limit to recent/visible sessions similar to detections to avoid overload
+            const recentSessions = filteredSessions.slice(0, 20);
+
+            const promises = recentSessions.map(async (s) => {
+                try {
+                    const segs = await api.getSessionSegments(s.id);
+                    map[s.id] = segs;
+                } catch (e) {
+                    console.error(`Failed to fetch segments for session ${s.id}`, e);
+                }
+            });
+
+            await Promise.all(promises);
+            return map;
+        },
+        enabled: filteredSessions.length > 0,
+        refetchOnWindowFocus: false,
+        staleTime: 300000, // 5 minutes
+    });
+
     // Auto-select first camera if none selected
     useEffect(() => {
         if (selectedCameras.length === 0 && cameras.length > 0) {
@@ -305,16 +330,43 @@ export default function RecordingsPage() {
                             <span className="text-xs text-gray-500 mb-1">Overlays</span>
                             <div className="flex bg-gray-800 rounded-lg p-1 border border-gray-700 h-[38px] items-center gap-3 px-3">
                                 {[
-                                    { id: 'bbox', label: 'Box', state: showBBox, setter: setShowBBox },
-                                    { id: 'class', label: 'Label', state: showLabels, setter: setShowLabels },
-                                    { id: 'conf', label: 'Conf', state: showConfidence, setter: setShowConfidence },
+                                    {
+                                        id: 'bbox',
+                                        label: 'Boxes',
+                                        state: showBBox,
+                                        setter: (val: boolean) => {
+                                            setShowBBox(val);
+                                            if (!val) {
+                                                setShowLabels(false);
+                                                setShowConfidence(false);
+                                            }
+                                        }
+                                    },
+                                    {
+                                        id: 'class',
+                                        label: 'Labels',
+                                        state: showLabels,
+                                        setter: (val: boolean) => {
+                                            if (val && !showBBox) setShowBBox(true); // Auto-enable box if label checked
+                                            setShowLabels(val);
+                                        }
+                                    },
+                                    {
+                                        id: 'conf',
+                                        label: 'Confidence',
+                                        state: showConfidence,
+                                        setter: (val: boolean) => {
+                                            if (val && !showBBox) setShowBBox(true); // Auto-enable box if conf checked
+                                            setShowConfidence(val);
+                                        }
+                                    },
                                 ].map(opt => (
                                     <label key={opt.id} className="flex items-center gap-1.5 cursor-pointer text-sm select-none">
                                         <div className={`
                                             w-4 h-4 rounded border flex items-center justify-center transition-colors
                                             ${opt.state ? 'bg-blue-600 border-blue-600' : 'border-gray-500 hover:border-gray-400'}
                                         `}>
-                                            {opt.state && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                                            {opt.state && <Check size={12} className="text-white" />}
                                         </div>
                                         <input
                                             type="checkbox"
@@ -467,8 +519,10 @@ export default function RecordingsPage() {
                                 currentTime={currentTime}
                                 events={detections}
                                 sessions={filteredSessions}
+                                segmentsBySessionId={segmentsBySession}
+                                selectedCameras={selectedCameras}
                                 onSeek={setCurrentTime}
-                                height={60}
+                                height={60 + (selectedCameras.length > 1 ? selectedCameras.length * 20 : 0)} // Dynamic height? Adjusting container height might be needed.
                                 className="rounded-lg border border-gray-700"
                             />
                             {/* Time Axis Context */}

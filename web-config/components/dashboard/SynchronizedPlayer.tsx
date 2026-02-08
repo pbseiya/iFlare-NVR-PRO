@@ -508,6 +508,19 @@ export default function SynchronizedPlayer({
                         preserveAspectRatio="xMidYMid meet" // Match object-contain behavior
                     >
                         {(() => {
+                            // Calculate Dynamic Scale Factor
+                            // Base reference: 1920x1080 -> scale 1.0 (stroke 2px, font 14px)
+                            // For 2K (2560x1440) -> scale ~1.33
+                            // For 4K (3840x2160) -> scale ~2.0
+                            const baseWidth = 1920;
+                            const scaleFactor = Math.max(0.8, videoDims.width / baseWidth); // Min scale 0.8 to not get too small on tiny videos
+
+                            const strokeWidth = 2 * scaleFactor;
+                            const fontSize = 16 * scaleFactor;
+                            const textPaddingX = 4 * scaleFactor;
+                            const textPaddingY = 2 * scaleFactor;
+                            const textHeight = fontSize + (textPaddingY * 2);
+
                             // Sort detections by priority for Z-index (Low -> High)
                             const getPriority = (cls: string = '') => {
                                 const c = cls.toLowerCase();
@@ -526,12 +539,17 @@ export default function SynchronizedPlayer({
 
                             return sortedDetections.map((det, idx) => {
                                 const color = getColor(det.class_name || '');
-                                const labelText = `${showLabels ? det.class_name : ''}${showLabels && showConfidence ? ' ' : ''}${showConfidence ? Math.round(det.confidence * 100) + '%' : ''}`;
+                                // Only show label/conf if Box is ON (redundant check if parent handles it, but safe)
+                                const shouldShowText = showBBox && (showLabels || showConfidence);
 
-                                // Approx text width for background (font-size 14px * 0.6 + padding)
-                                const charCount = labelText.length;
-                                const textWidth = charCount * 9 + 4; // Estimate
-                                const textHeight = 20;
+                                const labelParts = [];
+                                if (showLabels) labelParts.push(det.class_name);
+                                if (showConfidence) labelParts.push(`${Math.round(det.confidence * 100)}%`);
+                                const labelText = labelParts.join(' ');
+
+                                // Estimate text width (rough char width approximation)
+                                const charWidth = fontSize * 0.6;
+                                const textWidth = (labelText.length * charWidth) + (textPaddingX * 2);
 
                                 return (
                                     <g key={idx}>
@@ -543,13 +561,13 @@ export default function SynchronizedPlayer({
                                                 height={det.bbox_y2 - det.bbox_y1}
                                                 fill="none"
                                                 stroke={color}
-                                                strokeWidth="2"
+                                                strokeWidth={strokeWidth}
                                                 vectorEffect="non-scaling-stroke"
                                             />
                                         )}
-                                        {(showLabels || showConfidence) && (
+                                        {shouldShowText && labelText.length > 0 && (
                                             <g>
-                                                {/* Background Rect for Label */}
+                                                {/* Background Rect for Label - Positioned above box */}
                                                 <rect
                                                     x={det.bbox_x1}
                                                     y={det.bbox_y1 - textHeight}
@@ -559,12 +577,13 @@ export default function SynchronizedPlayer({
                                                 />
                                                 {/* Text Label */}
                                                 <text
-                                                    x={det.bbox_x1 + 2}
-                                                    y={det.bbox_y1 - 5}
+                                                    x={det.bbox_x1 + textPaddingX}
+                                                    y={det.bbox_y1 - textPaddingY - (fontSize * 0.15)} // Fine-tune baseline
                                                     fill="white"
                                                     fontWeight="bold"
-                                                    fontSize="14"
+                                                    fontSize={fontSize}
                                                     style={{ textShadow: 'none' }}
+                                                    dominantBaseline="auto"
                                                 >
                                                     {labelText}
                                                 </text>

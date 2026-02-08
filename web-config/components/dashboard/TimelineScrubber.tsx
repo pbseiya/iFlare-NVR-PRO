@@ -9,6 +9,8 @@ interface TimelineScrubberProps {
     currentTime: Date;
     events: Detection[];
     sessions?: SessionInfo[];
+    segmentsBySessionId?: Record<number, any[]>;
+    selectedCameras?: string[]; // New prop for multi-lane rendering
     onSeek: (time: Date) => void;
     height?: number;
     className?: string;
@@ -20,6 +22,8 @@ export default function TimelineScrubber({
     currentTime,
     events,
     sessions = [],
+    segmentsBySessionId = {},
+    selectedCameras = [],
     onSeek,
     height = 60,
     className = ''
@@ -46,7 +50,7 @@ export default function TimelineScrubber({
         canvas.height = clientHeight;
 
         // Clear canvas
-        ctx.fillStyle = '#111827'; // bg-gray-900
+        ctx.fillStyle = '#020617'; // bg-gray-950 (approx)
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         const duration = viewEnd - viewStart;
@@ -54,67 +58,119 @@ export default function TimelineScrubber({
 
         const pixelsPerMs = canvas.width / duration;
 
-        // Draw time markers (grid)
-        ctx.strokeStyle = '#374151'; // gray-700
-        ctx.fillStyle = '#9CA3AF'; // gray-400
+        // --- 1. Draw Global Grid (Time Markers) ---
+        ctx.strokeStyle = '#1F2937'; // gray-800
+        ctx.fillStyle = '#6B7280'; // gray-500
         ctx.font = '10px sans-serif';
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
 
-        // Determine grid interval based on zoom
         const updateGrid = () => {
-            // Simple adaptive grid: aim for ~100px per tick
             const targetPx = 100;
             const msPerTick = targetPx / pixelsPerMs;
-
-            // Round to nice intervals (1s, 1m, 5m, 1h, 6h, 1d, 1w)
             const intervals = [
                 1000, 10000, 60000, 300000, 600000, 3600000,
                 10800000, 21600000, 43200000, 86400000, 604800000
             ];
             const interval = intervals.find(i => i >= msPerTick) || 86400000;
-
-            // Align first tick to interval
             const firstTick = Math.ceil(viewStart / interval) * interval;
 
             for (let t = firstTick; t <= viewEnd; t += interval) {
                 const x = (t - viewStart) * pixelsPerMs;
+
+                // Grid line
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
                 ctx.lineTo(x, canvas.height);
                 ctx.stroke();
 
+                // Label
                 const date = new Date(t);
                 let label = '';
                 if (interval < 60000) label = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
                 else if (interval < 86400000) label = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 else label = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
-                ctx.fillText(label, x, canvas.height - 5);
+                ctx.fillText(label, x, canvas.height - 14); // Draw at bottom
             }
         };
         updateGrid();
 
-        // Draw Session Blocks (Blue background where video exists)
-        ctx.fillStyle = '#3B82F6'; // Blue-500
+        // --- 2. Calculate Lanes ---
+        // If no cameras selected, treat as 1 lane.
+        const lanes = selectedCameras.length > 0 ? selectedCameras : ['All'];
+        const laneHeight = (height - 20) / lanes.length; // Reserve 20px at bottom for timeline labels
+
+        // Helper to get lane index
+        const getLaneIndex = (sessionOrEventName: string) => {
+            if (lanes.length === 1 && lanes[0] === 'All') return 0;
+            return lanes.indexOf(sessionOrEventName);
+        };
+
+        // --- 3. Draw Sessions (Gap-Aware) per Lane ---
         sessions.forEach(session => {
+            const camName = session.name || session.source_path;
+            const laneIdx = getLaneIndex(camName);
+            if (laneIdx === -1) return; // Not in selected cameras
+
             const sTime = new Date(session.created_at).getTime();
             const eTime = session.ended_at ? new Date(session.ended_at).getTime() : Date.now();
+            const laneY = laneIdx * laneHeight;
 
-            // Skip if out of view
-            if (eTime < viewStart || sTime > viewEnd) return;
+            // 1. Draw Faint Background for Session Duration (System Active Scope)
+            if (eTime >= viewStart && sTime <= viewEnd) {
+                const startX = Math.max(0, (sTime - viewStart) * pixelsPerMs);
+                const endX = Math.min(canvas.width, (eTime - viewStart) * pixelsPerMs);
+                const w = endX - startX;
 
-            const start = Math.max(sTime, viewStart);
-            const end = Math.min(eTime, viewEnd);
+                if (w > 0) {
+                    ctx.fillStyle = '#1e293b'; // slate-800 (very dark blue-gray)
+                    ctx.fillRect(startX, laneY + 2, w, laneHeight - 4);
+                }
+            }
 
-            const x = (start - viewStart) * pixelsPerMs;
-            const w = (end - start) * pixelsPerMs;
+            // 2. Draw Actual Video Segments (Bright Blue)
+            const segments = segmentsBySessionId[session.id] || [];
+            if (segments.length > 0) {
+                ctx.fillStyle = '#3B82F6'; // Blue-500
+                segments.forEach(seg => {
+                    const segStart = new Date(seg.start_time).getTime();
+                    // Use duration if available, else approximate or skip
+                    // segments usually have duration in seconds
+                    const durMs = (seg.duration_seconds || 0) * 1000;
+                    if (durMs <= 0) return;
 
-            ctx.fillRect(x, 5, Math.max(w, 2), height - 25);
+                    const segEnd = segStart + durMs;
+
+                    if (segEnd < viewStart || segStart > viewEnd) return;
+
+                    const startX = (segStart - viewStart) * pixelsPerMs;
+                    const endX = (segEnd - viewStart) * pixelsPerMs; // allow overshoot, canvas clips
+
+                    // Draw distinct block
+                    ctx.fillRect(Math.max(0, startX), laneY + 2, Math.max(1, endX - startX), laneHeight - 4);
+                });
+            } else {
+                // FALLBACK: If no segments loaded yet (or legacy session), draw solid blue bar for whole session
+                // This preserves behavior for sessions before we had segments or if fetch fails
+                // But specifically for our fixed session 101, it has segments, so it should render fine.
+                // If it has segments in DB but we failed to fetch, it will look like "System Active" but no video.
+                // Let's keep logic simple: if segments array is explicit empty but session is legacy, we might want to default.
+                // But for now, "Gap-Aware" means if we don't see segments, we don't draw video.
+                // EXCEPT if session.video_output_path is set (Legacy Mode) -> Single file
+                if (session.video_output_path) {
+                    const startX = Math.max(0, (sTime - viewStart) * pixelsPerMs);
+                    const endX = Math.min(canvas.width, (eTime - viewStart) * pixelsPerMs);
+                    const w = endX - startX;
+                    if (w > 0) {
+                        ctx.fillStyle = '#3B82F6';
+                        ctx.fillRect(startX, laneY + 2, w, laneHeight - 4);
+                    }
+                }
+            }
         });
 
-        // Draw events (Detections)
-        // Priority (High to Low): fire_smoke > smoke > fire > steam
-        // Draw Order (Low -> High priority): steam (1) -> fire (2) -> smoke (3) -> fire_smoke (4)
+        // --- 4. Draw Events (Detections) per Lane ---
         const getPriority = (cls: string = '') => {
             const c = cls.toLowerCase();
             if (c.includes('fire_smoke') || c.includes('firesmoke')) return 4;
@@ -124,36 +180,66 @@ export default function TimelineScrubber({
             return 0;
         };
 
-        // Sort events by priority (low to high) so high priority is drawn last (on top)
-        const sortedEvents = [...events].sort((a, b) => {
-            const pA = getPriority((a.class_name || '').toLowerCase());
-            const pB = getPriority((b.class_name || '').toLowerCase());
-            return pA - pB;
-        });
+        const sortedEvents = [...events].sort((a, b) => getPriority(a.class_name) - getPriority(b.class_name));
 
         sortedEvents.forEach(event => {
             if (!event.timestamp) return;
             const t = new Date(event.timestamp).getTime();
             if (t < viewStart || t > viewEnd) return;
 
+            // Find which session this event belongs to to identify camera
+            const session = sessions.find(s => s.id === event.session_id);
+            if (!session) return;
+
+            const camName = session.name || session.source_path;
+            const laneIdx = getLaneIndex(camName);
+            if (laneIdx === -1) return;
+
             const x = (t - viewStart) * pixelsPerMs;
+            const y = laneIdx * laneHeight;
 
-            // Color based on class (User defined)
-            let color = '#22C55E'; // Default Green (Steam)
+            // Color Coding
             const cls = (event.class_name || '').toLowerCase();
-
-            if (cls.includes('fire_smoke') || cls.includes('firesmoke')) color = '#EF4444';      // Red
-            else if (cls.includes('smoke')) color = '#A855F7';      // Purple
-            else if (cls.includes('fire')) color = '#EAB308';       // Yellow
-            else if (cls.includes('steam')) color = '#22C55E';      // Green
+            let color = '#22C55E';
+            if (cls.includes('fire_smoke') || cls.includes('firesmoke')) color = '#EF4444';
+            else if (cls.includes('smoke')) color = '#A855F7';
+            else if (cls.includes('fire')) color = '#EAB308';
+            else if (cls.includes('steam')) color = '#22C55E';
 
             ctx.fillStyle = color;
-            ctx.globalAlpha = 0.8;
-            ctx.fillRect(x - 1, 10, 2, height - 30);
+            ctx.globalAlpha = 0.9;
+            ctx.fillRect(x - 1, y + 2, 2, laneHeight - 4);
             ctx.globalAlpha = 1.0;
         });
 
-        // Draw current time playhead
+        // --- 5. Draw Lane Separators & Labels ---
+        if (lanes.length > 1) {
+            ctx.strokeStyle = '#374151'; // gray-700
+            ctx.fillStyle = '#9CA3AF'; // gray-400
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.font = '10px monospace';
+
+            lanes.forEach((lane, idx) => {
+                const y = idx * laneHeight;
+
+                // Separator line (bottom of lane)
+                if (idx < lanes.length - 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y + laneHeight);
+                    ctx.lineTo(canvas.width, y + laneHeight);
+                    ctx.stroke();
+                }
+
+                // Camera Label (Semi-transparent overlay)
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, y, 100, 16);
+                ctx.fillStyle = '#E5E7EB'; // gray-200
+                ctx.fillText(lane, 4, y + 8);
+            });
+        }
+
+        // --- 6. Draw Playhead ---
         const currentT = currentTime.getTime();
         if (currentT >= viewStart && currentT <= viewEnd) {
             const x = (currentT - viewStart) * pixelsPerMs;
@@ -179,7 +265,7 @@ export default function TimelineScrubber({
         draw();
         window.addEventListener('resize', draw);
         return () => window.removeEventListener('resize', draw);
-    }, [startTime, endTime, currentTime, events, sessions, viewStart, viewEnd]);
+    }, [startTime, endTime, currentTime, events, sessions, segmentsBySessionId, selectedCameras, viewStart, viewEnd]);
 
     const handleMouseEvent = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!containerRef.current) return;
