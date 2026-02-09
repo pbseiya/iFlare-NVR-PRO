@@ -388,3 +388,34 @@ class Database:
                 session_id,
             )
             return [dict(row) for row in rows]
+
+    async def get_stuck_segments(self):
+        """Get video segments that are stuck in 'recording' status"""
+        async with self.acquire() as conn:
+            # We look for segments that are 'recording' but the system has restarted
+            # Since this runs at startup, ANY segment with status 'recording' is by definition stuck
+            rows = await conn.fetch(
+                """
+                SELECT id, session_id, file_path, start_time
+                FROM video_segments
+                WHERE status = 'recording'
+                """
+            )
+            return [dict(row) for row in rows]
+
+    async def mark_segment_recovered(
+        self, segment_id: int, new_path: str, duration: float, status: str
+    ):
+        """Update segment status after recovery attempt"""
+        async with self.acquire() as conn:
+            await conn.execute(
+                """
+                UPDATE video_segments
+                SET file_path = $1, duration_seconds = $2, status = $3, end_time = start_time + make_interval(secs => $2)
+                WHERE id = $4
+                """,
+                new_path,
+                duration,
+                status,
+                segment_id,
+            )

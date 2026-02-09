@@ -34,6 +34,7 @@ import cv2
 from .database import Database
 from .inference_engine import InferenceEngine
 from .video_converter import VideoConverter
+from .recovery import VideoRecoveryService
 
 
 @asynccontextmanager
@@ -45,8 +46,6 @@ async def lifespan(app: FastAPI):
     )
     app.state.db = Database(database_url)
     await app.state.db.connect()
-    app.state.db = Database(database_url)
-    await app.state.db.connect()
     print(f"✓ Connected to database")
 
     # Cleanup stale sessions
@@ -55,6 +54,14 @@ async def lifespan(app: FastAPI):
             "UPDATE inference_sessions SET status = 'stopped', ended_at = NOW() WHERE status = 'running'"
         )
     print(f"✓ Cleaned up stale sessions")
+
+    # Run Video Recovery (for crashed segments)
+    recovery_service = VideoRecoveryService(app.state.db)
+    # Run in background or await? Await is safer to ensure consistency before accepting new reqs
+    # but might delay startup 500ms-1s per broken file.
+    # Given typical user usage, awaiting is better to ensure data integrity immediately.
+    print(f"⏳ Running video recovery scan...")
+    await recovery_service.scan_and_recover()
 
     # Initialize Inference Engine
     app.state.inference_engine = InferenceEngine(app.state.db)
