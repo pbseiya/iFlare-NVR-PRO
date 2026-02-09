@@ -29,14 +29,14 @@ export default function SessionCardSimple({
         <div className="bg-gray-900 rounded-xl p-6 border border-gray-800 hover:border-blue-500 transition-all group">
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
-                <Link href={`/nvr?session_id=${session.id}`} className="flex-1">
-                    <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-blue-400 transition-colors cursor-pointer">
+                <Link href={`/nvr?session_id=${session.id}`} className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-blue-400 transition-colors cursor-pointer truncate" title={session.name || session.model_name.split('/').pop()}>
                         {session.name || session.model_name.split('/').pop()}
                     </h3>
                     <p className="text-sm text-gray-500">Session #{session.id}</p>
                 </Link>
                 <div className={`
-                    px-3 py-1 rounded-full text-xs font-medium
+                    flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium
                     ${isRunning
                         ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                         : 'bg-gray-700 text-gray-400 border border-gray-600'
