@@ -1,7 +1,7 @@
 // API Client for YOLOv11 Backend
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export const apiClient = axios.create({
     baseURL: API_BASE_URL,
@@ -37,6 +37,7 @@ export interface SessionConfig {
     video_output_path?: string | null;
     recording_mode?: 'none' | 'clean' | 'annotated';
     render_mode: 'pipeline' | 'deferred';
+    video_height?: number;
 }
 
 export interface SessionInfo extends SessionConfig {
@@ -91,6 +92,16 @@ export interface SessionListResponse {
     total: number;
 }
 
+export interface SourceAnalysisResponse {
+    width: number;
+    height: number;
+    fps: number;
+    codec?: string;
+    estimated_bitrate_bps?: number;
+    duration_sec?: number;
+    error?: string;
+}
+
 // API Functions
 export const api = {
     // Health check
@@ -140,6 +151,15 @@ export const api = {
 
     deleteSession: async (sessionId: number) => {
         const response = await apiClient.delete(`/api/sessions/${sessionId}`);
+        return response.data;
+    },
+
+    // Analysis
+    analyzeSource: async (sourcePath: string, sourceType: string) => {
+        const response = await apiClient.post<SourceAnalysisResponse>('/api/sessions/analyze-source', {
+            source_path: sourcePath,
+            source_type: sourceType,
+        });
         return response.data;
     },
 

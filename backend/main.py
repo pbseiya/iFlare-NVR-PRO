@@ -27,9 +27,13 @@ from .models import (
     TimeSeriesPoint,
     ErrorResponse,
     HealthResponse,
+    SourceAnalysisRequest,
+    SourceAnalysisResponse,
 )
+import cv2
 from .database import Database
 from .inference_engine import InferenceEngine
+from .video_converter import VideoConverter
 
 
 @asynccontextmanager
@@ -56,11 +60,22 @@ async def lifespan(app: FastAPI):
     app.state.inference_engine = InferenceEngine(app.state.db)
     print(f"✓ Inference Engine initialized")
 
+    # Initialize Video Converter Service
+    app.state.video_converter = VideoConverter(app.state.db, max_concurrent=2)
+    await app.state.video_converter.start()
+    app.state.inference_engine.converter = app.state.video_converter
+    print(f"✓ Video Converter Service started")
+
     yield
 
     # Shutdown
     # Stop all active sessions
     await app.state.inference_engine.stop_all_sessions()
+
+    # Stop Video Converter Service
+    await app.state.video_converter.stop()
+    print("✓ Video Converter Service stopped")
+
     await app.state.db.disconnect()
     print("✓ Disconnected from database")
 
@@ -109,6 +124,7 @@ async def start_session(config: SessionConfig):
             render_mode=config.render_mode,
             recording_mode=config.recording_mode,
             name=config.name,
+            video_height=config.video_height,
         )
 
         # Auto-generate video path if not provided but save_video is True
@@ -307,23 +323,72 @@ async def delete_session(session_id: int):
             except Exception as e:
                 print(f"⚠️ Error stopping session {session_id}: {e}")
 
-        # Clean up video files
+        # Clean up video files from hierarchical structure
         try:
             import shutil
+            from pathlib import Path
 
-            # 1. Delete session directory (Video Segments)
-            session_dir = os.path.join(os.getcwd(), "videos", "output", f"session_{session_id}")
-            if os.path.exists(session_dir):
-                shutil.rmtree(session_dir)
-                print(f"🗑️ Deleted session directory: {session_dir}")
+            # Query all video segments to get actual file paths
+            async with app.state.db.acquire() as conn:
+                segments = await conn.fetch(
+                    "SELECT file_path FROM video_segments WHERE session_id = $1 AND file_path IS NOT NULL",
+                    session_id,
+                )
 
-            # 2. Check for single video output (Legacy or non-segment mode)
+            deleted_files = 0
+            deleted_dirs = set()
+
+            for segment in segments:
+                file_path = segment["file_path"]
+                if file_path and os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                        deleted_files += 1
+                        print(f"🗑️ Deleted video file: {file_path}")
+
+                        # Track parent directory for cleanup
+                        parent_dir = os.path.dirname(file_path)
+                        deleted_dirs.add(parent_dir)
+                    except Exception as e:
+                        print(f"⚠️ Error deleting file {file_path}: {e}")
+
+            # Clean up empty directories (session folder and parent date/time folders if empty)
+            for dir_path in sorted(deleted_dirs, reverse=True):  # Start from deepest
+                try:
+                    if os.path.exists(dir_path) and not os.listdir(dir_path):
+                        os.rmdir(dir_path)
+                        print(f"🗑️ Deleted empty directory: {dir_path}")
+
+                        # Try to clean up parent directories if they're also empty
+                        parent = os.path.dirname(dir_path)
+                        while parent and parent.startswith(
+                            os.path.join(os.getcwd(), "videos", "output")
+                        ):
+                            if os.path.exists(parent) and not os.listdir(parent):
+                                os.rmdir(parent)
+                                print(f"🗑️ Deleted empty parent directory: {parent}")
+                                parent = os.path.dirname(parent)
+                            else:
+                                break
+                except Exception as e:
+                    print(f"⚠️ Error cleaning up directory {dir_path}: {e}")
+
+            print(f"✅ Deleted {deleted_files} video files for session {session_id}")
+
+            # Legacy cleanup: Check for old-style session directory (for backward compatibility)
+            legacy_session_dir = os.path.join(
+                os.getcwd(), "videos", "output", f"session_{session_id}"
+            )
+            if os.path.exists(legacy_session_dir):
+                shutil.rmtree(legacy_session_dir)
+                print(f"🗑️ Deleted legacy session directory: {legacy_session_dir}")
+
+            # Check for single video output (Legacy or non-segment mode)
             video_path = session.get("video_output_path")
             if video_path and isinstance(video_path, str) and os.path.exists(video_path):
-                # Avoid deleting if it was inside the directory we just removed
-                if not video_path.startswith(session_dir):
-                    os.remove(video_path)
-                    print(f"🗑️ Deleted video file: {video_path}")
+                os.remove(video_path)
+                print(f"🗑️ Deleted legacy video file: {video_path}")
+
         except Exception as e:
             print(f"⚠️ Error cleaning up files for session {session_id}: {e}")
 
@@ -750,6 +815,62 @@ async def global_exception_handler(request, exc):
 # ========================================
 # Run Application
 # ========================================
+
+
+# ========================================
+# Analysis Endpoints
+# ========================================
+
+
+@app.post("/api/sessions/analyze-source", response_model=SourceAnalysisResponse)
+async def analyze_source(request: SourceAnalysisRequest):
+    """Analyze source media to get resolution, FPS, and estimated bitrate."""
+    source_path = request.source_path
+    source_type = request.source_type
+
+    if source_type == "video":
+        source_path = os.path.expanduser(source_path)
+        if not os.path.exists(source_path):
+            raise HTTPException(status_code=404, detail=f"File not found: {source_path}")
+
+    try:
+        cap = cv2.VideoCapture(source_path)
+        if not cap.isOpened():
+            raise HTTPException(status_code=400, detail=f"Could not open source: {source_path}")
+
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+        # Estimate Bitrate
+        estimated_bitrate = None
+        duration = None
+
+        if source_type == "video":
+            # flexible duration logic
+            try:
+                duration = frame_count / fps if fps > 0 else 0
+                file_size = os.path.getsize(source_path)
+                if duration > 0:
+                    estimated_bitrate = (file_size * 8) / duration  # bits per second
+            except Exception as e:
+                print(f"Error calculating file bitrate: {e}")
+
+        cap.release()
+
+        return SourceAnalysisResponse(
+            width=width,
+            height=height,
+            fps=fps,
+            estimated_bitrate_bps=estimated_bitrate,
+            duration_sec=duration,
+        )
+
+    except Exception as e:
+        print(f"Analyze source error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     import uvicorn

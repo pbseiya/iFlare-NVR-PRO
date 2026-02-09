@@ -3,7 +3,7 @@
 import { useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api, SessionInfo } from '@/lib/api';
-import { getClassColor, DrawDetectionsOptions } from '@/lib/detection-utils';
+import { getClassColor, DrawDetectionsOptions, drawDetections } from '@/lib/detection-utils';
 import { useSettings } from '../SettingsContext';
 
 interface LiveCameraFeedProps {
@@ -74,52 +74,18 @@ export default function LiveCameraFeed({ session, options }: LiveCameraFeedProps
                         centerShift_x, centerShift_y, img.width * ratio, img.height * ratio);
 
                     // Draw detections if enabled
-                    if (currentToggles.showBoxes && data.detections) {
+                    if (data.detections) {
                         ctx.save();
-                        ctx.translate(centerShift_x, centerShift_y);
-                        ctx.scale(ratio, ratio);
+                        // drawDetections handles centering (offsetX/Y) internally based on canvas/source dimensions.
+                        // We do not translate here to avoid double-offsetting.
 
-                        const videoHeight = img.height;
-                        const fontSize = Math.max(12, videoHeight * currentSettings.overlayScale);
-                        const strokeWidth = Math.max(1, videoHeight * currentSettings.strokeScale);
-
-                        data.detections.forEach((d: any) => {
-                            const bbox = d.bbox;
-                            const className = d.class;
-                            const conf = d.conf;
-
-                            const x = bbox[0];
-                            const y = bbox[1];
-                            const w = bbox[2] - bbox[0];
-                            const h = bbox[3] - bbox[1];
-
-                            const color = getClassColor(className);
-
-                            // Draw bounding box
-                            ctx.strokeStyle = color;
-                            ctx.lineWidth = strokeWidth;
-                            ctx.strokeRect(x, y, w, h);
-
-                            // Draw label
-                            if (currentToggles.showLabels) {
-                                ctx.fillStyle = color;
-                                let text = `${className}`;
-                                if (currentToggles.showConfidence) {
-                                    text += ` ${Math.round(conf * 100)}%`;
-                                }
-
-                                ctx.font = `bold ${fontSize}px sans-serif`;
-                                const padding = fontSize * 0.3;
-                                const textMetrics = ctx.measureText(text);
-                                const bgHeight = fontSize + padding * 0.5;
-
-                                ctx.fillRect(x, y - bgHeight - (padding * 0.5), textMetrics.width + padding, bgHeight + (padding * 0.5));
-
-                                ctx.fillStyle = 'white';
-                                ctx.fillText(text, x + (padding * 0.5), y - (padding * 0.5));
-                            }
-                        });
-
+                        drawDetections(
+                            ctx,
+                            canvas,
+                            data.detections,
+                            { width: img.width, height: img.height },
+                            currentToggles
+                        );
                         ctx.restore();
                     }
                 }

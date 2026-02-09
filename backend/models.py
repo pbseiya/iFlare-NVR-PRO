@@ -38,6 +38,9 @@ class SessionConfig(BaseModel):
     render_mode: str = Field(
         "pipeline", pattern="^(pipeline|deferred)$", description="Rendering mode"
     )
+    video_height: Optional[int] = Field(
+        None, description="Target height for video storage (e.g. 720, 1080). None=Original"
+    )
 
 
 class SessionUpdate(BaseModel):
@@ -55,6 +58,7 @@ class SessionUpdate(BaseModel):
     video_output_path: Optional[str] = None
     recording_mode: Optional[str] = Field(None, pattern="^(none|clean|annotated)$")
     render_mode: Optional[str] = Field(None, pattern="^(pipeline|deferred)$")
+    video_height: Optional[int] = None
 
 
 class SessionResponse(BaseModel):
@@ -80,8 +84,10 @@ class SessionInfo(BaseModel):
     iou_threshold: float
     save_video: bool
     video_output_path: Optional[str]
-    recording_mode: Optional[str]
+    video_encoded_path: Optional[str] = None
+    recording_mode: Optional[str] = None
     render_mode: str
+    video_height: Optional[int] = None
     created_at: datetime
     ended_at: Optional[datetime]
     status: str
@@ -269,3 +275,23 @@ class HealthResponse(BaseModel):
     database: str
     timestamp: datetime
     version: str = "1.0.0"
+
+
+# ========================================
+# Source Analysis Models
+# ========================================
+
+
+class SourceAnalysisRequest(BaseModel):
+    source_path: str
+    source_type: str = Field(..., pattern="^(video|rtsp|webcam)$")
+
+
+class SourceAnalysisResponse(BaseModel):
+    width: int
+    height: int
+    fps: float
+    codec: Optional[str] = None
+    estimated_bitrate_bps: Optional[float] = None
+    duration_sec: Optional[float] = None
+    error: Optional[str] = None

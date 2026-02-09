@@ -5,6 +5,8 @@ import { useState } from 'react';
 import CameraGridItem from './CameraGridItem';
 import LayoutSwitcher from './LayoutSwitcher';
 import { Grid, X } from 'lucide-react';
+import { useDetectionFilter } from '@/hooks/useDetectionFilter';
+import { DetectionToggles } from '@/components/shared/DetectionToggles';
 
 type GridLayout = '1x1' | '2x2' | '3x3' | '4x4';
 
@@ -17,10 +19,8 @@ export default function CameraGrid({ sessions, defaultLayout = '2x2' }: CameraGr
     const [layout, setLayout] = useState<GridLayout>(defaultLayout);
     const [focusedSessionId, setFocusedSessionId] = useState<number | null>(null);
 
-    // Detection overlay toggles
-    const [showBoxes, setShowBoxes] = useState(true);
-    const [showLabels, setShowLabels] = useState(true);
-    const [showConfidence, setShowConfidence] = useState(true);
+    // Detection overlay toggles managed by custom hook
+    const detectionFilter = useDetectionFilter();
 
     // Calculate max cameras based on layout
     const maxCameras = {
@@ -65,35 +65,10 @@ export default function CameraGrid({ sessions, defaultLayout = '2x2' }: CameraGr
 
                 <div className="flex items-center gap-3">
                     {/* Detection Overlay Controls */}
-                    <div className="flex items-center gap-3 px-3 py-2 bg-gray-800 rounded-lg border border-gray-700">
-                        <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={showBoxes}
-                                onChange={e => setShowBoxes(e.target.checked)}
-                                className="rounded text-blue-500 focus:ring-blue-500 bg-gray-700 border-gray-600"
-                            />
-                            Boxes
-                        </label>
-                        <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={showLabels}
-                                onChange={e => setShowLabels(e.target.checked)}
-                                className="rounded text-blue-500 focus:ring-blue-500 bg-gray-700 border-gray-600"
-                            />
-                            Labels
-                        </label>
-                        <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={showConfidence}
-                                onChange={e => setShowConfidence(e.target.checked)}
-                                className="rounded text-blue-500 focus:ring-blue-500 bg-gray-700 border-gray-600"
-                            />
-                            Confidence
-                        </label>
-                    </div>
+                    <DetectionToggles
+                        filterState={detectionFilter}
+                        actions={detectionFilter}
+                    />
 
                     {focusedSessionId && (
                         <button
@@ -117,7 +92,7 @@ export default function CameraGrid({ sessions, defaultLayout = '2x2' }: CameraGr
                             session={session}
                             onFocus={() => handleFocus(session.id)}
                             isFocused={focusedSessionId === session.id}
-                            detectionOptions={{ showBoxes, showLabels, showConfidence }}
+                            detectionOptions={detectionFilter}
                         />
                     ))}
                 </div>

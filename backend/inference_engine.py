@@ -4,8 +4,9 @@ import cv2
 import numpy as np
 import time
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from .database import Database
+from .video_converter import VideoConverter
 from ultralytics import YOLO
 import torch
 
@@ -19,7 +20,9 @@ class VideoSegmentManager:
         width: int,
         height: int,
         fps: float,
+        camera_id: str = "default",
         interval_seconds: int = 60,
+        converter: Optional[VideoConverter] = None,
     ):
         self.db = db
         self.session_id = session_id
@@ -27,16 +30,15 @@ class VideoSegmentManager:
         self.width = width
         self.height = height
         self.fps = fps
+        self.camera_id = camera_id
         self.interval_seconds = interval_seconds
+        self.converter = converter
 
         self.current_writer = None
         self.current_segment_id = None
         self.segment_start_time = None
         self.current_file_path = None
-
-        # Ensure session directory exists
-        self.session_dir = os.path.join(base_dir, f"session_{session_id}")
-        os.makedirs(self.session_dir, exist_ok=True)
+        self.current_temp_path = None  # For M4V temp file
 
     async def write_frame(self, frame):
         now = datetime.now()
@@ -57,28 +59,50 @@ class VideoSegmentManager:
         if self.current_writer:
             await asyncio.to_thread(self.current_writer.release)
             duration = (now - self.segment_start_time).total_seconds()
-            await self.db.update_video_segment(self.current_segment_id, now, duration, "completed")
-            print(f"📦 Segment closed: {self.current_file_path} ({duration:.1f}s)")
+
+            # Enqueue for H.264 conversion if converter is available
+            if self.converter:
+                await self.converter.enqueue(
+                    self.current_segment_id, self.current_temp_path, self.session_id
+                )
+                print(
+                    f"📦 Segment closed, queued for conversion: {self.current_file_path} ({duration:.1f}s)"
+                )
+            else:
+                # No converter, mark as ready immediately
+                await self.db.update_video_segment(self.current_segment_id, now, duration, "ready")
+                print(f"📦 Segment closed: {self.current_file_path} ({duration:.1f}s)")
 
         # Start new
         self.segment_start_time = now
-        # VP9 uses .webm
-        filename = now.strftime("%Y%m%d_%H%M%S.webm")
-        self.current_file_path = os.path.join(self.session_dir, filename)
 
-        # VP90 codec
-        fourcc = cv2.VideoWriter_fourcc(*"VP90")
+        # Generate hierarchical path: YYYY/MM/DD/HH/camera_id/
+        year = now.strftime("%Y")
+        month = now.strftime("%m")
+        day = now.strftime("%d")
+        hour = now.strftime("%H")
+
+        segment_dir = os.path.join(self.base_dir, year, month, day, hour, self.camera_id)
+        os.makedirs(segment_dir, exist_ok=True)
+
+        # Filename: segment_HH-MM-SS.m4v (temp file for M4V capture)
+        filename = f"segment_{now.strftime('%H-%M-%S')}.m4v"
+        self.current_temp_path = os.path.join(segment_dir, filename)
+        self.current_file_path = self.current_temp_path  # Will be updated after conversion
+
+        # Use mp4v codec for M4V capture (fast, low CPU)
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 
         # Blocking Warning: VideoWriter init can be slow
         self.current_writer = await asyncio.to_thread(
-            cv2.VideoWriter, self.current_file_path, fourcc, self.fps, (self.width, self.height)
+            cv2.VideoWriter, self.current_temp_path, fourcc, self.fps, (self.width, self.height)
         )
 
-        # Register in DB
+        # Register in DB with 'recording' status
         self.current_segment_id = await self.db.create_video_segment(
-            self.session_id, self.current_file_path, now
+            self.session_id, self.current_temp_path, now
         )
-        print(f"🎬 New segment started: {self.current_file_path}")
+        print(f"🎬 New segment started: {self.current_temp_path}")
 
     async def close(self):
         if self.current_writer:
@@ -99,6 +123,8 @@ class InferenceEngine:
         self.models = {}
         # session_id -> list of queues
         self.frame_queues: Dict[int, List[asyncio.Queue]] = {}
+        # Video converter service
+        self.converter: Optional[VideoConverter] = None
 
     def add_subscriber(self, session_id: int) -> asyncio.Queue:
         """Add a subscriber for live frame updates"""
@@ -450,6 +476,7 @@ class InferenceEngine:
 
         source = config.get("source_path")
         source_type = config.get("source_type", "video")
+        session_name = config.get("session_name", "")  # Extract session name from config
 
         if isinstance(source, str):
             source = os.path.expanduser(source)
@@ -510,7 +537,22 @@ class InferenceEngine:
                     if not is_live and start_frame > 0:
                         await asyncio.to_thread(cap.set, cv2.CAP_PROP_POS_FRAMES, start_frame)
 
+                    # Get Source FPS for File Processing
+                    source_fps = cap.get(cv2.CAP_PROP_FPS)
+                    if source_fps <= 0:
+                        source_fps = 30.0  # Fallback
+
+                    # Calculate frame stride for Fast File Processing (Offline Mode)
+                    frame_stride = 1
+                    if (
+                        not is_live and fps_target > 0
+                    ):  # Only skip frames if target FPS is set (and valid)
+                        frame_stride = int(source_fps / fps_target)
+                        if frame_stride < 1:
+                            frame_stride = 1
+
                     last_frame_time = 0
+                    processed_frames_count = 0
 
                     # --- Inference Loop ---
                     while True:
@@ -518,6 +560,9 @@ class InferenceEngine:
                             raise asyncio.CancelledError()
 
                         now = time.time()
+
+                        # [Modified] Throttling Logic: Always sleep to enforce Real-Time Simulation
+                        # User Requirement: "Simulate RTSP behavior... must wait for time"
                         if now - last_frame_time < frame_interval:
                             await asyncio.sleep(0.01)
                             continue
@@ -526,9 +571,13 @@ class InferenceEngine:
                         t0 = time.perf_counter()
 
                         # Read Frame
-                        ret, frame = await asyncio.to_thread(
-                            cap.read
-                        )  # Already wrapped in asyncio.to_thread
+                        if not is_live and frame_stride > 1:
+                            # [New] Fast Forward: Skip frames using grab()
+                            for _ in range(frame_stride - 1):
+                                await asyncio.to_thread(cap.grab)
+
+                        ret, frame = await asyncio.to_thread(cap.read)
+
                         if not ret or frame is None:
                             if not is_live and source_type == "video":
                                 # Video ended - loop back to start by re-opening (more robust than seek)
@@ -569,6 +618,11 @@ class InferenceEngine:
                                 store_h -= 1
 
                         if should_record and segment_manager is None:
+                            # Generate camera_id from session name or source path
+                            camera_id = session_name if session_name else f"session_{session_id}"
+                            # Sanitize camera_id for filesystem
+                            camera_id = camera_id.replace("/", "_").replace(" ", "_")
+
                             segment_manager = VideoSegmentManager(
                                 self.db,
                                 session_id,
@@ -576,7 +630,9 @@ class InferenceEngine:
                                 store_w,
                                 store_h,
                                 fps_target if fps_target > 0 else 10,
+                                camera_id=camera_id,
                                 interval_seconds=60,
+                                converter=self.converter,  # Pass converter instance
                             )
 
                         # Inference
@@ -590,12 +646,20 @@ class InferenceEngine:
                         last_frame_time = now
                         detections_list = []
                         broadcast_detections_list = []
-                        frame_timestamp = datetime.now()
 
+                        # [Modified] Timestamp Logic
                         if not is_live:
+                            # Use Video Timestamp for Files (Offline Mode)
+                            # frame_num is updated by cap.get
                             frame_num = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+                            video_pos_msec = cap.get(cv2.CAP_PROP_POS_MSEC)
+                            # Calculate datetime based on start time + video position
+                            # Or just use current time? Using current time for 'Run Now' semantics is usually fine,
+                            # BUT for accurate playback speed simulation in recorded file, we rely on the fps_target passed to VideoWriter.
+                            frame_timestamp = datetime.now()
                         else:
                             frame_num = 0
+                            frame_timestamp = datetime.now()
 
                         if results:
                             r = results[0]
@@ -664,20 +728,6 @@ class InferenceEngine:
                                 )
 
                             await segment_manager.write_frame(frame_to_write)
-
-                        # Frame Skipping for Video Files (to match Real-Dime Duration)
-                        if not is_live and fps_target > 0:
-                            source_fps = cap.get(cv2.CAP_PROP_FPS)
-                            if source_fps > 0:
-                                stride = int(source_fps / fps_target)
-                                if stride > 1:
-                                    current_pos = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
-                                    next_pos = (
-                                        current_pos + stride - 1
-                                    )  # -1 because we just read one
-                                    await asyncio.to_thread(
-                                        cap.set, cv2.CAP_PROP_POS_FRAMES, next_pos
-                                    )
 
                         t3 = time.perf_counter()
 
