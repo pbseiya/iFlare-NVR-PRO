@@ -121,7 +121,6 @@ export default function DashboardPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {sessionsData?.sessions.map((session) => {
                                     const commonProps = {
-                                        key: session.id,
                                         session,
                                         onStop: (id: number) => stopSessionMutation.mutate(id),
                                         onResume: (id: number) => resumeSessionMutation.mutate(id),
@@ -133,6 +132,7 @@ export default function DashboardPage() {
                                     if (isAdmin) {
                                         return (
                                             <SessionCard
+                                                key={session.id}
                                                 {...commonProps}
                                                 onEdit={setEditSession}
                                                 onDelete={(id) => setDeleteConfirm({ show: true, sessionId: id })}
@@ -142,7 +142,7 @@ export default function DashboardPage() {
                                     }
 
                                     // Regular users see SessionCardSimple (Stop/Resume only)
-                                    return <SessionCardSimple {...commonProps} />;
+                                    return <SessionCardSimple key={session.id} {...commonProps} />;
                                 })}
                                 {sessionsData?.sessions.length === 0 && (
                                     <div className="col-span-full py-12 text-center bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">

@@ -531,32 +531,50 @@ class InferenceEngine:
                         )  # Already wrapped in asyncio.to_thread
                         if not ret or frame is None:
                             if not is_live and source_type == "video":
-                                # Video ended - loop back to start
-                                print(f"🔄 Video ended. Looping back to start...")
-                                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                                # Video ended - loop back to start by re-opening (more robust than seek)
+                                print(
+                                    f"🔄 Video ended (is_live={is_live}, source_type={source_type}). Looping back to start (Re-opening)..."
+                                )
+                                cap.release()
+                                cap = await asyncio.to_thread(cv2.VideoCapture, source)
                                 frame_num = 0
                                 continue
                             else:
                                 # Live stream ended or other source
                                 print(
-                                    f"⚠️ Frame read failed/ended. Reconnecting..."
+                                    f"⚠️ Frame read failed/ended (is_live={is_live}, source_type={source_type}). Reconnecting..."
                                     if is_live
-                                    else "🎉 Stream ended."
+                                    else f"🎉 Stream ended (is_live={is_live}, source_type={source_type})."
                                 )
                                 break  # Break inner loop -> Reconnect or Finish
 
                         t1 = time.perf_counter()
 
-                        # Initialize Segment Manager if not exists
-                        # Ensure we check should_record
+                        # Initialize Video Scaling & Segment Manager
+                        h, w = frame.shape[:2]
+
+                        # Determine efficient storage resolution
+                        target_h_param = config.get("video_height")
+                        scale_factor = 1.0
+                        store_w, store_h = w, h
+
+                        if target_h_param and target_h_param < h:
+                            scale_factor = target_h_param / h
+                            store_h = target_h_param
+                            store_w = int(w * scale_factor)
+                            # Align to 2 for video encoding safety
+                            if store_w % 2 != 0:
+                                store_w -= 1
+                            if store_h % 2 != 0:
+                                store_h -= 1
+
                         if should_record and segment_manager is None:
-                            h, w = frame.shape[:2]
                             segment_manager = VideoSegmentManager(
                                 self.db,
                                 session_id,
                                 base_video_dir,
-                                w,
-                                h,
+                                store_w,
+                                store_h,
                                 fps_target if fps_target > 0 else 10,
                                 interval_seconds=60,
                             )
@@ -571,6 +589,7 @@ class InferenceEngine:
                         # Postprocess
                         last_frame_time = now
                         detections_list = []
+                        broadcast_detections_list = []
                         frame_timestamp = datetime.now()
 
                         if not is_live:
@@ -589,7 +608,29 @@ class InferenceEngine:
                                 class_name = (
                                     model.names[cls_id] if hasattr(model, "names") else str(cls_id)
                                 )
-                                detections_list.append(
+
+                                # Scale Coordinates to match Stored Video
+                                x1 = int(xyxy[0] * scale_factor)
+                                y1 = int(xyxy[1] * scale_factor)
+                                x2 = int(xyxy[2] * scale_factor)
+                                y2 = int(xyxy[3] * scale_factor)
+
+                                detection_tuple = (
+                                    session_id,
+                                    frame_num,
+                                    frame_timestamp,
+                                    cls_id,
+                                    class_name,
+                                    conf_val,
+                                    x1,  # Scaled for DB
+                                    y1,
+                                    x2,
+                                    y2,
+                                )
+                                detections_list.append(detection_tuple)
+
+                                # Original Coordinates for Broadcast (Live View)
+                                broadcast_detections_list.append(
                                     (
                                         session_id,
                                         frame_num,
@@ -597,10 +638,10 @@ class InferenceEngine:
                                         cls_id,
                                         class_name,
                                         conf_val,
-                                        int(xyxy[0]),
-                                        int(xyxy[1]),
-                                        int(xyxy[2]),
-                                        int(xyxy[3]),
+                                        int(xyxy[0]),  # Original X1
+                                        int(xyxy[1]),  # Original Y1
+                                        int(xyxy[2]),  # Original X2
+                                        int(xyxy[3]),  # Original Y2
                                     )
                                 )
 
@@ -615,6 +656,13 @@ class InferenceEngine:
 
                         if should_record and segment_manager:
                             frame_to_write = frame if recording_mode == "clean" else annotated_frame
+
+                            # Resize if necessary
+                            if scale_factor != 1.0:
+                                frame_to_write = cv2.resize(
+                                    frame_to_write, (store_w, store_h), interpolation=cv2.INTER_AREA
+                                )
+
                             await segment_manager.write_frame(frame_to_write)
 
                         # Frame Skipping for Video Files (to match Real-Dime Duration)
@@ -634,7 +682,7 @@ class InferenceEngine:
                         t3 = time.perf_counter()
 
                         # Broadcast
-                        await self._broadcast_frame(session_id, frame, detections_list)
+                        await self._broadcast_frame(session_id, frame, broadcast_detections_list)
 
                         # Metrics
                         total_ms = (t3 - t0) * 1000
@@ -660,13 +708,17 @@ class InferenceEngine:
                     if cap:
                         await asyncio.to_thread(cap.release)
 
-                    if not is_live:
-                        # File processing done
-                        break
+                    # For video files, the loop will restart from the outer reconnection loop
+                    # Video looping is handled at line 533-541 by re-opening the file
+                    # No need to break here - let it reconnect/loop
 
-                    # RTSP Reconnect Delay
-                    print(f"🔄 RTSP Stream ended/failed. Reconnecting in 1s...")
-                    await asyncio.sleep(1)
+                    # RTSP Reconnect Delay (also applies to video loop restart)
+                    if is_live:
+                        print(f"🔄 RTSP Stream ended/failed. Reconnecting in 1s...")
+                        await asyncio.sleep(1)
+                    else:
+                        # Small delay before restarting video loop
+                        await asyncio.sleep(0.1)
 
                 except asyncio.CancelledError:
                     raise
