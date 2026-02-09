@@ -218,6 +218,27 @@ class VideoConverter:
             logger.error(f"Conversion error: {e}", exc_info=True)
             return False
 
+    async def _get_duration(self, file_path: str) -> float:
+        """Get duration of video file using ffprobe"""
+        try:
+            cmd = [
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                file_path,
+            ]
+            process = await asyncio.create_subprocess_exec(
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            stdout, _ = await process.communicate()
+            return float(stdout.decode().strip())
+        except:
+            return 0.0
+
     async def _finalize_conversion(self, job: ConversionJob):
         """
         Finalize successful conversion.
@@ -225,18 +246,21 @@ class VideoConverter:
         Args:
             job: Conversion job
         """
-        # Update database with new file path and 'ready' status
-        # Note: We need to update the file_path in the database
+        # Get new duration
+        duration = await self._get_duration(job.output_path)
+
+        # Update database with new file path, duration, and 'ready' status
         async with self.db.acquire() as conn:
             await conn.execute(
                 """
                 UPDATE video_segments 
-                SET file_path = $2, status = $3
+                SET file_path = $2, status = $3, duration_seconds = $4, end_time = start_time + make_interval(secs => $4)
                 WHERE id = $1
                 """,
                 job.segment_id,
                 job.output_path,
                 "ready",
+                duration,
             )
 
         # Delete M4V temp file
@@ -287,7 +311,7 @@ class VideoConverter:
                     """
                     SELECT id, file_path, session_id 
                     FROM video_segments 
-                    WHERE status = 'processing'
+                    WHERE file_path LIKE '%.m4v'
                     """
                 )
 

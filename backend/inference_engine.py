@@ -108,11 +108,32 @@ class VideoSegmentManager:
         if self.current_writer:
             await asyncio.to_thread(self.current_writer.release)
             now = datetime.now()
-            if self.segment_start_time:
-                duration = (now - self.segment_start_time).total_seconds()
+            duration = (
+                (now - self.segment_start_time).total_seconds() if self.segment_start_time else 0
+            )
+
+            # Enqueue for H.264 conversion if converter is available
+            if self.converter and self.current_temp_path and os.path.exists(self.current_temp_path):
+                await self.converter.enqueue(
+                    self.current_segment_id, self.current_temp_path, self.session_id
+                )
+                print(
+                    f"📦 Final segment closed, queued for conversion: {self.current_file_path} ({duration:.1f}s)"
+                )
+                # Do NOT set status to 'stopped' here, let the converter set it to 'processing' -> 'ready'
+                # But we should update duration/end_time in DB?
+                # The converter usually updates status. If we don't update anything, it stays 'recording'.
+                # The worker picks it up and sets 'processing'.
+                # We SHOULD update duration though.
+                await self.db.update_video_segment(
+                    self.current_segment_id, now, duration, "recording"
+                )
+            else:
+                # No converter, just mark as stopped/ready (still M4V)
                 await self.db.update_video_segment(
                     self.current_segment_id, now, duration, "stopped"
                 )
+
             self.current_writer = None
 
 
