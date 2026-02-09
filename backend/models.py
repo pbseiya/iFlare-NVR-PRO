@@ -41,6 +41,8 @@ class SessionConfig(BaseModel):
     video_height: Optional[int] = Field(
         None, description="Target height for video storage (e.g. 720, 1080). None=Original"
     )
+    source_width: Optional[int] = Field(None, description="Source video width")
+    source_height: Optional[int] = Field(None, description="Source video height")
 
 
 class SessionUpdate(BaseModel):
@@ -59,6 +61,8 @@ class SessionUpdate(BaseModel):
     recording_mode: Optional[str] = Field(None, pattern="^(none|clean|annotated)$")
     render_mode: Optional[str] = Field(None, pattern="^(pipeline|deferred)$")
     video_height: Optional[int] = None
+    source_width: Optional[int] = None
+    source_height: Optional[int] = None
 
 
 class SessionResponse(BaseModel):
@@ -88,6 +92,8 @@ class SessionInfo(BaseModel):
     recording_mode: Optional[str] = None
     render_mode: str
     video_height: Optional[int] = None
+    source_width: Optional[int] = None
+    source_height: Optional[int] = None
     created_at: datetime
     ended_at: Optional[datetime]
     status: str

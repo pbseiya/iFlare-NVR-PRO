@@ -125,6 +125,8 @@ async def start_session(config: SessionConfig):
             recording_mode=config.recording_mode,
             name=config.name,
             video_height=config.video_height,
+            source_width=config.source_width,
+            source_height=config.source_height,
         )
 
         # Auto-generate video path if not provided but save_video is True

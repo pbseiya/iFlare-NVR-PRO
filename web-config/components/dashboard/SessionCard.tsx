@@ -112,8 +112,25 @@ export default function SessionCard({
                 <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-yellow-400" />
                     <div>
-                        <p className="text-xs text-gray-500">FPS Target</p>
-                        <p className="text-sm font-semibold text-white">{session.fps_target}</p>
+                        <p className="text-xs text-gray-500">Config</p>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-white bg-yellow-400/10 px-1.5 rounded" title="FPS Target">
+                                {session.fps_target} FPS
+                            </span>
+                            {session.source_width && session.source_height && (
+                                <span className="text-xs font-mono text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700" title="Source Resolution">
+                                    {session.source_width}x{session.source_height}
+                                </span>
+                            )}
+                            {session.save_video && (
+                                <span className={`text-xs font-medium px-1.5 py-0.5 rounded border ${session.video_height
+                                        ? "text-blue-400 bg-blue-400/10 border-blue-400/20"
+                                        : "text-amber-400 bg-amber-400/10 border-amber-400/20"
+                                    }`} title="Storage Resolution">
+                                    {session.video_height ? `${session.video_height}p` : "Orig"}
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

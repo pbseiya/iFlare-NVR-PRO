@@ -52,6 +52,8 @@ class Database:
         recording_mode: str = "none",
         name: Optional[str] = None,
         video_height: Optional[int] = None,
+        source_width: Optional[int] = None,
+        source_height: Optional[int] = None,
     ) -> int:
         """Create a new inference session"""
         async with self.acquire() as conn:
@@ -60,8 +62,9 @@ class Database:
                 INSERT INTO inference_sessions (
                     model_name, language, source_type, source_path,
                     fps_target, conf_threshold, iou_threshold,
-                    save_video, video_output_path, render_mode, recording_mode, name, video_height
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                    save_video, video_output_path, render_mode, recording_mode, name, video_height,
+                    source_width, source_height
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
                 RETURNING id
                 """,
                 model_name,
@@ -77,6 +80,8 @@ class Database:
                 recording_mode,
                 name,
                 video_height,
+                source_width,
+                source_height,
             )
         return session_id
 

@@ -44,6 +44,10 @@ export function SessionFormFields({ formData, onChange, isEditMode = false }: Se
         try {
             const result = await api.analyzeSource(formData.source_path, formData.source_type);
             setSourceInfo(result);
+            onChange({
+                source_width: result.width,
+                source_height: result.height
+            });
         } catch (e) {
             console.error("Analysis failed", e);
         } finally {
