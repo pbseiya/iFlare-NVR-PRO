@@ -218,4 +218,15 @@ export const api = {
         // If we are using valid relative paths in the proxy setup:
         return `${API_BASE_URL}/api/video/stream?path=${encodeURIComponent(videoPath)}`;
     },
+
+    // System Settings
+    getSystemSettings: async () => {
+        const response = await apiClient.get('/api/settings');
+        return response.data;
+    },
+
+    updateSystemSettings: async (settings: { auto_resume?: boolean }) => {
+        const response = await apiClient.post('/api/settings', settings);
+        return response.data;
+    },
 };

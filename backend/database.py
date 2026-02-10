@@ -419,3 +419,33 @@ class Database:
                 status,
                 segment_id,
             )
+
+    # ========================================
+    # App Settings Queries
+    # ========================================
+
+    async def get_app_setting(self, key: str, default: Any = None) -> Any:
+        """Get application setting by key"""
+        async with self.acquire() as conn:
+            row = await conn.fetchrow("SELECT value FROM app_settings WHERE key = $1", key)
+        if row:
+            return row["value"]
+        return default
+
+    async def set_app_setting(self, key: str, value: Any):
+        """Set application setting"""
+        import json
+
+        async with self.acquire() as conn:
+            # asyncpg handles JSON/JSONB automatically if we pass native types,
+            # but sometimes explicit json.dumps is safer depending on driver setup.
+            # Here we rely on asyncpg's jsonb support for 'value' column.
+            await conn.execute(
+                """
+                INSERT INTO app_settings (key, value, updated_at)
+                VALUES ($1, $2, NOW())
+                ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()
+                """,
+                key,
+                value,
+            )

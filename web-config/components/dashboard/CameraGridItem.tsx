@@ -2,7 +2,7 @@
 
 import { SessionInfo } from '@/lib/api';
 import { Maximize2, Circle } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import LiveCameraFeed from './LiveCameraFeed';
 import { DrawDetectionsOptions } from '@/lib/detection-utils';
 
@@ -15,8 +15,18 @@ interface CameraGridItemProps {
 
 export default function CameraGridItem({ session, onFocus, isFocused = false, detectionOptions }: CameraGridItemProps) {
     const [isHovered, setIsHovered] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const isRunning = session.status === 'running';
+
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(document.fullscreenElement === containerRef.current);
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, []);
 
     const handleDoubleClick = () => {
         if (containerRef.current) {
@@ -32,12 +42,13 @@ export default function CameraGridItem({ session, onFocus, isFocused = false, de
         <div
             ref={containerRef}
             className={`
-                relative bg-gray-900 rounded-lg overflow-hidden border-2 transition-all cursor-pointer
-                ${isFocused
+                relative bg-gray-900 overflow-hidden transition-all cursor-pointer
+                ${isFullscreen ? 'rounded-none border-0' : 'rounded-lg border-2'}
+                ${isFocused && !isFullscreen
                     ? 'border-blue-500 shadow-lg shadow-blue-500/20'
-                    : isHovered
+                    : isHovered && !isFullscreen
                         ? 'border-blue-400'
-                        : 'border-gray-800'
+                        : !isFullscreen ? 'border-gray-800' : ''
                 }
             `}
             onClick={onFocus}
@@ -46,7 +57,13 @@ export default function CameraGridItem({ session, onFocus, isFocused = false, de
             onMouseLeave={() => setIsHovered(false)}
         >
             {/* Live Video Feed with Detection Overlay */}
-            <div className="aspect-video bg-gray-950">
+            <div className={`
+                bg-gray-950 flex items-center justify-center
+                ${isFullscreen
+                    ? 'w-full h-full'
+                    : 'aspect-video max-h-[75vh] w-auto mx-auto'
+                }
+            `}>
                 <LiveCameraFeed session={session} options={detectionOptions} />
             </div>
 
@@ -91,7 +108,13 @@ export default function CameraGridItem({ session, onFocus, isFocused = false, de
 
             {/* Focus Icon - Show on hover */}
             {isHovered && !isFocused && (
-                <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm rounded-lg p-2">
+                <div
+                    className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm rounded-lg p-2 cursor-pointer hover:bg-black/70 transition-colors"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleDoubleClick();
+                    }}
+                >
                     <Maximize2 size={16} className="text-white" />
                 </div>
             )}

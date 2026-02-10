@@ -44,6 +44,10 @@ interface SettingsContextType {
 
     // Helper to get effective settings for a camera (merges global + override)
     getSettingsForCamera: (cameraName?: string) => OverlaySettings;
+
+    // System Settings (Backend)
+    systemSettings: { auto_resume: boolean };
+    updateSystemSettings: (settings: { auto_resume?: boolean }) => Promise<void>;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -52,6 +56,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const [globalSettings, setGlobalSettingsState] = useState<OverlaySettings>(DEFAULT_SETTINGS);
     const [cameraSettings, setCameraSettingsState] = useState<Record<string, OverlaySettings>>({});
     const [scopeSettings, setScopeSettingsState] = useState<ScopeSettings>(DEFAULT_SCOPES);
+    const [systemSettings, setSystemSettingsState] = useState<{ auto_resume: boolean }>({ auto_resume: false });
     const [isLoaded, setIsLoaded] = useState(false);
 
     // Load from LocalStorage on mount
@@ -77,6 +82,23 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         } finally {
             setIsLoaded(true);
         }
+    }, []);
+
+    // Load System Settings from Backend on mount
+    useEffect(() => {
+        const fetchSystemSettings = async () => {
+            // Dynamic import to avoid circular dependency issues if any, or just direct usage
+            const { api } = await import('@/lib/api');
+            try {
+                const settings = await api.getSystemSettings();
+                if (settings) {
+                    setSystemSettingsState(prev => ({ ...prev, ...settings }));
+                }
+            } catch (e) {
+                console.error("Failed to fetch system settings", e);
+            }
+        };
+        fetchSystemSettings();
     }, []);
 
     // Manual Save Function
@@ -112,6 +134,19 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
     const setScopeSettings = (updates: Partial<ScopeSettings>) => {
         setScopeSettingsState(prev => ({ ...prev, ...updates }));
+    };
+
+    const updateSystemSettings = async (updates: { auto_resume?: boolean }) => {
+        // Optimistic update
+        setSystemSettingsState(prev => ({ ...prev, ...updates }));
+
+        try {
+            const { api } = await import('@/lib/api');
+            await api.updateSystemSettings(updates);
+        } catch (e) {
+            console.error("Failed to update system settings", e);
+            // Revert? For now just log.
+        }
     };
 
     const getSettingsForCamera = (cameraName?: string): OverlaySettings => {
@@ -151,7 +186,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
             setScopeSettings,
             saveSettings,
             getSettingsForCamera,
-            resetDefaults
+            resetDefaults,
+            systemSettings,
+            updateSystemSettings
         }}>
             {children}
         </SettingsContext.Provider>

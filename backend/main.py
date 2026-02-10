@@ -48,21 +48,6 @@ async def lifespan(app: FastAPI):
     await app.state.db.connect()
     print(f"✓ Connected to database")
 
-    # Cleanup stale sessions
-    async with app.state.db.acquire() as conn:
-        await conn.execute(
-            "UPDATE inference_sessions SET status = 'stopped', ended_at = NOW() WHERE status = 'running'"
-        )
-    print(f"✓ Cleaned up stale sessions")
-
-    # Run Video Recovery (for crashed segments)
-    recovery_service = VideoRecoveryService(app.state.db)
-    # Run in background or await? Await is safer to ensure consistency before accepting new reqs
-    # but might delay startup 500ms-1s per broken file.
-    # Given typical user usage, awaiting is better to ensure data integrity immediately.
-    print(f"⏳ Running video recovery scan...")
-    await recovery_service.scan_and_recover()
-
     # Initialize Inference Engine
     app.state.inference_engine = InferenceEngine(app.state.db)
     print(f"✓ Inference Engine initialized")
@@ -72,6 +57,76 @@ async def lifespan(app: FastAPI):
     await app.state.video_converter.start()
     app.state.inference_engine.converter = app.state.video_converter
     print(f"✓ Video Converter Service started")
+
+    # Check Auto-Resume Setting
+    auto_resume = await app.state.db.get_app_setting("auto_resume", default=False)
+    print(f"⚙️ Auto-Resume System: {'ENABLED' if auto_resume else 'DISABLED'}")
+
+    # Handle Stale Sessions
+    async with app.state.db.acquire() as conn:
+        # Find sessions that were running when server died
+        running_sessions = await conn.fetch(
+            "SELECT * FROM inference_sessions WHERE status = 'running'"
+        )
+
+        if running_sessions:
+            print(f"Found {len(running_sessions)} sessions that were left running.")
+
+            if auto_resume:
+                # Resume them
+                for session_row in running_sessions:
+                    session = dict(session_row)
+                    session_id = session["id"]
+                    print(f"🔄 Auto-Resuming Session #{session_id} ({session.get('name')})...")
+
+                    try:
+                        # Get last frame
+                        last_frame = await conn.fetchval(
+                            "SELECT MAX(frame_number) FROM detections WHERE session_id = $1",
+                            session_id,
+                        )
+                        last_frame = last_frame if last_frame is not None else -1
+
+                        # Clear ended_at because we are continuing
+                        await conn.execute(
+                            "UPDATE inference_sessions SET ended_at = NULL WHERE id = $1",
+                            session_id,
+                        )
+
+                        # Construct config
+                        config_dict = {
+                            "model_name": session.get("model_name"),
+                            "language": session.get("language"),
+                            "source_type": session.get("source_type"),
+                            "source_path": session.get("source_path"),
+                            "fps_target": session.get("fps_target"),
+                            "conf_threshold": session.get("conf_threshold"),
+                            "iou_threshold": session.get("iou_threshold"),
+                            "save_video": session.get("save_video"),
+                            "video_output_path": session.get("video_output_path"),
+                            "render_mode": session.get("render_mode"),
+                            "recording_mode": session.get("recording_mode"),
+                        }
+
+                        # Start Inference
+                        await app.state.inference_engine.start_session(
+                            session_id, config_dict, start_frame=last_frame + 1
+                        )
+                    except Exception as e:
+                        print(f"❌ Failed to auto-resume session {session_id}: {e}")
+                        # Mark as failed if resume fails
+                        await app.state.db.update_session_status(session_id, "failed")
+            else:
+                # Mark as stopped (Default behavior)
+                await conn.execute(
+                    "UPDATE inference_sessions SET status = 'stopped', ended_at = NOW() WHERE status = 'running'"
+                )
+                print(f"✓ Cleaned up stale sessions (Marked as stopped)")
+
+    # Run Video Recovery (for crashed segments)
+    recovery_service = VideoRecoveryService(app.state.db)
+    print(f"⏳ Running video recovery scan...")
+    await recovery_service.scan_and_recover()
 
     yield
 
@@ -106,6 +161,33 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ========================================
+# System Settings Endpoints
+# ========================================
+
+
+@app.get("/api/settings")
+async def get_system_settings():
+    """Get all system settings"""
+    try:
+        # Currently we only have auto_resume
+        auto_resume = await app.state.db.get_app_setting("auto_resume", False)
+        return {"auto_resume": auto_resume}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/settings")
+async def update_system_settings(settings: dict):
+    """Update system settings"""
+    try:
+        if "auto_resume" in settings:
+            await app.state.db.set_app_setting("auto_resume", settings["auto_resume"])
+        return {"status": "updated", "settings": settings}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # ... (Health Check) ...
 
