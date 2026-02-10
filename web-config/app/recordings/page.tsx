@@ -11,12 +11,16 @@ import SynchronizedPlayer from '@/components/dashboard/SynchronizedPlayer';
 import { Play, Pause, SkipBack, SkipForward, Clock, Calendar as CalendarIcon, ZoomIn, ZoomOut, ChevronDown, Check } from 'lucide-react';
 
 const ZOOM_SCALES = [
+    { label: '5m', ms: 300000 },
+    { label: '15m', ms: 900000 },
     { label: '1H', ms: 3600000 },
     { label: '4H', ms: 14400000 },
     { label: '12H', ms: 43200000 },
     { label: '1D', ms: 86400000 },
     { label: '7D', ms: 604800000 },
     { label: '1M', ms: 2592000000 },
+    { label: '3M', ms: 7776000000 },
+    { label: '6M', ms: 15552000000 },
 ];
 
 export default function RecordingsPage() {
@@ -437,7 +441,7 @@ export default function RecordingsPage() {
 
                             {/* Speed Controls */}
                             <div className="flex items-center gap-1 bg-gray-800 rounded-lg p-1">
-                                {[1, 2, 4, 8, 16].map(speed => (
+                                {[1, 2, 4, 8, 16, 32, 64].map(speed => (
                                     <button
                                         key={speed}
                                         onClick={() => handleSpeedChange(speed)}

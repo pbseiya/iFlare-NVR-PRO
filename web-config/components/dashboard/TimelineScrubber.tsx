@@ -216,8 +216,8 @@ export default function TimelineScrubber({
             ctx.fillStyle = color;
 
             // Draw wider ticks for higher priority for visibility?
-            // Standard width 2px, maybe 3px?
-            const width = 3;
+            // Dynamic width to close gaps at high zoom: (1.5s * pixelsPerMs) or min 3px
+            const width = Math.max(3, pixelsPerMs * 1500);
 
             ctx.globalAlpha = 1.0; // Solid color
             ctx.fillRect(x - (width / 2), y + 2, width, laneHeight - 4);
