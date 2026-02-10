@@ -10,10 +10,11 @@ export const apiClient = axios.create({
     },
 });
 
-// Helper to ensure timestamps from backend (naive UTC) are treated as UTC by frontend
-const ensureUtc = (dateStr: string | null | undefined): string | null => {
+// Helper to ensure ISO format (replace space with T) for robust parsing
+// e.g., "2026-02-10 09:39:03.123" -> "2026-02-10T09:39:03.123"
+const toISO = (dateStr: string | null | undefined): string | null => {
     if (!dateStr) return null;
-    return dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`;
+    return dateStr.replace(' ', 'T');
 };
 
 export const LANGUAGE_MODELS = [
@@ -122,13 +123,12 @@ export const api = {
         status?: string;
     }): Promise<SessionListResponse> => {
         const response = await apiClient.get('/api/sessions', { params });
-        // Ensure UTC timestamps for Sessions (DB stores UTC)
         const sessions = response.data.sessions.map((s: SessionInfo) => ({
             ...s,
-            created_at: ensureUtc(s.created_at) as string,
-            ended_at: ensureUtc(s.ended_at)
+            // Use DB time, normalize space to T
+            created_at: toISO(s.created_at) as string,
+            ended_at: toISO(s.ended_at)
         }));
-        return { ...response.data, sessions };
         return { ...response.data, sessions };
     },
 
@@ -137,8 +137,8 @@ export const api = {
         const s = response.data;
         return {
             ...s,
-            created_at: ensureUtc(s.created_at) as string,
-            ended_at: ensureUtc(s.ended_at)
+            created_at: toISO(s.created_at) as string,
+            ended_at: toISO(s.ended_at)
         };
     },
 
@@ -174,12 +174,8 @@ export const api = {
     },
 
     getDetections: async (sessionId: number, limit: number = 1000, start?: string, end?: string): Promise<Detection[]> => {
-        // Strip 'Z' to send local time to backend (which expects naive datetime matching DB)
         const params: any = { limit };
-        // Use ISO string, but ensure backend handles timezone correctly.
-        // If backend expects naive, we should send naive UTC.
-        // Current issue: DB might be storing naive local time.
-        // Let's try sending standard ISO format.
+        // Pass timestamps as-is (Local ISO), removing Z if present to match DB expectation
         if (start) params.start_time = start.replace('Z', '');
         if (end) params.end_time = end.replace('Z', '');
 
@@ -188,34 +184,32 @@ export const api = {
         });
 
         let detections: Detection[] = [];
-        // Handle direct array or wrapped object
         if (Array.isArray(response.data)) {
             detections = response.data;
         } else {
             detections = response.data.detections || [];
         }
 
-        // Ensure UTC timestamps
-        return detections;
+        // Normalize timestamp (space -> T)
+        return detections.map(d => ({
+            ...d,
+            timestamp: toISO(d.timestamp)
+        }));
     },
 
     getSessionSegments: async (sessionId: number): Promise<VideoSegment[]> => {
         const response = await apiClient.get(`/api/sessions/${sessionId}/segments`);
-        // Ensure UTC timestamps
-        return response.data;
+        return response.data.map((s: VideoSegment) => ({
+            ...s,
+            start_time: toISO(s.start_time) as string,
+            end_time: toISO(s.end_time)
+        }));
     },
 
     // Video Streaming Helper
     getVideoUrl: (videoPath: string): string => {
         if (!videoPath) return '';
-        // Use browser's base URL if available, otherwise fallback to API_BASE_URL
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : API_BASE_URL;
-        // Construct the full URL for the video stream endpoint through the Next.js rewrite (if configured) or direct to backend
-        // Since we are using a proxy or direct access, let's assume /api routes are handled correctly.
-        // If we are on the frontend, we want to hit the backend URL. 
-        // Note: The backend endpoint is /api/video/stream?path=...
-
-        // If we are using valid relative paths in the proxy setup:
         return `${API_BASE_URL}/api/video/stream?path=${encodeURIComponent(videoPath)}`;
     },
 

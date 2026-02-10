@@ -22,6 +22,7 @@ export function NewSessionForm({ onSubmit, isLoading }: NewSessionFormProps) {
         video_output_path: null,
         recording_mode: "clean",
         render_mode: "pipeline",
+        video_height: undefined, // Will use original resolution unless user selects a specific value
     });
 
     const handleChange = (newData: Partial<SessionConfig>) => {

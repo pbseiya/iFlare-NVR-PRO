@@ -17,6 +17,8 @@ interface SynchronizedPlayerProps {
     showConfidence?: boolean;
     isMaster?: boolean;
     onTimeUpdate?: (time: Date) => void;
+    // Optimization: Pass pre-fetched segments to avoid internal API calls
+    segmentsMap?: Record<number, VideoSegment[]>;
 }
 
 export default function SynchronizedPlayer({
@@ -31,11 +33,12 @@ export default function SynchronizedPlayer({
     showBBox = true,
     showLabels = true,
     showConfidence = true,
+    segmentsMap,
 }: SynchronizedPlayerProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [segments, setSegments] = useState<VideoSegment[]>([]);
+    const [localSegments, setLocalSegments] = useState<VideoSegment[]>([]);
 
     // Global Settings with Camera Override
     const { getSettingsForCamera, scopeSettings } = useSettings();
@@ -89,30 +92,38 @@ export default function SynchronizedPlayer({
     // Store video intrinsic dimensions for Canvas
     const [videoDims, setVideoDims] = useState<{ width: number, height: number } | null>(null);
 
+    // Use passed segments if available, otherwise use local state
+    const segments = useMemo(() => {
+        if (segmentsMap && currentSession) {
+            return segmentsMap[currentSession.id] || [];
+        }
+        return localSegments;
+    }, [segmentsMap, currentSession, localSegments]);
+
     // Filter detections for this session only (Optimization)
     const sessionDetections = useMemo(() => {
         if (!currentSession) return [];
         return detections.filter(d => d.session_id === currentSession.id);
     }, [currentSession?.id, detections]);
 
-    // 2. Fetch Segments when Session Changes
+    // 2. Fetch Segments when Session Changes (Only if not provided via props)
     useEffect(() => {
-        if (!currentSession) {
-            setSegments([]);
+        if (!currentSession || segmentsMap) {
+            if (!currentSession) setLocalSegments([]);
             return;
         }
 
         let cancelled = false;
         api.getSessionSegments(currentSession.id)
             .then(data => {
-                if (!cancelled) setSegments(data);
+                if (!cancelled) setLocalSegments(data);
             })
             .catch(err => {
-                if (!cancelled) setSegments([]);
+                if (!cancelled) setLocalSegments([]);
             });
 
         return () => { cancelled = true; };
-    }, [currentSession?.id]);
+    }, [currentSession?.id, segmentsMap]);
 
     // 3. Find Active Segment vs Legacy File
     const activeSource = useMemo(() => {
@@ -123,10 +134,13 @@ export default function SynchronizedPlayer({
 
             const candidates = segments.filter(s => {
                 const start = new Date(s.start_time).getTime();
+
                 // Allow any segment with a file path unless explicitly failed
-                const isValidStatus = !!s.file_path && s.status !== 'failed';
+                // [Modified] Filter out .m4v files (recording/processing) as browsers can't play them
+                const isReady = s.status === 'completed' || s.status === 'ready' || (s.file_path && !s.file_path.endsWith('.m4v'));
+
                 // Tolerance + 1500ms just in case of drift (increased from 1000ms to fix small gaps)
-                return start <= timeMs + 1500 && isValidStatus;
+                return start <= timeMs + 1500 && isReady;
             });
 
             if (candidates.length > 0) {
@@ -177,8 +191,14 @@ export default function SynchronizedPlayer({
     }, [activeSource]);
 
     // 5. Smooth Animation Loop for Overlays
+    useEffect(() => {
+        console.log('[Player] Active Source:', activeSource, 'IsLoading:', isLoading, 'VideoSrc:', videoSrc);
+        setError(false); // Reset error when source changes
+    }, [activeSource, isLoading, videoSrc]);
+
     const [currentRenderTime, setCurrentRenderTime] = useState<number>(currentTime.getTime());
     const [showDebug, setShowDebug] = useState(false);
+    const [error, setError] = useState(false);
     const requestRef = useRef<number | null>(null);
 
     useEffect(() => {
@@ -235,7 +255,7 @@ export default function SynchronizedPlayer({
         candidates.forEach(d => {
             const detTime = new Date(d.timestamp as string).getTime();
             const diff = Math.abs(detTime - timeMs);
-            const cls = d.class_name || 'unknown';
+            const cls = d.class_name || d.class || 'unknown';
 
             if (!closestByClass.has(cls) || diff < closestByClass.get(cls)!.diff) {
                 closestByClass.set(cls, { diff, det: d });
@@ -497,18 +517,33 @@ export default function SynchronizedPlayer({
                     onWaiting={() => setIsLoading(true)}
                     onPlaying={() => setIsLoading(false)}
                     onLoadedMetadata={handleLoadedMetadata}
-                    onError={() => console.log("Video Playback Error")}
+                    onError={() => { console.log("Video Playback Error"); setError(true); }}
                 />
+                {/* Overlay: No Signal / Loading / Debug */}
+                {/* Overlay: No Signal / Loading / Debug */}
+                {(!videoSrc || error) && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 text-white z-10 p-4 text-center">
+                        <p className="text-xl font-bold mb-2">
+                            {error ? 'PLAYBACK ERROR' : 'NO SIGNAL / PROCESSING'}
+                        </p>
 
-                {!activeSource && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black z-20">
-                        <div className="text-gray-500 flex flex-col items-center">
-                            <span className="text-4xl font-mono animate-pulse">NO SIGNAL</span>
-                            <span className="text-xs mt-2">{currentTime.toLocaleTimeString()}</span>
-                        </div>
+                        {/* Only show technical details if Debug Mode is ON */}
+                        {showDebug && (
+                            <div className="text-xs font-mono text-left bg-gray-900 p-2 rounded max-w-full overflow-auto mt-2 border border-gray-700">
+                                <p className="text-red-400 font-bold mb-1">[DEBUG INFO]</p>
+                                <p>Time: {currentTime.toLocaleString()}</p>
+                                <p>Active Source: {activeSource ? (activeSource.type === 'segment' ? (activeSource.data as any).file_path : activeSource.path) : 'None'}</p>
+                                <p>Video Src: {videoSrc || 'None'}</p>
+                                <p>Error: {error ? 'Playback Error' : 'No Source'}</p>
+                                <p>Segments Available: {segments.length}</p>
+                            </div>
+                        )}
+
+                        {!showDebug && !error && (
+                            <p className="text-gray-400 text-sm animate-pulse">Waiting for video stream...</p>
+                        )}
                     </div>
                 )}
-
                 {/* Canvas Overlay using drawDetections */}
                 {videoDims && activeDetections.length > 0 && (
                     <canvas

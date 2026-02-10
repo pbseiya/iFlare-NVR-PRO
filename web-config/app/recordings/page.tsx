@@ -183,8 +183,8 @@ export default function RecordingsPage() {
             bufferedEndDay.setDate(bufferedEndDay.getDate() + 1);
             const fetchEnd = toLocalISO(bufferedEndDay, '23:59:59.999');
 
-            // Fetch with high limit to cover the full range
-            const promises = recentSessions.map(s => api.getDetections(s.id, 50000, fetchStart, fetchEnd));
+            // Fetch with high limit to cover the full range (Max 100k per backend constraint)
+            const promises = recentSessions.map(s => api.getDetections(s.id, 100000, fetchStart, fetchEnd));
             const results = await Promise.all(promises);
             const flatResults = results.flat();
             console.log(`[Recordings] Fetched ${flatResults.length} detections for range ${fetchStart} - ${fetchEnd}`);
@@ -196,7 +196,8 @@ export default function RecordingsPage() {
         },
         enabled: filteredSessions.length > 0,
         refetchOnWindowFocus: false,
-        staleTime: 60000,
+        staleTime: 10000, // Reduced from 60s to 10s for faster updates
+        refetchInterval: 10000, // Auto-refresh every 10s
     });
 
     // Fetch video segments for visible sessions
@@ -209,7 +210,9 @@ export default function RecordingsPage() {
 
             const promises = recentSessions.map(async (s) => {
                 try {
+                    // console.log(`[Recordings] Fetching segments for session ${s.id}...`);
                     const segs = await api.getSessionSegments(s.id);
+                    // console.log(`[Recordings] Fetched ${segs.length} segments for session ${s.id}`);
                     map[s.id] = segs;
                 } catch (e) {
                     console.error(`Failed to fetch segments for session ${s.id}`, e);
@@ -217,11 +220,13 @@ export default function RecordingsPage() {
             });
 
             await Promise.all(promises);
+            // console.log('[Recordings] Segments Map keys:', Object.keys(map));
             return map;
         },
         enabled: filteredSessions.length > 0,
         refetchOnWindowFocus: false,
-        staleTime: 300000, // 5 minutes
+        staleTime: 5000, // Reduced stale time
+        refetchInterval: 5000, // Auto-refresh every 5s for segments (faster than detections)
     });
 
     // Auto-select first camera if none selected
@@ -382,6 +387,7 @@ export default function RecordingsPage() {
                                                 showLabels={detectionFilter.showLabels}
                                                 showConfidence={detectionFilter.showConfidence}
                                                 isMaster={false}
+                                                segmentsMap={segmentsBySession}
                                             />
 
                                             {/* Camera Name Label */}

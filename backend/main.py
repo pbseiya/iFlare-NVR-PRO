@@ -337,6 +337,7 @@ async def update_session(session_id: int, updates: SessionUpdate):
             "save_video",
             "video_output_path",
             "recording_mode",
+            "video_height",  # Resolution changes require restart
         ]
 
         needs_restart = any(field in update_data for field in critical_fields)
@@ -362,6 +363,8 @@ async def update_session(session_id: int, updates: SessionUpdate):
                 "video_output_path": updated_session.get("video_output_path"),
                 "render_mode": updated_session.get("render_mode"),
                 "recording_mode": updated_session.get("recording_mode"),
+                "video_height": updated_session.get("video_height"),
+                "session_name": updated_session.get("name"),  # For camera_id generation
             }
 
             last_frame = -1
@@ -556,6 +559,10 @@ async def resume_session(session_id: int):
             "iou_threshold": session.get("iou_threshold"),
             "save_video": session.get("save_video"),
             "video_output_path": session.get("video_output_path"),
+            "recording_mode": session.get("recording_mode"),
+            "render_mode": session.get("render_mode"),
+            "video_height": session.get("video_height"),
+            "session_name": session.get("name"),
         }
 
         await app.state.inference_engine.start_session(
@@ -842,7 +849,7 @@ async def get_session_detections(session_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/video/stream")
+@app.api_route("/api/video/stream", methods=["GET", "HEAD"])
 async def video_stream(path: str = Query(...), range: str = Header(None)):
     """Stream video file with Range support"""
     video_path = os.path.expanduser(path)

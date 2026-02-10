@@ -182,7 +182,18 @@ export default function TimelineScrubber({
         };
 
         // Sort ascending, so high priority is drawn last (on top)
-        const sortedEvents = [...events].sort((a, b) => getPriority(a.class_name) - getPriority(b.class_name));
+        const sortedEvents = [...events].sort((a, b) => {
+            const clsA = (a.class_name || a.class || '').toLowerCase();
+            const clsB = (b.class_name || b.class || '').toLowerCase();
+            return getPriority(clsA) - getPriority(clsB);
+        });
+
+        if (sortedEvents.length > 0) {
+            const sample = sortedEvents.find(e => (e.class_name || e.class || '').toLowerCase().includes('fire'));
+            if (sample) {
+                console.log('[Timeline Debug] Sample Fire:', sample, 'Priority:', getPriority((sample.class_name || sample.class || '')));
+            }
+        }
 
         sortedEvents.forEach(event => {
             if (!event.timestamp) return;
@@ -204,7 +215,7 @@ export default function TimelineScrubber({
             const y = laneIdx * laneHeight;
 
             // Color Coding
-            const cls = (event.class_name || '').toLowerCase();
+            const cls = (event.class_name || event.class || '').toLowerCase();
             const priority = getPriority(cls);
 
             let color = '#3B82F6'; // Default Blue
