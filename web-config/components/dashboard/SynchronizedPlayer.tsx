@@ -125,8 +125,8 @@ export default function SynchronizedPlayer({
                 const start = new Date(s.start_time).getTime();
                 // Allow any segment with a file path unless explicitly failed
                 const isValidStatus = !!s.file_path && s.status !== 'failed';
-                // Tolerance + 1000ms just in case of drift
-                return start <= timeMs + 1000 && isValidStatus;
+                // Tolerance + 1500ms just in case of drift (increased from 1000ms to fix small gaps)
+                return start <= timeMs + 1500 && isValidStatus;
             });
 
             if (candidates.length > 0) {
