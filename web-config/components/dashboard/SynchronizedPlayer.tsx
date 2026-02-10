@@ -164,7 +164,10 @@ export default function SynchronizedPlayer({
             return null;
         }
 
-        if (currentSession.video_output_path || currentSession.source_type === 'rtsp') {
+        // [Fix] Only fall back to full video file if source_type is 'video' (static file analysis).
+        // For RTSP/Webcam, if no segments are found, we should return null (NO SIGNAL)
+        // instead of trying to open a non-existent "output" file which causes 404 errors.
+        if (currentSession.source_type === 'video' && (currentSession.video_output_path || currentSession.source_path)) {
             let start = currentSession.created_at;
             if (!start || isNaN(new Date(start).getTime())) {
                 start = new Date().toISOString();
