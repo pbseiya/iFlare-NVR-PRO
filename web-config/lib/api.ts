@@ -10,6 +10,13 @@ export const apiClient = axios.create({
     },
 });
 
+// Helper to ensure ISO format (replace space with T) for robust parsing
+// e.g., "2026-02-10 09:39:03.123" -> "2026-02-10T09:39:03.123"
+const toISO = (dateStr: string | null | undefined): string | null => {
+    if (!dateStr) return null;
+    return dateStr.replace(' ', 'T');
+};
+
 export const LANGUAGE_MODELS = [
     { id: 'python+pytorch', name: 'Python + PyTorch (Default)' },
     { id: 'python+openvino', name: 'Python + OpenVINO' },
@@ -31,6 +38,7 @@ export interface SessionConfig {
     video_output_path?: string | null;
     recording_mode?: 'none' | 'clean' | 'annotated';
     render_mode: 'pipeline' | 'deferred';
+    video_height?: number;
 }
 
 export interface SessionInfo extends SessionConfig {
@@ -48,6 +56,8 @@ export interface SessionInfo extends SessionConfig {
 }
 
 export interface Detection {
+    id?: number;
+    session_id: number;
     frame_number: number;
     class_name: string;
     confidence: number;
@@ -56,6 +66,9 @@ export interface Detection {
     bbox_x2: number;
     bbox_y2: number;
     timestamp: string | null;
+    // Optional fields for backward compatibility
+    bbox?: number[]; // [x1, y1, x2, y2]
+    class?: string;
 }
 
 export interface SessionResponse {
@@ -65,9 +78,29 @@ export interface SessionResponse {
     created_at: string;
 }
 
+export interface VideoSegment {
+    id: number;
+    session_id: number;
+    file_path: string;
+    start_time: string;
+    end_time: string | null;
+    duration_seconds: number | null;
+    status: string;
+}
+
 export interface SessionListResponse {
     sessions: SessionInfo[];
     total: number;
+}
+
+export interface SourceAnalysisResponse {
+    width: number;
+    height: number;
+    fps: number;
+    codec?: string;
+    estimated_bitrate_bps?: number;
+    duration_sec?: number;
+    error?: string;
 }
 
 // API Functions
@@ -90,12 +123,23 @@ export const api = {
         status?: string;
     }): Promise<SessionListResponse> => {
         const response = await apiClient.get('/api/sessions', { params });
-        return response.data;
+        const sessions = response.data.sessions.map((s: SessionInfo) => ({
+            ...s,
+            // Use DB time, normalize space to T
+            created_at: toISO(s.created_at) as string,
+            ended_at: toISO(s.ended_at)
+        }));
+        return { ...response.data, sessions };
     },
 
     getSession: async (sessionId: number): Promise<SessionInfo> => {
         const response = await apiClient.get(`/api/sessions/${sessionId}`);
-        return response.data;
+        const s = response.data;
+        return {
+            ...s,
+            created_at: toISO(s.created_at) as string,
+            ended_at: toISO(s.ended_at)
+        };
     },
 
     stopSession: async (sessionId: number, status: string = 'stopped') => {
@@ -110,6 +154,15 @@ export const api = {
         return response.data;
     },
 
+    // Analysis
+    analyzeSource: async (sourcePath: string, sourceType: string) => {
+        const response = await apiClient.post<SourceAnalysisResponse>('/api/sessions/analyze-source', {
+            source_path: sourcePath,
+            source_type: sourceType,
+        });
+        return response.data;
+    },
+
     resumeSession: async (sessionId: number) => {
         const response = await apiClient.post(`/api/sessions/${sessionId}/resume`);
         return response.data;
@@ -120,19 +173,54 @@ export const api = {
         return response.data;
     },
 
-    getDetections: async (sessionId: number, limit: number = 1000): Promise<Detection[]> => {
+    getDetections: async (sessionId: number, limit: number = 1000, start?: string, end?: string): Promise<Detection[]> => {
+        const params: any = { limit };
+        // Pass timestamps as-is (Local ISO), removing Z if present to match DB expectation
+        if (start) params.start_time = start.replace('Z', '');
+        if (end) params.end_time = end.replace('Z', '');
+
         const response = await apiClient.get(`/api/sessions/${sessionId}/detections`, {
-            params: { limit }
+            params
         });
-        // Handle direct array or wrapped object
+
+        let detections: Detection[] = [];
         if (Array.isArray(response.data)) {
-            return response.data;
+            detections = response.data;
+        } else {
+            detections = response.data.detections || [];
         }
-        return response.data.detections || [];
+
+        // Normalize timestamp (space -> T)
+        return detections.map(d => ({
+            ...d,
+            timestamp: toISO(d.timestamp)
+        }));
     },
 
-    getSessionSegments: async (sessionId: number): Promise<any[]> => {
+    getSessionSegments: async (sessionId: number): Promise<VideoSegment[]> => {
         const response = await apiClient.get(`/api/sessions/${sessionId}/segments`);
+        return response.data.map((s: VideoSegment) => ({
+            ...s,
+            start_time: toISO(s.start_time) as string,
+            end_time: toISO(s.end_time)
+        }));
+    },
+
+    // Video Streaming Helper
+    getVideoUrl: (videoPath: string): string => {
+        if (!videoPath) return '';
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : API_BASE_URL;
+        return `${API_BASE_URL}/api/video/stream?path=${encodeURIComponent(videoPath)}`;
+    },
+
+    // System Settings
+    getSystemSettings: async () => {
+        const response = await apiClient.get('/api/settings');
+        return response.data;
+    },
+
+    updateSystemSettings: async (settings: { auto_resume?: boolean }) => {
+        const response = await apiClient.post('/api/settings', settings);
         return response.data;
     },
 };

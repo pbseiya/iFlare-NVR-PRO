@@ -27,9 +27,14 @@ from .models import (
     TimeSeriesPoint,
     ErrorResponse,
     HealthResponse,
+    SourceAnalysisRequest,
+    SourceAnalysisResponse,
 )
+import cv2
 from .database import Database
 from .inference_engine import InferenceEngine
+from .video_converter import VideoConverter
+from .recovery import VideoRecoveryService
 
 
 @asynccontextmanager
@@ -41,25 +46,98 @@ async def lifespan(app: FastAPI):
     )
     app.state.db = Database(database_url)
     await app.state.db.connect()
-    app.state.db = Database(database_url)
-    await app.state.db.connect()
     print(f"✓ Connected to database")
-
-    # Cleanup stale sessions
-    async with app.state.db.acquire() as conn:
-        await conn.execute(
-            "UPDATE inference_sessions SET status = 'stopped', ended_at = NOW() WHERE status = 'running'"
-        )
-    print(f"✓ Cleaned up stale sessions")
 
     # Initialize Inference Engine
     app.state.inference_engine = InferenceEngine(app.state.db)
     print(f"✓ Inference Engine initialized")
 
+    # Initialize Video Converter Service
+    app.state.video_converter = VideoConverter(app.state.db, max_concurrent=2)
+    await app.state.video_converter.start()
+    app.state.inference_engine.converter = app.state.video_converter
+    print(f"✓ Video Converter Service started")
+
+    # Check Auto-Resume Setting
+    auto_resume = await app.state.db.get_app_setting("auto_resume", default=False)
+    print(f"⚙️ Auto-Resume System: {'ENABLED' if auto_resume else 'DISABLED'}")
+
+    # Handle Stale Sessions
+    async with app.state.db.acquire() as conn:
+        # Find sessions that were running when server died
+        running_sessions = await conn.fetch(
+            "SELECT * FROM inference_sessions WHERE status = 'running'"
+        )
+
+        if running_sessions:
+            print(f"Found {len(running_sessions)} sessions that were left running.")
+
+            if auto_resume:
+                # Resume them
+                for session_row in running_sessions:
+                    session = dict(session_row)
+                    session_id = session["id"]
+                    print(f"🔄 Auto-Resuming Session #{session_id} ({session.get('name')})...")
+
+                    try:
+                        # Get last frame
+                        last_frame = await conn.fetchval(
+                            "SELECT MAX(frame_number) FROM detections WHERE session_id = $1",
+                            session_id,
+                        )
+                        last_frame = last_frame if last_frame is not None else -1
+
+                        # Clear ended_at because we are continuing
+                        await conn.execute(
+                            "UPDATE inference_sessions SET ended_at = NULL WHERE id = $1",
+                            session_id,
+                        )
+
+                        # Construct config
+                        config_dict = {
+                            "model_name": session.get("model_name"),
+                            "language": session.get("language"),
+                            "source_type": session.get("source_type"),
+                            "source_path": session.get("source_path"),
+                            "fps_target": session.get("fps_target"),
+                            "conf_threshold": session.get("conf_threshold"),
+                            "iou_threshold": session.get("iou_threshold"),
+                            "save_video": session.get("save_video"),
+                            "video_output_path": session.get("video_output_path"),
+                            "render_mode": session.get("render_mode"),
+                            "recording_mode": session.get("recording_mode"),
+                        }
+
+                        # Start Inference
+                        await app.state.inference_engine.start_session(
+                            session_id, config_dict, start_frame=last_frame + 1
+                        )
+                    except Exception as e:
+                        print(f"❌ Failed to auto-resume session {session_id}: {e}")
+                        # Mark as failed if resume fails
+                        await app.state.db.update_session_status(session_id, "failed")
+            else:
+                # Mark as stopped (Default behavior)
+                await conn.execute(
+                    "UPDATE inference_sessions SET status = 'stopped', ended_at = NOW() WHERE status = 'running'"
+                )
+                print(f"✓ Cleaned up stale sessions (Marked as stopped)")
+
+    # Run Video Recovery (for crashed segments)
+    recovery_service = VideoRecoveryService(app.state.db)
+    print(f"⏳ Running video recovery scan...")
+    await recovery_service.scan_and_recover()
+
     yield
 
     # Shutdown
-    # Stop all active sessions?
+    # Stop all active sessions
+    await app.state.inference_engine.stop_all_sessions()
+
+    # Stop Video Converter Service
+    await app.state.video_converter.stop()
+    print("✓ Video Converter Service stopped")
+
     await app.state.db.disconnect()
     print("✓ Disconnected from database")
 
@@ -83,6 +161,33 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ========================================
+# System Settings Endpoints
+# ========================================
+
+
+@app.get("/api/settings")
+async def get_system_settings():
+    """Get all system settings"""
+    try:
+        # Currently we only have auto_resume
+        auto_resume = await app.state.db.get_app_setting("auto_resume", False)
+        return {"auto_resume": auto_resume}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/settings")
+async def update_system_settings(settings: dict):
+    """Update system settings"""
+    try:
+        if "auto_resume" in settings:
+            await app.state.db.set_app_setting("auto_resume", settings["auto_resume"])
+        return {"status": "updated", "settings": settings}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # ... (Health Check) ...
 
@@ -108,6 +213,9 @@ async def start_session(config: SessionConfig):
             render_mode=config.render_mode,
             recording_mode=config.recording_mode,
             name=config.name,
+            video_height=config.video_height,
+            source_width=config.source_width,
+            source_height=config.source_height,
         )
 
         # Auto-generate video path if not provided but save_video is True
@@ -116,8 +224,8 @@ async def start_session(config: SessionConfig):
             output_dir = os.path.join(os.getcwd(), "videos", "output")
             os.makedirs(output_dir, exist_ok=True)
 
-            # Generate path: videos/output/session_{id}.mp4
-            generated_path = os.path.join(output_dir, f"session_{session_id}.mp4")
+            # Generate path: videos/output/session_{id}.webm
+            generated_path = os.path.join(output_dir, f"session_{session_id}.webm")
 
             # Update DB and Config
             await app.state.db.update_session(session_id, {"video_output_path": generated_path})
@@ -229,6 +337,7 @@ async def update_session(session_id: int, updates: SessionUpdate):
             "save_video",
             "video_output_path",
             "recording_mode",
+            "video_height",  # Resolution changes require restart
         ]
 
         needs_restart = any(field in update_data for field in critical_fields)
@@ -254,6 +363,8 @@ async def update_session(session_id: int, updates: SessionUpdate):
                 "video_output_path": updated_session.get("video_output_path"),
                 "render_mode": updated_session.get("render_mode"),
                 "recording_mode": updated_session.get("recording_mode"),
+                "video_height": updated_session.get("video_height"),
+                "session_name": updated_session.get("name"),  # For camera_id generation
             }
 
             last_frame = -1
@@ -306,23 +417,72 @@ async def delete_session(session_id: int):
             except Exception as e:
                 print(f"⚠️ Error stopping session {session_id}: {e}")
 
-        # Clean up video files
+        # Clean up video files from hierarchical structure
         try:
             import shutil
+            from pathlib import Path
 
-            # 1. Delete session directory (Video Segments)
-            session_dir = os.path.join(os.getcwd(), "videos", "output", f"session_{session_id}")
-            if os.path.exists(session_dir):
-                shutil.rmtree(session_dir)
-                print(f"🗑️ Deleted session directory: {session_dir}")
+            # Query all video segments to get actual file paths
+            async with app.state.db.acquire() as conn:
+                segments = await conn.fetch(
+                    "SELECT file_path FROM video_segments WHERE session_id = $1 AND file_path IS NOT NULL",
+                    session_id,
+                )
 
-            # 2. Check for single video output (Legacy or non-segment mode)
+            deleted_files = 0
+            deleted_dirs = set()
+
+            for segment in segments:
+                file_path = segment["file_path"]
+                if file_path and os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                        deleted_files += 1
+                        print(f"🗑️ Deleted video file: {file_path}")
+
+                        # Track parent directory for cleanup
+                        parent_dir = os.path.dirname(file_path)
+                        deleted_dirs.add(parent_dir)
+                    except Exception as e:
+                        print(f"⚠️ Error deleting file {file_path}: {e}")
+
+            # Clean up empty directories (session folder and parent date/time folders if empty)
+            for dir_path in sorted(deleted_dirs, reverse=True):  # Start from deepest
+                try:
+                    if os.path.exists(dir_path) and not os.listdir(dir_path):
+                        os.rmdir(dir_path)
+                        print(f"🗑️ Deleted empty directory: {dir_path}")
+
+                        # Try to clean up parent directories if they're also empty
+                        parent = os.path.dirname(dir_path)
+                        while parent and parent.startswith(
+                            os.path.join(os.getcwd(), "videos", "output")
+                        ):
+                            if os.path.exists(parent) and not os.listdir(parent):
+                                os.rmdir(parent)
+                                print(f"🗑️ Deleted empty parent directory: {parent}")
+                                parent = os.path.dirname(parent)
+                            else:
+                                break
+                except Exception as e:
+                    print(f"⚠️ Error cleaning up directory {dir_path}: {e}")
+
+            print(f"✅ Deleted {deleted_files} video files for session {session_id}")
+
+            # Legacy cleanup: Check for old-style session directory (for backward compatibility)
+            legacy_session_dir = os.path.join(
+                os.getcwd(), "videos", "output", f"session_{session_id}"
+            )
+            if os.path.exists(legacy_session_dir):
+                shutil.rmtree(legacy_session_dir)
+                print(f"🗑️ Deleted legacy session directory: {legacy_session_dir}")
+
+            # Check for single video output (Legacy or non-segment mode)
             video_path = session.get("video_output_path")
             if video_path and isinstance(video_path, str) and os.path.exists(video_path):
-                # Avoid deleting if it was inside the directory we just removed
-                if not video_path.startswith(session_dir):
-                    os.remove(video_path)
-                    print(f"🗑️ Deleted video file: {video_path}")
+                os.remove(video_path)
+                print(f"🗑️ Deleted legacy video file: {video_path}")
+
         except Exception as e:
             print(f"⚠️ Error cleaning up files for session {session_id}: {e}")
 
@@ -378,8 +538,8 @@ async def resume_session(session_id: int):
             output_dir = os.path.join(os.getcwd(), "videos", "output")
             os.makedirs(output_dir, exist_ok=True)
 
-            # Generate path: videos/output/session_{id}.mp4
-            generated_path = os.path.join(output_dir, f"session_{session_id}.mp4")
+            # Generate path: videos/output/session_{id}.webm
+            generated_path = os.path.join(output_dir, f"session_{session_id}.webm")
 
             # Update DB
             await app.state.db.update_session(session_id, {"video_output_path": generated_path})
@@ -399,7 +559,10 @@ async def resume_session(session_id: int):
             "iou_threshold": session.get("iou_threshold"),
             "save_video": session.get("save_video"),
             "video_output_path": session.get("video_output_path"),
+            "recording_mode": session.get("recording_mode"),
             "render_mode": session.get("render_mode"),
+            "video_height": session.get("video_height"),
+            "session_name": session.get("name"),
         }
 
         await app.state.inference_engine.start_session(
@@ -466,7 +629,7 @@ async def get_detections(
     end_time: Optional[datetime] = None,
     class_id: Optional[int] = None,
     min_confidence: Optional[float] = Query(None, ge=0.0, le=1.0),
-    limit: int = Query(100, ge=1, le=1000),
+    limit: int = Query(100, ge=1, le=100000),
     offset: int = Query(0, ge=0),
 ):
     """Get detections for a session"""
@@ -612,23 +775,38 @@ async def websocket_live(websocket: WebSocket, session_id: int):
         )
 
         # Keep connection alive and handle messages
-        while True:
-            try:
-                # Receive message from client
-                data = await websocket.receive_json()
+        # Subscribe to inference engine frames
+        queue = app.state.engine.add_subscriber(session_id)
 
-                # Handle different message types
-                if data.get("type") == "ping":
-                    await websocket.send_json({"type": "pong"})
+        try:
+            while True:
+                # Receive message from client (keep alive/ping)
+                # We use asyncio.wait to handle both incoming messages and outgoing queue
+                receive_task = asyncio.create_task(websocket.receive_json())
+                queue_task = asyncio.create_task(queue.get())
 
-                # TODO: Implement actual live streaming logic
-                # This would involve:
-                # 1. Listening to inference engine output
-                # 2. Sending frames and detections to client
-                # 3. Handling client requests (pause, resume, etc.)
+                done, pending = await asyncio.wait(
+                    [receive_task, queue_task], return_when=asyncio.FIRST_COMPLETED
+                )
 
-            except WebSocketDisconnect:
-                break
+                if receive_task in done:
+                    data = receive_task.result()
+                    if data.get("type") == "ping":
+                        await websocket.send_json({"type": "pong"})
+                else:
+                    receive_task.cancel()
+
+                if queue_task in done:
+                    message = queue_task.result()
+                    await websocket.send_json(message)
+                else:
+                    queue_task.cancel()
+
+        except WebSocketDisconnect:
+            pass
+
+        finally:
+            app.state.engine.remove_subscriber(session_id, queue)
 
     except Exception as e:
         await websocket.send_json({"error": str(e)})
@@ -671,7 +849,7 @@ async def get_session_detections(session_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/video/stream")
+@app.api_route("/api/video/stream", methods=["GET", "HEAD"])
 async def video_stream(path: str = Query(...), range: str = Header(None)):
     """Stream video file with Range support"""
     video_path = os.path.expanduser(path)
@@ -711,7 +889,7 @@ async def video_stream(path: str = Query(...), range: str = Header(None)):
 
     mime_type, _ = mimetypes.guess_type(video_path)
     if not mime_type:
-        mime_type = "video/mp4"
+        mime_type = "video/webm"
 
     headers = {
         "Content-Range": f"bytes {start}-{end}/{file_size}",
@@ -735,6 +913,62 @@ async def global_exception_handler(request, exc):
 # ========================================
 # Run Application
 # ========================================
+
+
+# ========================================
+# Analysis Endpoints
+# ========================================
+
+
+@app.post("/api/sessions/analyze-source", response_model=SourceAnalysisResponse)
+async def analyze_source(request: SourceAnalysisRequest):
+    """Analyze source media to get resolution, FPS, and estimated bitrate."""
+    source_path = request.source_path
+    source_type = request.source_type
+
+    if source_type == "video":
+        source_path = os.path.expanduser(source_path)
+        if not os.path.exists(source_path):
+            raise HTTPException(status_code=404, detail=f"File not found: {source_path}")
+
+    try:
+        cap = cv2.VideoCapture(source_path)
+        if not cap.isOpened():
+            raise HTTPException(status_code=400, detail=f"Could not open source: {source_path}")
+
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+
+        # Estimate Bitrate
+        estimated_bitrate = None
+        duration = None
+
+        if source_type == "video":
+            # flexible duration logic
+            try:
+                duration = frame_count / fps if fps > 0 else 0
+                file_size = os.path.getsize(source_path)
+                if duration > 0:
+                    estimated_bitrate = (file_size * 8) / duration  # bits per second
+            except Exception as e:
+                print(f"Error calculating file bitrate: {e}")
+
+        cap.release()
+
+        return SourceAnalysisResponse(
+            width=width,
+            height=height,
+            fps=fps,
+            estimated_bitrate_bps=estimated_bitrate,
+            duration_sec=duration,
+        )
+
+    except Exception as e:
+        print(f"Analyze source error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     import uvicorn

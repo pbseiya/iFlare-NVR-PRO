@@ -4,8 +4,9 @@ import cv2
 import numpy as np
 import time
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 from .database import Database
+from .video_converter import VideoConverter
 from ultralytics import YOLO
 import torch
 
@@ -19,7 +20,9 @@ class VideoSegmentManager:
         width: int,
         height: int,
         fps: float,
+        camera_id: str = "default",
         interval_seconds: int = 60,
+        converter: Optional[VideoConverter] = None,
     ):
         self.db = db
         self.session_id = session_id
@@ -27,16 +30,15 @@ class VideoSegmentManager:
         self.width = width
         self.height = height
         self.fps = fps
+        self.camera_id = camera_id
         self.interval_seconds = interval_seconds
+        self.converter = converter
 
         self.current_writer = None
         self.current_segment_id = None
         self.segment_start_time = None
         self.current_file_path = None
-
-        # Ensure session directory exists
-        self.session_dir = os.path.join(base_dir, f"session_{session_id}")
-        os.makedirs(self.session_dir, exist_ok=True)
+        self.current_temp_path = None  # For M4V temp file
 
     async def write_frame(self, frame):
         now = datetime.now()
@@ -57,38 +59,81 @@ class VideoSegmentManager:
         if self.current_writer:
             await asyncio.to_thread(self.current_writer.release)
             duration = (now - self.segment_start_time).total_seconds()
-            await self.db.update_video_segment(self.current_segment_id, now, duration, "completed")
-            print(f"📦 Segment closed: {self.current_file_path} ({duration:.1f}s)")
+
+            # Enqueue for H.264 conversion if converter is available
+            if self.converter:
+                await self.converter.enqueue(
+                    self.current_segment_id, self.current_temp_path, self.session_id
+                )
+                print(
+                    f"📦 Segment closed, queued for conversion: {self.current_file_path} ({duration:.1f}s)"
+                )
+            else:
+                # No converter, mark as ready immediately
+                await self.db.update_video_segment(self.current_segment_id, now, duration, "ready")
+                print(f"📦 Segment closed: {self.current_file_path} ({duration:.1f}s)")
 
         # Start new
         self.segment_start_time = now
-        # VP9 uses .webm
-        filename = now.strftime("%Y%m%d_%H%M%S.webm")
-        self.current_file_path = os.path.join(self.session_dir, filename)
 
-        # VP90 codec
-        fourcc = cv2.VideoWriter_fourcc(*"VP90")
+        # Generate hierarchical path: YYYY/MM/DD/HH/camera_id/
+        year = now.strftime("%Y")
+        month = now.strftime("%m")
+        day = now.strftime("%d")
+        hour = now.strftime("%H")
+
+        segment_dir = os.path.join(self.base_dir, year, month, day, hour, self.camera_id)
+        os.makedirs(segment_dir, exist_ok=True)
+
+        # Filename: segment_HH-MM-SS.m4v (temp file for M4V capture)
+        filename = f"segment_{now.strftime('%H-%M-%S')}.m4v"
+        self.current_temp_path = os.path.join(segment_dir, filename)
+        self.current_file_path = self.current_temp_path  # Will be updated after conversion
+
+        # Use mp4v codec for M4V capture (fast, low CPU)
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
 
         # Blocking Warning: VideoWriter init can be slow
         self.current_writer = await asyncio.to_thread(
-            cv2.VideoWriter, self.current_file_path, fourcc, self.fps, (self.width, self.height)
+            cv2.VideoWriter, self.current_temp_path, fourcc, self.fps, (self.width, self.height)
         )
 
-        # Register in DB
+        # Register in DB with 'recording' status
         self.current_segment_id = await self.db.create_video_segment(
-            self.session_id, self.current_file_path, now
+            self.session_id, self.current_temp_path, now
         )
-        print(f"🎬 New segment started: {self.current_file_path}")
+        print(f"🎬 New segment started: {self.current_temp_path}")
 
     async def close(self):
         if self.current_writer:
             await asyncio.to_thread(self.current_writer.release)
             now = datetime.now()
-            if self.segment_start_time:
-                duration = (now - self.segment_start_time).total_seconds()
+            duration = (
+                (now - self.segment_start_time).total_seconds() if self.segment_start_time else 0
+            )
+
+            # Enqueue for H.264 conversion if converter is available
+            if self.converter and self.current_temp_path and os.path.exists(self.current_temp_path):
+                await self.converter.enqueue(
+                    self.current_segment_id, self.current_temp_path, self.session_id
+                )
+                print(
+                    f"📦 Final segment closed, queued for conversion: {self.current_file_path} ({duration:.1f}s)"
+                )
+                # Do NOT set status to 'stopped' here, let the converter set it to 'processing' -> 'ready'
+                # But we should update duration/end_time in DB?
+                # The converter usually updates status. If we don't update anything, it stays 'recording'.
+                # The worker picks it up and sets 'processing'.
+                # We SHOULD update duration though.
+                await self.db.update_video_segment(
+                    self.current_segment_id, now, duration, "recording"
+                )
+            else:
+                # No converter, just mark as stopped/ready (still M4V)
                 await self.db.update_video_segment(
                     self.current_segment_id, now, duration, "stopped"
                 )
+
             self.current_writer = None
 
 
@@ -99,6 +144,8 @@ class InferenceEngine:
         self.models = {}
         # session_id -> list of queues
         self.frame_queues: Dict[int, List[asyncio.Queue]] = {}
+        # Video converter service
+        self.converter: Optional[VideoConverter] = None
 
     def add_subscriber(self, session_id: int) -> asyncio.Queue:
         """Add a subscriber for live frame updates"""
@@ -119,6 +166,10 @@ class InferenceEngine:
     async def _broadcast_frame(self, session_id: int, frame, detections: list):
         """Broadcast raw frame + detections to all subscribers"""
         if session_id not in self.frame_queues:
+            return
+
+        queues = self.frame_queues[session_id]
+        if not queues:
             return
 
         try:
@@ -200,12 +251,21 @@ class InferenceEngine:
             del self.active_sessions[session_id]
             print(f"🛑 Session {session_id} stopped")
 
+    async def stop_all_sessions(self):
+        """Stop all active sessions gracefully"""
+        print(f"🛑 Stopping all {len(self.active_sessions)} active sessions...")
+        session_ids = list(self.active_sessions.keys())
+        for sid in session_ids:
+            await self.stop_session(sid)
+        print("✅ All sessions stopped.")
+
     async def _inference_loop(self, session_id: int, config: dict, start_frame: int = 0):
         """Main inference loop"""
         print(
             f"🔄 Inference loop started for session {session_id}, starting from frame {start_frame}"
         )
         cap = None
+        segment_manager = None  # Ensure it is in scope for finally
 
         try:
             # Load Model (Lazy loading)
@@ -224,6 +284,12 @@ class InferenceEngine:
                 return
 
             # Default: python+pytorch
+            # We need to pass segment_manager reference out?
+            # Actually, _run_python_pytorch creates its own segment_manager.
+            # We should refactor to handle cleanup here or ensure _run_python_pytorch handles it.
+            # _run_python_pytorch HAS a finally block? No, it catches Exception but the loop might exit.
+            # Let's verify _run_python_pytorch structure.
+            # It has a main loop. If cancelled, it cleans up.
             await self._run_python_pytorch(session_id, config, start_frame)
 
         except Exception as e:
@@ -233,6 +299,13 @@ class InferenceEngine:
             traceback.print_exc()
         finally:
             print(f"👋 Session {session_id} loop ended")
+
+            # Note: _run_python_pytorch handles its own cleanup internally for cap and segment_manager
+            # BUT if _run_python_pytorch raises an unhandled exception before cleaning up, we might leak.
+            # However, segment_manager is local to that method.
+            # We can't close it from here easily unless we return it.
+            # For now, let's assume _run_python_pytorch handles it, I will check that method next.
+
             try:
                 async with self.db.acquire() as conn:
                     await conn.execute(
@@ -424,6 +497,7 @@ class InferenceEngine:
 
         source = config.get("source_path")
         source_type = config.get("source_type", "video")
+        session_name = config.get("session_name", "")  # Extract session name from config
 
         if isinstance(source, str):
             source = os.path.expanduser(source)
@@ -439,195 +513,306 @@ class InferenceEngine:
         iou_thresh = float(config.get("iou_threshold", 0.45))
 
         # Prepare Video Manager
-        recording_mode = config.get("recording_mode", "none")
+        # Robustly determine recording mode: handle None, missing key, or string 'none'
+        raw_mode = config.get("recording_mode")
+        recording_mode = (
+            str(raw_mode).lower() if raw_mode is not None else "clean"
+        )  # Default to CLEAN as per models.py
+
         if config.get("save_video", False) and recording_mode == "none":
-            recording_mode = "annotated"
+            # Only override if explicit 'none' was passed but save_video is True (legacy case)
+            # But if it was None/missing, we defaulted to "clean" above.
+            pass
+
+        print(f"Session {session_id} (Pytorch): recording_mode='{recording_mode}'")
 
         should_record = recording_mode in ["clean", "annotated"]
         segment_manager = None
         base_video_dir = os.path.join(os.getcwd(), "videos", "output")
 
         # --- Main Reconnection Loop (Infinite for Anti-Stale) ---
-        while True:
-            cap = None
-            try:
-                if asyncio.current_task().cancelled():
-                    break
-
-                print(f"🔌 Connecting to source: {source}")
-
-                is_live = source_type in ["rtsp", "webcam"]
-
-                if is_live:
-                    cap = await asyncio.to_thread(BufferlessVideoCapture, source)
-                else:
-                    cap = await asyncio.to_thread(cv2.VideoCapture, source)
-
-                if not cap.isOpened():
-                    print(f"⚠️ Failed to open source {source}. Retrying in 5s...")
-                    if is_live:
-                        await asyncio.sleep(5)
-                        continue
-                    else:
-                        break  # File not found, stop.
-
-                if not is_live and start_frame > 0:
-                    await asyncio.to_thread(cap.set, cv2.CAP_PROP_POS_FRAMES, start_frame)
-
-                last_frame_time = 0
-
-                # --- Inference Loop ---
-                while True:
+        try:
+            while True:
+                cap = None
+                try:
                     if asyncio.current_task().cancelled():
-                        # Cleanup and Exit
-                        if segment_manager:
-                            await segment_manager.close()
-                        if cap:
-                            await asyncio.to_thread(cap.release)
-                        return
+                        break
 
-                    now = time.time()
-                    if now - last_frame_time < frame_interval:
-                        await asyncio.sleep(0.01)
-                        continue
+                    print(f"🔌 Connecting to source: {source}")
 
-                    # Performance Timers
-                    t0 = time.perf_counter()
+                    is_live = source_type in ["rtsp", "webcam"]
 
-                    # Read Frame
-                    ret, frame = await asyncio.to_thread(
-                        cap.read
-                    )  # Already wrapped in asyncio.to_thread
-                    if not ret or frame is None:
-                        print(
-                            f"⚠️ Frame read failed/ended. Reconnecting..."
-                            if is_live
-                            else "🎉 Video ended."
-                        )
-                        break  # Break inner loop -> Reconnect or Finish
-
-                    t1 = time.perf_counter()
-
-                    # Initialize Segment Manager if not exists
-                    if should_record and segment_manager is None:
-                        h, w = frame.shape[:2]
-                        segment_manager = VideoSegmentManager(
-                            self.db,
-                            session_id,
-                            base_video_dir,
-                            w,
-                            h,
-                            fps_target if fps_target > 0 else 10,
-                            interval_seconds=60,
-                        )
-
-                    # Inference
-                    results = await asyncio.to_thread(
-                        model.predict, frame, conf=conf_thresh, iou=iou_thresh, verbose=False
-                    )
-
-                    t2 = time.perf_counter()
-
-                    # Postprocess
-                    last_frame_time = now
-                    detections_list = []
-                    frame_timestamp = datetime.now()
-
-                    if not is_live:
-                        frame_num = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+                    if is_live:
+                        cap = await asyncio.to_thread(BufferlessVideoCapture, source)
                     else:
-                        frame_num = 0
+                        cap = await asyncio.to_thread(cv2.VideoCapture, source)
 
-                    if results:
-                        r = results[0]
-                        annotated_frame = r.plot()
+                    if not cap.isOpened():
+                        print(f"⚠️ Failed to open source {source}. Retrying in 5s...")
+                        if is_live:
+                            await asyncio.sleep(5)
+                            continue
+                        else:
+                            break  # File not found, stop.
 
-                        for box in r.boxes:
-                            xyxy = box.xyxy[0].cpu().numpy()
-                            conf_val = float(box.conf[0].cpu().numpy())
-                            cls_id = int(box.cls[0].cpu().numpy())
-                            class_name = (
-                                model.names[cls_id] if hasattr(model, "names") else str(cls_id)
+                    if not is_live and start_frame > 0:
+                        await asyncio.to_thread(cap.set, cv2.CAP_PROP_POS_FRAMES, start_frame)
+
+                    # Get Source FPS for File Processing
+                    source_fps = cap.get(cv2.CAP_PROP_FPS)
+                    if source_fps <= 0:
+                        source_fps = 30.0  # Fallback
+
+                    # Calculate frame stride for Fast File Processing (Offline Mode)
+                    frame_stride = 1
+                    if (
+                        not is_live and fps_target > 0
+                    ):  # Only skip frames if target FPS is set (and valid)
+                        frame_stride = int(source_fps / fps_target)
+                        if frame_stride < 1:
+                            frame_stride = 1
+
+                    last_frame_time = 0
+                    processed_frames_count = 0
+
+                    # --- Inference Loop ---
+                    while True:
+                        if asyncio.current_task().cancelled():
+                            raise asyncio.CancelledError()
+
+                        now = time.time()
+
+                        # [Modified] Throttling Logic: Always sleep to enforce Real-Time Simulation
+                        # User Requirement: "Simulate RTSP behavior... must wait for time"
+                        if now - last_frame_time < frame_interval:
+                            await asyncio.sleep(0.01)
+                            continue
+
+                        # Performance Timers
+                        t0 = time.perf_counter()
+
+                        # Read Frame
+                        if not is_live and frame_stride > 1:
+                            # [New] Fast Forward: Skip frames using grab()
+                            for _ in range(frame_stride - 1):
+                                await asyncio.to_thread(cap.grab)
+
+                        ret, frame = await asyncio.to_thread(cap.read)
+
+                        if not ret or frame is None:
+                            if not is_live and source_type == "video":
+                                # Video ended - loop back to start by re-opening (more robust than seek)
+                                print(
+                                    f"🔄 Video ended (is_live={is_live}, source_type={source_type}). Looping back to start (Re-opening)..."
+                                )
+                                cap.release()
+                                cap = await asyncio.to_thread(cv2.VideoCapture, source)
+                                frame_num = 0
+                                continue
+                            else:
+                                # Live stream ended or other source
+                                print(
+                                    f"⚠️ Frame read failed/ended (is_live={is_live}, source_type={source_type}). Reconnecting..."
+                                    if is_live
+                                    else f"🎉 Stream ended (is_live={is_live}, source_type={source_type})."
+                                )
+                                break  # Break inner loop -> Reconnect or Finish
+
+                        t1 = time.perf_counter()
+
+                        # Initialize Video Scaling & Segment Manager
+                        h, w = frame.shape[:2]
+
+                        # Determine efficient storage resolution
+                        target_h_param = config.get("video_height")
+                        scale_factor = 1.0
+                        store_w, store_h = w, h
+
+                        if target_h_param and target_h_param < h:
+                            scale_factor = target_h_param / h
+                            store_h = target_h_param
+                            store_w = int(w * scale_factor)
+                            # Align to 2 for video encoding safety
+                            if store_w % 2 != 0:
+                                store_w -= 1
+                            if store_h % 2 != 0:
+                                store_h -= 1
+
+                        if should_record and segment_manager is None:
+                            # Generate camera_id from session name or source path
+                            camera_id = session_name if session_name else f"session_{session_id}"
+                            # Sanitize camera_id for filesystem
+                            camera_id = camera_id.replace("/", "_").replace(" ", "_")
+
+                            segment_manager = VideoSegmentManager(
+                                self.db,
+                                session_id,
+                                base_video_dir,
+                                store_w,
+                                store_h,
+                                fps_target if fps_target > 0 else 10,
+                                camera_id=camera_id,
+                                interval_seconds=60,
+                                converter=self.converter,  # Pass converter instance
                             )
-                            detections_list.append(
-                                (
+
+                        # Inference
+                        results = await asyncio.to_thread(
+                            model.predict, frame, conf=conf_thresh, iou=iou_thresh, verbose=False
+                        )
+
+                        t2 = time.perf_counter()
+
+                        # Postprocess
+                        last_frame_time = now
+                        detections_list = []
+                        broadcast_detections_list = []
+
+                        # [Modified] Timestamp Logic
+                        if not is_live:
+                            # Use Video Timestamp for Files (Offline Mode)
+                            # frame_num is updated by cap.get
+                            frame_num = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+                            video_pos_msec = cap.get(cv2.CAP_PROP_POS_MSEC)
+                            # Calculate datetime based on start time + video position
+                            # Or just use current time? Using current time for 'Run Now' semantics is usually fine,
+                            # BUT for accurate playback speed simulation in recorded file, we rely on the fps_target passed to VideoWriter.
+                            frame_timestamp = datetime.now()
+                        else:
+                            frame_num = 0
+                            frame_timestamp = datetime.now()
+
+                        if results:
+                            r = results[0]
+                            annotated_frame = r.plot()
+
+                            for box in r.boxes:
+                                xyxy = box.xyxy[0].cpu().numpy()
+                                conf_val = float(box.conf[0].cpu().numpy())
+                                cls_id = int(box.cls[0].cpu().numpy())
+                                class_name = (
+                                    model.names[cls_id] if hasattr(model, "names") else str(cls_id)
+                                )
+
+                                # Scale Coordinates to match Stored Video
+                                x1 = int(xyxy[0] * scale_factor)
+                                y1 = int(xyxy[1] * scale_factor)
+                                x2 = int(xyxy[2] * scale_factor)
+                                y2 = int(xyxy[3] * scale_factor)
+
+                                detection_tuple = (
                                     session_id,
                                     frame_num,
                                     frame_timestamp,
                                     cls_id,
                                     class_name,
                                     conf_val,
-                                    int(xyxy[0]),
-                                    int(xyxy[1]),
-                                    int(xyxy[2]),
-                                    int(xyxy[3]),
+                                    x1,  # Scaled for DB
+                                    y1,
+                                    x2,
+                                    y2,
                                 )
-                            )
+                                detections_list.append(detection_tuple)
 
-                        if detections_list:
+                                # Original Coordinates for Broadcast (Live View)
+                                broadcast_detections_list.append(
+                                    (
+                                        session_id,
+                                        frame_num,
+                                        frame_timestamp,
+                                        cls_id,
+                                        class_name,
+                                        conf_val,
+                                        int(xyxy[0]),  # Original X1
+                                        int(xyxy[1]),  # Original Y1
+                                        int(xyxy[2]),  # Original X2
+                                        int(xyxy[3]),  # Original Y2
+                                    )
+                                )
+
+                            if detections_list:
+                                async with self.db.acquire() as conn:
+                                    await conn.executemany(
+                                        "INSERT INTO detections (session_id, frame_number, timestamp, class_id, class_name, confidence, bbox_x1, bbox_y1, bbox_x2, bbox_y2) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+                                        detections_list,
+                                    )
+                        else:
+                            annotated_frame = frame
+
+                        if should_record and segment_manager:
+                            frame_to_write = frame if recording_mode == "clean" else annotated_frame
+
+                            # Resize if necessary
+                            if scale_factor != 1.0:
+                                frame_to_write = cv2.resize(
+                                    frame_to_write, (store_w, store_h), interpolation=cv2.INTER_AREA
+                                )
+
+                            await segment_manager.write_frame(frame_to_write)
+
+                        t3 = time.perf_counter()
+
+                        # Broadcast
+                        await self._broadcast_frame(session_id, frame, broadcast_detections_list)
+
+                        # Metrics
+                        total_ms = (t3 - t0) * 1000
+                        infer_ms = (t2 - t1) * 1000
+                        pre_ms = (t1 - t0) * 1000
+                        post_ms = (t3 - t2) * 1000
+
+                        try:
                             async with self.db.acquire() as conn:
-                                await conn.executemany(
-                                    "INSERT INTO detections (session_id, frame_number, timestamp, class_id, class_name, confidence, bbox_x1, bbox_y1, bbox_x2, bbox_y2) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
-                                    detections_list,
+                                await conn.execute(
+                                    "INSERT INTO performance_metrics (session_id, frame_number, timestamp, total_ms, inference_ms, preprocess_ms, postprocess_ms, render_ms) VALUES ($1, $2, NOW(), $3, $4, $5, $6, 0.0)",
+                                    session_id,
+                                    frame_num,
+                                    total_ms,
+                                    infer_ms,
+                                    pre_ms,
+                                    post_ms,
                                 )
-                    else:
-                        annotated_frame = frame
+                        except Exception as e:
+                            print(f"❌ Metrics Error: {e}")
 
-                    # Save Video Segment
-                    if should_record and segment_manager:
-                        frame_to_write = frame if recording_mode == "clean" else annotated_frame
-                        # Fix: write_frame is async, call it directly. It handles threading internally.
-                        await segment_manager.write_frame(
-                            frame_to_write
-                        )  # Already wrapped in await
-
-                    t3 = time.perf_counter()
-
-                    # Broadcast
-                    await self._broadcast_frame(session_id, frame, detections_list)
-
-                    # Metrics
-                    total_ms = (t3 - t0) * 1000
-                    infer_ms = (t2 - t1) * 1000
-                    pre_ms = (t1 - t0) * 1000
-                    post_ms = (t3 - t2) * 1000
-
-                    try:
-                        async with self.db.acquire() as conn:
-                            await conn.execute(
-                                "INSERT INTO performance_metrics (session_id, frame_number, timestamp, total_ms, inference_ms, preprocess_ms, postprocess_ms, render_ms) VALUES ($1, $2, NOW(), $3, $4, $5, $6, 0.0)",
-                                session_id,
-                                frame_num,
-                                total_ms,
-                                infer_ms,
-                                pre_ms,
-                                post_ms,
-                            )
-                    except Exception as e:
-                        print(f"❌ Metrics Error: {e}")
-
-                # End of Inner Loop
-                if cap:
-                    await asyncio.to_thread(cap.release)
-
-                if not is_live:
-                    if segment_manager:
-                        await segment_manager.close()
-                    break
-
-                # RTSP Reconnect Delay
-                print(f"🔄 RTSP Stream ended/failed. Reconnecting in 1s...")
-                await asyncio.sleep(1)
-
-            except Exception as e:
-                print(f"❌ Error in session loop: {e}")
-                # Ensure release if crash
-                if cap:
-                    try:
+                    # End of Inner Loop
+                    if cap:
                         await asyncio.to_thread(cap.release)
-                    except:
-                        pass
-                await asyncio.sleep(5)
+
+                    # For video files, the loop will restart from the outer reconnection loop
+                    # Video looping is handled at line 533-541 by re-opening the file
+                    # No need to break here - let it reconnect/loop
+
+                    # RTSP Reconnect Delay (also applies to video loop restart)
+                    if is_live:
+                        print(f"🔄 RTSP Stream ended/failed. Reconnecting in 1s...")
+                        await asyncio.sleep(1)
+                    else:
+                        # Small delay before restarting video loop
+                        await asyncio.sleep(0.1)
+
+                except asyncio.CancelledError:
+                    raise
+                except Exception as e:
+                    print(f"❌ Error in session loop: {e}")
+                    # Ensure release if crash
+                    if cap:
+                        try:
+                            await asyncio.to_thread(cap.release)
+                        except:
+                            pass
+                    await asyncio.sleep(5)
+        finally:
+            # Ensure segment manager is closed on ANY exit (normal, error, cancel)
+            if segment_manager:
+                print(f"🧹 Closing session {session_id} segment manager...")
+                await segment_manager.close()
+
+            if cap:
+                try:
+                    await asyncio.to_thread(cap.release)
+                except:
+                    pass
 
         # End of Main Loop
 

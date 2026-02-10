@@ -51,6 +51,9 @@ class Database:
         render_mode: str = "pipeline",
         recording_mode: str = "none",
         name: Optional[str] = None,
+        video_height: Optional[int] = None,
+        source_width: Optional[int] = None,
+        source_height: Optional[int] = None,
     ) -> int:
         """Create a new inference session"""
         async with self.acquire() as conn:
@@ -59,8 +62,9 @@ class Database:
                 INSERT INTO inference_sessions (
                     model_name, language, source_type, source_path,
                     fps_target, conf_threshold, iou_threshold,
-                    save_video, video_output_path, render_mode, recording_mode, name
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                    save_video, video_output_path, render_mode, recording_mode, name, video_height,
+                    source_width, source_height
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
                 RETURNING id
                 """,
                 model_name,
@@ -75,6 +79,9 @@ class Database:
                 render_mode,
                 recording_mode,
                 name,
+                video_height,
+                source_width,
+                source_height,
             )
         return session_id
 
@@ -381,3 +388,64 @@ class Database:
                 session_id,
             )
             return [dict(row) for row in rows]
+
+    async def get_stuck_segments(self):
+        """Get video segments that are stuck in 'recording' status"""
+        async with self.acquire() as conn:
+            # We look for segments that are 'recording' but the system has restarted
+            # Since this runs at startup, ANY segment with status 'recording' is by definition stuck
+            rows = await conn.fetch(
+                """
+                SELECT id, session_id, file_path, start_time
+                FROM video_segments
+                WHERE status = 'recording'
+                """
+            )
+            return [dict(row) for row in rows]
+
+    async def mark_segment_recovered(
+        self, segment_id: int, new_path: str, duration: float, status: str
+    ):
+        """Update segment status after recovery attempt"""
+        async with self.acquire() as conn:
+            await conn.execute(
+                """
+                UPDATE video_segments
+                SET file_path = $1, duration_seconds = $2, status = $3, end_time = start_time + make_interval(secs => $2)
+                WHERE id = $4
+                """,
+                new_path,
+                duration,
+                status,
+                segment_id,
+            )
+
+    # ========================================
+    # App Settings Queries
+    # ========================================
+
+    async def get_app_setting(self, key: str, default: Any = None) -> Any:
+        """Get application setting by key"""
+        async with self.acquire() as conn:
+            row = await conn.fetchrow("SELECT value FROM app_settings WHERE key = $1", key)
+        if row:
+            return row["value"]
+        return default
+
+    async def set_app_setting(self, key: str, value: Any):
+        """Set application setting"""
+        import json
+
+        async with self.acquire() as conn:
+            # asyncpg handles JSON/JSONB automatically if we pass native types,
+            # but sometimes explicit json.dumps is safer depending on driver setup.
+            # Here we rely on asyncpg's jsonb support for 'value' column.
+            await conn.execute(
+                """
+                INSERT INTO app_settings (key, value, updated_at)
+                VALUES ($1, $2, NOW())
+                ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()
+                """,
+                key,
+                value,
+            )

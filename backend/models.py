@@ -30,14 +30,19 @@ class SessionConfig(BaseModel):
     fps_target: int = Field(10, ge=1, le=60, description="Target FPS for inference")
     conf_threshold: float = Field(0.25, ge=0.0, le=1.0, description="Confidence threshold")
     iou_threshold: float = Field(0.45, ge=0.0, le=1.0, description="IoU threshold for NMS")
-    save_video: bool = Field(False, description="Legacy: whether to save output video")
+    save_video: bool = Field(True, description="Legacy: whether to save output video")
     video_output_path: Optional[str] = Field(None, description="Output video path")
     recording_mode: str = Field(
-        "none", pattern="^(none|clean|annotated)$", description="Recording mode"
+        "clean", pattern="^(none|clean|annotated)$", description="Recording mode"
     )
     render_mode: str = Field(
         "pipeline", pattern="^(pipeline|deferred)$", description="Rendering mode"
     )
+    video_height: Optional[int] = Field(
+        None, description="Target height for video storage (e.g. 720, 1080). None=Original"
+    )
+    source_width: Optional[int] = Field(None, description="Source video width")
+    source_height: Optional[int] = Field(None, description="Source video height")
 
 
 class SessionUpdate(BaseModel):
@@ -55,6 +60,9 @@ class SessionUpdate(BaseModel):
     video_output_path: Optional[str] = None
     recording_mode: Optional[str] = Field(None, pattern="^(none|clean|annotated)$")
     render_mode: Optional[str] = Field(None, pattern="^(pipeline|deferred)$")
+    video_height: Optional[int] = None
+    source_width: Optional[int] = None
+    source_height: Optional[int] = None
 
 
 class SessionResponse(BaseModel):
@@ -80,8 +88,12 @@ class SessionInfo(BaseModel):
     iou_threshold: float
     save_video: bool
     video_output_path: Optional[str]
-    recording_mode: Optional[str]
+    video_encoded_path: Optional[str] = None
+    recording_mode: Optional[str] = None
     render_mode: str
+    video_height: Optional[int] = None
+    source_width: Optional[int] = None
+    source_height: Optional[int] = None
     created_at: datetime
     ended_at: Optional[datetime]
     status: str
@@ -269,3 +281,23 @@ class HealthResponse(BaseModel):
     database: str
     timestamp: datetime
     version: str = "1.0.0"
+
+
+# ========================================
+# Source Analysis Models
+# ========================================
+
+
+class SourceAnalysisRequest(BaseModel):
+    source_path: str
+    source_type: str = Field(..., pattern="^(video|rtsp|webcam)$")
+
+
+class SourceAnalysisResponse(BaseModel):
+    width: int
+    height: int
+    fps: float
+    codec: Optional[str] = None
+    estimated_bitrate_bps: Optional[float] = None
+    duration_sec: Optional[float] = None
+    error: Optional[str] = None
