@@ -147,6 +147,9 @@ class InferenceEngine:
         # Video converter service
         self.converter: Optional[VideoConverter] = None
 
+        # Flag to preserve 'running' state in DB during shutdown (for auto-resume)
+        self.shutdown_preserve_state = False
+
     def add_subscriber(self, session_id: int) -> asyncio.Queue:
         """Add a subscriber for live frame updates"""
         if session_id not in self.frame_queues:
@@ -307,11 +310,15 @@ class InferenceEngine:
             # For now, let's assume _run_python_pytorch handles it, I will check that method next.
 
             try:
-                async with self.db.acquire() as conn:
-                    await conn.execute(
-                        "UPDATE inference_sessions SET status = 'stopped', ended_at = NOW() WHERE id = $1",
-                        session_id,
-                    )
+                # Check if we should preserve state (for auto-resume on server restart)
+                if self.shutdown_preserve_state:
+                    print(f"⚠️ Preserving session {session_id} state (running) for auto-resume.")
+                else:
+                    async with self.db.acquire() as conn:
+                        await conn.execute(
+                            "UPDATE inference_sessions SET status = 'stopped', ended_at = NOW() WHERE id = $1",
+                            session_id,
+                        )
             except Exception as e:
                 print(f"❌ Failed to update session status: {e}")
 

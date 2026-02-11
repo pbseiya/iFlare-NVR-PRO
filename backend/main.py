@@ -131,6 +131,16 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
+
+    # Check if we need to preserve session states for auto-resume
+    try:
+        auto_resume = await app.state.db.get_app_setting("auto_resume", default=False)
+        if auto_resume:
+            print("🛑 Shutdown: Auto-Resume is ENABLED. Preserving session states in DB.")
+            app.state.inference_engine.shutdown_preserve_state = True
+    except Exception as e:
+        print(f"⚠️ Error checking auto-resume setting during shutdown: {e}")
+
     # Stop all active sessions
     await app.state.inference_engine.stop_all_sessions()
 
