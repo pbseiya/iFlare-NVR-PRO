@@ -68,8 +68,8 @@ export default function DashboardPage() {
                 {/* Header with Role Switcher */}
                 <div className="flex items-start justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold mb-2">Live Operations</h1>
-                        <p className="text-gray-600">Monitor and manage your sessions</p>
+                        <h1 className="text-3xl font-bold mb-2 text-slate-900 dark:text-white">Live Operations</h1>
+                        <p className="text-slate-600 dark:text-slate-400">Monitor and manage your sessions</p>
                     </div>
                     <RoleSwitcher />
                 </div>

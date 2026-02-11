@@ -1,0 +1,34 @@
+H.264 vs VP9 Codec Benchmark Report
+================================================================================
+
+Timestamp: 2026-02-09T14:37:11.828254
+Source: /home/pongsak/projects/rtsp_server/demo_clips/tf2dfx.mp4
+Resolution: 2560x1440
+Sample Size: 5
+
+
+VP9_FPS1:
+  Codec: VP90
+  FPS: 1
+  CRF: None
+  Avg Size: 4.50 MB
+  Std Dev: 0.000
+  Samples:
+    1. 4.50 MB (sample_1.webm)
+    2. 4.50 MB (sample_2.webm)
+    3. 4.50 MB (sample_3.webm)
+    4. 4.50 MB (sample_4.webm)
+    5. 4.50 MB (sample_5.webm)
+
+VP9_FPS6:
+  Codec: VP90
+  FPS: 6
+  CRF: None
+  Avg Size: 18.42 MB
+  Std Dev: 0.000
+  Samples:
+    1. 18.42 MB (sample_1.webm)
+    2. 18.42 MB (sample_2.webm)
+    3. 18.42 MB (sample_3.webm)
+    4. 18.42 MB (sample_4.webm)
+    5. 18.42 MB (sample_5.webm)

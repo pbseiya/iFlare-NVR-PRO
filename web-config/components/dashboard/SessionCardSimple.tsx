@@ -26,20 +26,20 @@ export default function SessionCardSimple({
     const isRunning = session.status === 'running';
 
     return (
-        <div className="bg-gray-900 rounded-xl p-6 border border-gray-800 hover:border-blue-500 transition-all group">
+        <div className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-slate-200 dark:border-gray-800 hover:border-blue-500 transition-all group">
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
                 <Link href={`/nvr?session_id=${session.id}`} className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-blue-400 transition-colors cursor-pointer truncate" title={session.name || session.model_name.split('/').pop()}>
+                    <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer truncate" title={session.name || session.model_name.split('/').pop()}>
                         {session.name || session.model_name.split('/').pop()}
                     </h3>
-                    <p className="text-sm text-gray-500">Session #{session.id}</p>
+                    <p className="text-sm text-slate-500 dark:text-gray-500">Session #{session.id}</p>
                 </Link>
                 <div className={`
                     flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium
                     ${isRunning
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                        : 'bg-gray-700 text-gray-400 border border-gray-600'
+                        ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-500/30'
+                        : 'bg-slate-100 dark:bg-gray-700 text-slate-500 dark:text-gray-400 border border-slate-200 dark:border-gray-600'
                     }
                 `}>
                     {isRunning && <span className="inline-block w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse" />}
@@ -52,8 +52,8 @@ export default function SessionCardSimple({
                 <div className="flex items-center gap-2">
                     <Activity className="w-4 h-4 text-blue-400" />
                     <div>
-                        <p className="text-xs text-gray-500">Detections</p>
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-xs text-slate-500 dark:text-gray-500">Detections</p>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
                             {session.total_detections?.toLocaleString() || '0'}
                         </p>
                     </div>
@@ -62,8 +62,8 @@ export default function SessionCardSimple({
                 <div className="flex items-center gap-2">
                     <Video className="w-4 h-4 text-purple-400" />
                     <div>
-                        <p className="text-xs text-gray-500">Frames</p>
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-xs text-slate-500 dark:text-gray-500">Frames</p>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
                             {session.total_frames?.toLocaleString() || '0'}
                         </p>
                     </div>
@@ -72,8 +72,8 @@ export default function SessionCardSimple({
                 <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-green-400" />
                     <div>
-                        <p className="text-xs text-gray-500">Avg Conf</p>
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-xs text-slate-500 dark:text-gray-500">Avg Conf</p>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
                             {session.avg_confidence ? `${(session.avg_confidence * 100).toFixed(1)}%` : 'N/A'}
                         </p>
                     </div>
@@ -82,15 +82,15 @@ export default function SessionCardSimple({
                 <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-yellow-400" />
                     <div>
-                        <p className="text-xs text-gray-500">FPS Target</p>
-                        <p className="text-sm font-semibold text-white">{session.fps_target}</p>
+                        <p className="text-xs text-slate-500 dark:text-gray-500">FPS Target</p>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{session.fps_target}</p>
                     </div>
                 </div>
             </div>
 
             {/* Action Buttons - Stop/Resume only */}
             {(onStop || onResume) && (
-                <div className="pt-4 border-t border-gray-800">
+                <div className="pt-4 border-t border-slate-200 dark:border-gray-800">
                     {isRunning ? (
                         <button
                             onClick={() => onStop?.(session.id)}
@@ -114,7 +114,7 @@ export default function SessionCardSimple({
             )}
 
             {/* Footer - Timestamp */}
-            <div className="pt-4 border-t border-gray-800 mt-4">
+            <div className="pt-4 border-t border-slate-200 dark:border-gray-800 mt-4">
                 <div className="flex items-center justify-between text-xs">
                     <span className="text-gray-500">
                         {new Date(session.created_at).toLocaleDateString()} {new Date(session.created_at).toLocaleTimeString()}

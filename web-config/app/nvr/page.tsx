@@ -11,8 +11,11 @@ import { DetectionToggles } from '@/components/shared/DetectionToggles';
 import { drawDetections } from '@/lib/detection-utils';
 import SynchronizedPlayer from '@/components/dashboard/SynchronizedPlayer';
 
-export default function NVRPage() {
+import { Suspense } from 'react';
+
+function NVRContent() {
     const searchParams = useSearchParams();
+
     const router = useRouter();
     const initialSessionId = searchParams.get('session_id') ? parseInt(searchParams.get('session_id')!) : null;
 
@@ -448,6 +451,14 @@ export default function NVRPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function NVRPage() {
+    return (
+        <Suspense fallback={<div className="h-screen bg-gray-900 flex items-center justify-center text-white">Loading NVR...</div>}>
+            <NVRContent />
+        </Suspense>
     );
 }
 

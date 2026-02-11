@@ -18,23 +18,23 @@ export default function CamerasPage() {
     const sessions = sessionsData?.sessions || [];
 
     return (
-        <div className="min-h-screen bg-gray-950 text-white">
+        <div className="min-h-screen bg-background text-foreground">
             {/* Header */}
-            <div className="border-b border-gray-800 bg-gray-900/50 backdrop-blur-sm sticky top-0 z-10">
+            <div className="border-b border-slate-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm sticky top-0 z-10">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <Link
                                 href="/"
-                                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                                className="flex items-center gap-2 text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors"
                             >
                                 <ArrowLeft size={20} />
                                 <span>Back to Home</span>
                             </Link>
-                            <div className="h-6 w-px bg-gray-700" />
+                            <div className="h-6 w-px bg-slate-300 dark:bg-gray-700" />
                             <div>
                                 <h1 className="text-2xl font-bold">Multi-Camera View</h1>
-                                <p className="text-sm text-gray-400">Monitor all active sessions</p>
+                                <p className="text-sm text-slate-500 dark:text-gray-400">Monitor all active sessions</p>
                             </div>
                         </div>
                     </div>

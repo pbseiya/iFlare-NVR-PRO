@@ -23,7 +23,9 @@ const ZOOM_SCALES = [
     { label: '6M', ms: 15552000000 },
 ];
 
-export default function RecordingsPage() {
+import { Suspense } from 'react';
+
+function RecordingsContent() {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -268,21 +270,21 @@ export default function RecordingsPage() {
     };
 
     return (
-        <div className="flex h-screen bg-gray-950 text-white">
+        <div className="flex h-screen bg-background text-foreground">
             <main className="flex-1 flex flex-col min-w-0 transition-all duration-300">
                 {/* Header */}
-                <header className="px-6 py-4 bg-gray-900 border-b border-gray-800 flex items-center justify-between gap-4">
+                <header className="px-6 py-4 bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-800 flex items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold">Recordings</h1>
-                        <p className="text-gray-400 text-sm">Long-term timeline analysis</p>
+                        <p className="text-slate-500 dark:text-gray-400 text-sm">Long-term timeline analysis</p>
                     </div>
 
                     <div className="flex items-center gap-4 flex-wrap justify-end">
                         {/* Camera Selector (Multi-Select) */}
                         <div className="flex flex-col relative" ref={camDropdownRef}>
-                            <span className="text-xs text-gray-500 mb-1">Sources / Cameras</span>
+                            <span className="text-xs text-slate-500 dark:text-gray-500 mb-1">Sources / Cameras</span>
                             <button
-                                className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none min-w-[200px] flex items-center justify-between"
+                                className="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none min-w-[200px] flex items-center justify-between"
                                 onClick={() => setIsCamDropdownOpen(!isCamDropdownOpen)}
                             >
                                 <span className="truncate max-w-[180px]">
@@ -294,7 +296,7 @@ export default function RecordingsPage() {
                             </button>
 
                             {isCamDropdownOpen && (
-                                <div className="absolute top-full left-0 mt-1 w-full min-w-[220px] bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto p-1">
+                                <div className="absolute top-full left-0 mt-1 w-full min-w-[220px] bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto p-1">
                                     {cameras.map(cam => {
                                         const isSelected = selectedCameras.includes(cam);
                                         return (
@@ -302,7 +304,7 @@ export default function RecordingsPage() {
                                                 key={cam}
                                                 className={`
                                                     flex items-center gap-2 px-3 py-2 rounded cursor-pointer text-sm
-                                                    ${isSelected ? 'bg-blue-600/20 text-blue-200' : 'text-gray-300 hover:bg-gray-700'}
+                                                    ${isSelected ? 'bg-blue-600/20 text-blue-600 dark:text-blue-200' : 'text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-gray-700'}
                                                 `}
                                                 onClick={() => toggleCamera(cam)}
                                             >
@@ -320,20 +322,20 @@ export default function RecordingsPage() {
                         {/* Date Range Selector */}
                         <div className="flex items-center gap-2">
                             <div className="flex flex-col">
-                                <span className="text-xs text-gray-500 mb-1">From</span>
+                                <span className="text-xs text-slate-500 dark:text-gray-500 mb-1">From</span>
                                 <input
                                     type="date"
-                                    className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-slate-900 dark:text-white"
                                     value={startDate}
                                     onChange={(e) => setStartDate(e.target.value)}
                                 />
                             </div>
-                            <span className="mt-5 text-gray-500">-</span>
+                            <span className="mt-5 text-slate-400 dark:text-gray-500">-</span>
                             <div className="flex flex-col">
-                                <span className="text-xs text-gray-500 mb-1">To</span>
+                                <span className="text-xs text-slate-500 dark:text-gray-500 mb-1">To</span>
                                 <input
                                     type="date"
-                                    className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none text-slate-900 dark:text-white"
                                     value={endDate}
                                     onChange={(e) => setEndDate(e.target.value)}
                                 />
@@ -342,8 +344,8 @@ export default function RecordingsPage() {
 
                         {/* Overlay Controls */}
                         <div className="flex flex-col ml-2">
-                            <span className="text-xs text-gray-500 mb-1">Overlays</span>
-                            <div className="flex bg-gray-800 rounded-lg p-1 border border-gray-700 h-[38px] items-center gap-3 px-3">
+                            <span className="text-xs text-slate-500 dark:text-gray-500 mb-1">Overlays</span>
+                            <div className="flex bg-white dark:bg-gray-800 rounded-lg p-1 border border-slate-200 dark:border-gray-700 h-[38px] items-center gap-3 px-3">
                                 <DetectionToggles
                                     filterState={detectionFilter}
                                     actions={detectionFilter}
@@ -357,7 +359,7 @@ export default function RecordingsPage() {
                 {/* Main Content */}
                 <div className="flex-1 flex flex-col p-6 gap-6 overflow-hidden">
                     {/* Video Player Grid */}
-                    <div className="flex-1 bg-black rounded-2xl border border-gray-800 relative overflow-hidden">
+                    <div className="flex-1 bg-black rounded-2xl border border-slate-200 dark:border-gray-800 relative overflow-hidden">
                         {selectedCameras.length > 0 ? (
                             <div className={`grid h-full gap-1 ${selectedCameras.length === 1 ? 'grid-cols-1' :
                                 selectedCameras.length <= 2 ? 'grid-cols-2' :
@@ -374,7 +376,7 @@ export default function RecordingsPage() {
                                     });
 
                                     return (
-                                        <div key={cam} className="relative bg-black border border-gray-900 overflow-hidden group">
+                                        <div key={cam} className="relative bg-black border border-slate-200 dark:border-gray-900 overflow-hidden group">
                                             {/* Player Component */}
                                             <SynchronizedPlayer
                                                 cameraName={cam}
@@ -404,7 +406,7 @@ export default function RecordingsPage() {
                                 })}
                             </div>
                         ) : (
-                            <div className="flex h-full items-center justify-center text-center text-gray-600">
+                            <div className="flex h-full items-center justify-center text-center text-slate-500 dark:text-gray-600">
                                 <div>
                                     <Clock size={48} className="mx-auto mb-4 opacity-50" />
                                     <p>Select a camera to view recordings</p>
@@ -421,12 +423,12 @@ export default function RecordingsPage() {
                     </div>
 
                     {/* Timeline Controls */}
-                    <div className="flex flex-col gap-4 bg-gray-900 p-4 rounded-xl border border-gray-800">
+                    <div className="flex flex-col gap-4 bg-white dark:bg-gray-900 p-4 rounded-xl border border-slate-200 dark:border-gray-800">
                         {/* Control Row */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <button
-                                    className="p-2 hover:bg-gray-800 rounded-full text-gray-400 hover:text-white transition-colors"
+                                    className="p-2 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full text-slate-400 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors"
                                     onClick={() => navigateTime('back')}
                                 >
                                     <SkipBack size={20} />
@@ -438,49 +440,51 @@ export default function RecordingsPage() {
                                     {isPlaying ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
                                 </button>
                                 <button
-                                    className="p-2 hover:bg-gray-800 rounded-full text-gray-400 hover:text-white transition-colors"
+                                    className="p-2 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-full text-slate-400 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors"
                                     onClick={() => navigateTime('forward')}
                                 >
                                     <SkipForward size={20} />
                                 </button>
                             </div>
 
-                            {/* Speed Controls */}
-                            <div className="flex items-center gap-1 bg-gray-800 rounded-lg p-1">
-                                {[1, 2, 4, 8, 16, 32, 64].map(speed => (
-                                    <button
-                                        key={speed}
-                                        onClick={() => handleSpeedChange(speed)}
-                                        className={`
-                                            px-3 py-1.5 rounded text-xs font-bold transition-colors
-                                            ${playbackSpeed === speed
-                                                ? 'bg-blue-600 text-white shadow'
-                                                : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'
-                                            }
-                                        `}
-                                    >
-                                        {speed}x
-                                    </button>
-                                ))}
-                            </div>
+                            <div className="flex items-center gap-2">
+                                {/* Speed Controls */}
+                                <div className="flex items-center gap-1 bg-slate-100 dark:bg-gray-800 rounded-lg p-1">
+                                    {[1, 2, 4, 8, 16, 32, 64].map(speed => (
+                                        <button
+                                            key={speed}
+                                            onClick={() => handleSpeedChange(speed)}
+                                            className={`
+                                                px-3 py-1.5 rounded text-xs font-bold transition-colors
+                                                ${playbackSpeed === speed
+                                                    ? 'bg-blue-600 text-white shadow'
+                                                    : 'text-slate-500 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-700 hover:text-black dark:hover:text-gray-200'
+                                                }
+                                            `}
+                                        >
+                                            {speed}x
+                                        </button>
+                                    ))}
+                                </div>
 
-                            {/* Zoom Scale Controls */}
-                            <div className="flex items-center gap-1 bg-gray-800 rounded-lg p-1">
-                                {ZOOM_SCALES.map(scale => (
-                                    <button
-                                        key={scale.label}
-                                        onClick={() => setZoomLevel(scale.ms)}
-                                        className={`
-                                            px-3 py-1.5 rounded text-xs font-bold transition-colors
-                                            ${zoomLevel === scale.ms
-                                                ? 'bg-blue-600 text-white shadow'
-                                                : 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'
-                                            }
-                                        `}
-                                    >
-                                        {scale.label}
-                                    </button>
-                                ))}
+                                {/* Zoom Scale Controls */}
+                                <div className="flex items-center gap-1 bg-slate-100 dark:bg-gray-800 rounded-lg p-1">
+                                    {ZOOM_SCALES.map(scale => (
+                                        <button
+                                            key={scale.label}
+                                            onClick={() => setZoomLevel(scale.ms)}
+                                            className={`
+                                                px-3 py-1.5 rounded text-xs font-bold transition-colors
+                                                ${zoomLevel === scale.ms
+                                                    ? 'bg-blue-600 text-white shadow'
+                                                    : 'text-slate-500 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-700 hover:text-black dark:hover:text-gray-200'
+                                                }
+                                            `}
+                                        >
+                                            {scale.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
@@ -495,13 +499,13 @@ export default function RecordingsPage() {
                                 segmentsBySessionId={segmentsBySession}
                                 selectedCameras={selectedCameras}
                                 onSeek={setCurrentTime}
-                                height={60 + (selectedCameras.length > 1 ? selectedCameras.length * 20 : 0)} // Dynamic height? Adjusting container height might be needed.
-                                className="rounded-lg border border-gray-700"
+                                height={60 + (selectedCameras.length > 1 ? selectedCameras.length * 20 : 0)}
+                                className="rounded-lg border border-slate-200 dark:border-gray-700"
                             />
                             {/* Time Axis Context */}
-                            <div className="flex justify-between text-xs text-gray-500 mt-1 font-mono">
+                            <div className="flex justify-between text-xs text-slate-500 dark:text-gray-500 mt-1 font-mono">
                                 <span>{viewStart.toLocaleString()}</span>
-                                <span className="text-white font-bold">{currentTime.toLocaleTimeString()}</span>
+                                <span className="text-slate-900 dark:text-white font-bold">{currentTime.toLocaleTimeString()}</span>
                                 <span>{viewEnd.toLocaleString()}</span>
                             </div>
                         </div>
@@ -509,5 +513,13 @@ export default function RecordingsPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function RecordingsPage() {
+    return (
+        <Suspense fallback={<div className="h-screen bg-gray-900 flex items-center justify-center text-white">Loading Recordings...</div>}>
+            <RecordingsContent />
+        </Suspense>
     );
 }

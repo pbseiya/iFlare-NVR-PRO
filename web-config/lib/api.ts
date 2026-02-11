@@ -39,6 +39,8 @@ export interface SessionConfig {
     recording_mode?: 'none' | 'clean' | 'annotated';
     render_mode: 'pipeline' | 'deferred';
     video_height?: number;
+    source_width?: number;
+    source_height?: number;
 }
 
 export interface SessionInfo extends SessionConfig {
@@ -53,6 +55,8 @@ export interface SessionInfo extends SessionConfig {
     avg_confidence: number | null;
     avg_total_ms: number | null;
     avg_inference_ms: number | null;
+    source_width?: number;
+    source_height?: number;
 }
 
 export interface Detection {

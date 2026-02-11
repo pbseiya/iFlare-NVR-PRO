@@ -78,35 +78,29 @@ models/
 
 ### 4. Start Services
 
-#### Option A: Docker Compose (แนะนำ)
+#### Option A: Production Mode (Recommended)
+ประหยัดทรัพยากร CPU/RAM เหมาะสำหรับการใช้งานทั่วไป
 
 ```bash
-# Start all services
-docker-compose up -d
+# Start application
+./run_app.sh
 
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
+# Start with Rebuild (หากมีการแก้ไขโค้ด Frontend)
+./run_app.sh build
 ```
 
 #### Option B: Development Mode
+สำหรับนักพัฒนา มี Hot-Reload (แก้ไขโค้ดแล้วเปลี่ยนทันที) แต่ใช้ทรัพยากรสูง
 
 ```bash
-# Terminal 1: Backend
-cd backend
-uvicorn main:app --reload --port 8000
+./run_app.sh dev
+```
 
-# Terminal 2: Config UI
-cd web-ui/config
-npm install
-npm run dev
+#### Option C: Docker Compose
+สำหรับการ Deploy แบบ Containerized
 
-# Terminal 3: NVR UI
-cd web-ui/nvr
-npm install
-npm run dev
+```bash
+docker-compose up -d
 ```
 
 ### 5. Access Web UI
