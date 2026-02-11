@@ -135,3 +135,4 @@ htmlcov/
 *.sqlite3
 *.db
 database/*.db
+rtsp_webhook.txt
