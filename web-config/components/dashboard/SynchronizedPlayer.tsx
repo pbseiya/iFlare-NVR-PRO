@@ -77,11 +77,12 @@ export default function SynchronizedPlayer({
                 end = new Date(endStr).getTime();
             }
 
-            const TOLERANCE = 30 * 60 * 1000; // 30m tolerance for late starts/ends
+            // Increased tolerance for Postgres UTC matching
+            const TOLERANCE_START = 60 * 60 * 1000; // 1h tolerance for late starts
+            const TOLERANCE_END = 60 * 60 * 1000;   // 1h tolerance for ends
 
-            const effectiveStart = start - TOLERANCE;
-            // If running, effectively infinite end? Or rely on no ended_at.
-            const effectiveEnd = end ? end + TOLERANCE : (s.status === 'running' ? Date.now() + 86400000 : null);
+            const effectiveStart = start - TOLERANCE_START;
+            const effectiveEnd = end ? end + TOLERANCE_END : (s.status === 'running' ? Date.now() + 86400000 : null);
 
             return timeMs >= effectiveStart && (effectiveEnd ? timeMs <= effectiveEnd : true);
         });
@@ -136,30 +137,34 @@ export default function SynchronizedPlayer({
                 const start = new Date(s.start_time).getTime();
 
                 // Allow any segment with a file path unless explicitly failed
-                // [Modified] Filter out .m4v files (recording/processing) as browsers can't play them
                 const isReady = s.status === 'completed' || s.status === 'ready' || (s.file_path && !s.file_path.endsWith('.m4v'));
 
-                // Tolerance + 1500ms just in case of drift (increased from 1000ms to fix small gaps)
-                return start <= timeMs + 1500 && isReady;
+                // Increased tolerance for matching to 4.0 seconds (was 2.5s) to handle larger RTSP gaps
+                // DEBUG: Log filtering
+                // console.log(`[SyncPlayer] Checking time: ${new Date(timeMs).toISOString()} against ${segments.length} segments`);
+
+                return start <= timeMs + 4000 && isReady;
             });
 
             if (candidates.length > 0) {
-                const seg = candidates[candidates.length - 1];
-                if (seg.end_time) {
-                    const end = new Date(seg.end_time).getTime();
-                    // If segment has explicit end, respect it with tolerance
-                    if (timeMs > end + 5000) {
-                        return null;
-                    }
-                } else if (seg.duration_seconds) {
-                    // Fallback to duration if end_time missing
-                    const end = new Date(seg.start_time).getTime() + (seg.duration_seconds * 1000);
-                    if (timeMs > end + 5000) {
-                        return null;
+                // [Fix] Iterate backwards through candidates to find the *first* one that actually fits the strict range.
+                // Previously, we just took the last candidate (newest), which might be too early (in the lookahead window but not in the playback window).
+                for (let i = candidates.length - 1; i >= 0; i--) {
+                    const seg = candidates[i];
+                    const start = new Date(seg.start_time).getTime();
+                    let end = seg.end_time
+                        ? new Date(seg.end_time).getTime()
+                        : start + ((seg.duration_seconds || 0) * 1000);
+
+                    // If currentTime is within the segment (plus small buffer), it's active
+                    if (timeMs >= start - 2000 && timeMs <= end + 10000) {
+                        // console.log(`[SyncPlayer] Selected Source: ${seg.id}`);
+                        return { type: 'segment', data: seg };
                     }
                 }
-
-                return { type: 'segment', data: seg };
+                console.warn(`[SyncPlayer] Candidates found but NONE in range!`);
+            } else {
+                console.warn(`[SyncPlayer] No candidates found for time: ${new Date(timeMs).toISOString()}`);
             }
             return null;
         }
@@ -349,13 +354,66 @@ export default function SynchronizedPlayer({
             const seekTime = (targetTimeMs - sourceStartMs) / 1000;
             if (seekTime >= 0 && isFinite(seekTime)) {
                 if (!isNaN(video.duration) && seekTime > video.duration) {
-                    // gap logic
+                    // [Gap Jump Logic]
+                    // If we are past the duration of the current video, it means we are in a gap.
+                    // We should check if the gap is small enough to jump over.
+                    const GAP_JUMP_LIMIT = 5000; // Increased to 5s for safety
+                    const timeSinceEnd = seekTime - video.duration;
+
+                    if (timeSinceEnd < GAP_JUMP_LIMIT / 1000) {
+                        // We are in a small gap.
+                        // For MASTER player, loop effect below handles it (Freewheel).
+                        // For now, do not update currentTime here, let the loop drive it.
+                    }
                 } else {
                     video.currentTime = seekTime;
                 }
             }
         }
     }, [currentTime, activeSource, isMaster]);
+
+    // 9. Gap Jumping / Auto-Advance Logic (Master Only)
+    // Also serves as "Freewheel" logic when activeSource is null but we are playing
+    // 9. Gap Jumping / Auto-Advance Logic (Master Only)
+    // Also serves as "Freewheel" logic when activeSource is null but we are playing
+    useEffect(() => {
+        if (!isMaster || !isPlaying) return;
+
+        const intervalMs = 100;
+        const tickAmountMs = intervalMs * playbackSpeed;
+
+        const checkTick = () => {
+            // Case 1: No active source (GAP or End of list)
+            // We should just tick forward blindly if we are "playing" to traverse the gap
+            if (!activeSource) {
+                if (onTimeUpdate) {
+                    const nextTime = new Date(currentTime.getTime() + tickAmountMs);
+                    console.log('[SyncPlayer] Freewheeling gap (No Source)...', nextTime.toISOString());
+                    onTimeUpdate(nextTime);
+                }
+                return;
+            }
+
+            // Case 2: Active Source exists
+            if (videoRef.current) {
+                const video = videoRef.current;
+
+                // Check if video has ended or is stuck at end
+                // Loosened tolerance to 0.5s to catch end of video earlier
+                if (video.ended || (video.duration > 0 && video.currentTime >= video.duration - 0.5)) {
+                    // Force jump
+                    const nextTickTime = new Date(currentTime.getTime() + tickAmountMs);
+                    console.log('[SyncPlayer] Freewheeling gap (Video End)...', nextTickTime.toISOString(), `CT: ${video.currentTime}/${video.duration}`);
+                    if (onTimeUpdate) {
+                        onTimeUpdate(nextTickTime);
+                    }
+                }
+            }
+        };
+
+        const interval = setInterval(checkTick, intervalMs);
+        return () => clearInterval(interval);
+    }, [isMaster, isPlaying, activeSource, currentTime, onTimeUpdate, playbackSpeed]);
 
     // Canvas Draw Effect
     useEffect(() => {
@@ -531,22 +589,20 @@ export default function SynchronizedPlayer({
                         </p>
 
                         {/* Only show technical details if Debug Mode is ON */}
-                        {showDebug && (
-                            <div className="text-xs font-mono text-left bg-gray-900 p-2 rounded max-w-full overflow-auto mt-2 border border-gray-700">
+                        {true && ( // Force debug for now to help user diagnose
+                            <div className="text-xs font-mono text-left bg-gray-900 p-2 rounded max-w-full overflow-auto mt-2 border border-gray-700 pointer-events-auto">
                                 <p className="text-red-400 font-bold mb-1">[DEBUG INFO]</p>
                                 <p>Time: {currentTime.toLocaleString()}</p>
-                                <p>Active Source: {activeSource ? (activeSource.type === 'segment' ? (activeSource.data as any).file_path : activeSource.path) : 'None'}</p>
-                                <p>Video Src: {videoSrc || 'None'}</p>
-                                <p>Error: {error ? 'Playback Error' : 'No Source'}</p>
-                                <p>Segments Available: {segments.length}</p>
+                                <p>Active Source: {activeSource ? (activeSource.type === 'segment' ? (activeSource.data as any).file_path.split('/').pop() : activeSource.path) : 'None (GAP)'}</p>
+                                <p>Status: {isPlaying ? 'PLAYING (Freewheel)' : 'PAUSED'}</p>
                             </div>
                         )}
-
-                        {!showDebug && !error && (
-                            <p className="text-gray-400 text-sm animate-pulse">Waiting for video stream...</p>
-                        )}
+                        <p>Video Src: {videoSrc || 'None'}</p>
+                        <p>Error: {error ? 'Playback Error' : 'No Source'}</p>
+                        <p>Segments Available: {segments.length}</p>
                     </div>
                 )}
+
                 {/* Canvas Overlay using drawDetections */}
                 {videoDims && activeDetections.length > 0 && (
                     <canvas

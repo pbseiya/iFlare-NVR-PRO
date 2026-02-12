@@ -5,7 +5,7 @@ import numpy as np
 import time
 from datetime import datetime
 from typing import Dict, Optional, List
-from .database import Database
+from .db.base import DatabaseInterface
 from .video_converter import VideoConverter
 from ultralytics import YOLO
 import torch
@@ -14,7 +14,7 @@ import torch
 class VideoSegmentManager:
     def __init__(
         self,
-        db: Database,
+        db: DatabaseInterface,
         session_id: int,
         base_dir: str,
         width: int,
@@ -138,7 +138,7 @@ class VideoSegmentManager:
 
 
 class InferenceEngine:
-    def __init__(self, db: Database):
+    def __init__(self, db: DatabaseInterface):
         self.db = db
         self.active_sessions: Dict[int, asyncio.Task] = {}
         self.models = {}
@@ -314,11 +314,7 @@ class InferenceEngine:
                 if self.shutdown_preserve_state:
                     print(f"⚠️ Preserving session {session_id} state (running) for auto-resume.")
                 else:
-                    async with self.db.acquire() as conn:
-                        await conn.execute(
-                            "UPDATE inference_sessions SET status = 'stopped', ended_at = NOW() WHERE id = $1",
-                            session_id,
-                        )
+                    await self.db.update_session_status(session_id, "stopped")
             except Exception as e:
                 print(f"❌ Failed to update session status: {e}")
 
@@ -466,6 +462,9 @@ class InferenceEngine:
                 self.t = threading.Thread(target=self._reader)
                 self.t.daemon = True
                 self.t.start()
+
+            def get(self, propId):
+                return self.cap.get(propId)
 
             def _reader(self):
                 while self.reading:
@@ -771,9 +770,10 @@ class InferenceEngine:
                         try:
                             async with self.db.acquire() as conn:
                                 await conn.execute(
-                                    "INSERT INTO performance_metrics (session_id, frame_number, timestamp, total_ms, inference_ms, preprocess_ms, postprocess_ms, render_ms) VALUES ($1, $2, NOW(), $3, $4, $5, $6, 0.0)",
+                                    "INSERT INTO performance_metrics (session_id, frame_number, timestamp, total_ms, inference_ms, preprocess_ms, postprocess_ms, render_ms) VALUES ($1, $2, $3, $4, $5, $6, $7, 0.0)",
                                     session_id,
                                     frame_num,
+                                    datetime.now(),
                                     total_ms,
                                     infer_ms,
                                     pre_ms,

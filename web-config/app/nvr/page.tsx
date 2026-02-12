@@ -103,9 +103,18 @@ function NVRContent() {
         if (session.status === 'running') {
             setCurrentTime(new Date()); // Liveish
         } else {
-            setCurrentTime(new Date(session.created_at)); // Start of session
+            // Default to session start, but we'll jump to the first segment in a useEffect once segments load
+            setCurrentTime(new Date(session.created_at));
         }
     };
+
+    // Auto-jump to first segment when they load for a stopped session
+    useEffect(() => {
+        if (selectedSession && selectedSession.status !== 'running' && !activeSegment && segments.length > 0) {
+            console.log(' jumping to first segment:', segments[0].start_time);
+            handleSegmentSelect(segments[0]);
+        }
+    }, [segments, selectedSessionId]);
 
     // Handle Clip Selection
     const handleSegmentSelect = (segment: any) => {
