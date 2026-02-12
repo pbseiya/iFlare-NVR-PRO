@@ -2,7 +2,7 @@ import os
 import asyncio
 import logging
 from datetime import datetime
-from .database import Database
+from .db.base import DatabaseInterface
 
 # Configure separate logger for recovery
 logger = logging.getLogger("recovery")
@@ -15,7 +15,7 @@ if not logger.handlers:
 
 
 class VideoRecoveryService:
-    def __init__(self, db: Database):
+    def __init__(self, db: DatabaseInterface):
         self.db = db
 
     async def scan_and_recover(self):

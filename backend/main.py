@@ -4,6 +4,11 @@ FastAPI application with REST endpoints and WebSocket support.
 """
 
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
 from datetime import datetime
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -31,7 +36,8 @@ from .models import (
     SourceAnalysisResponse,
 )
 import cv2
-from .database import Database
+from .db.factory import get_database
+from .db.base import DatabaseInterface
 from .inference_engine import InferenceEngine
 from .video_converter import VideoConverter
 from .recovery import VideoRecoveryService
@@ -41,10 +47,8 @@ from .recovery import VideoRecoveryService
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
     # Startup
-    database_url = os.getenv(
-        "DATABASE_URL", "postgresql://admin:password@localhost:5432/yolov11_inference"
-    )
-    app.state.db = Database(database_url)
+    # Initialize Database via Factory (reads DB_PROVIDER from env)
+    app.state.db = get_database()
     await app.state.db.connect()
     print(f"✓ Connected to database")
 
@@ -59,7 +63,8 @@ async def lifespan(app: FastAPI):
     print(f"✓ Video Converter Service started")
 
     # Check Auto-Resume Setting
-    auto_resume = await app.state.db.get_app_setting("auto_resume", default=False)
+    auto_resume_val = await app.state.db.get_app_setting("auto_resume", default="false")
+    auto_resume = str(auto_resume_val).lower() == "true"
     print(f"⚙️ Auto-Resume System: {'ENABLED' if auto_resume else 'DISABLED'}")
 
     # Handle Stale Sessions
@@ -119,7 +124,8 @@ async def lifespan(app: FastAPI):
             else:
                 # Mark as stopped (Default behavior)
                 await conn.execute(
-                    "UPDATE inference_sessions SET status = 'stopped', ended_at = NOW() WHERE status = 'running'"
+                    "UPDATE inference_sessions SET status = 'stopped', ended_at = $1 WHERE status = 'running'",
+                    datetime.now(),
                 )
                 print(f"✓ Cleaned up stale sessions (Marked as stopped)")
 
@@ -134,7 +140,8 @@ async def lifespan(app: FastAPI):
 
     # Check if we need to preserve session states for auto-resume
     try:
-        auto_resume = await app.state.db.get_app_setting("auto_resume", default=False)
+        auto_resume_val = await app.state.db.get_app_setting("auto_resume", default="false")
+        auto_resume = str(auto_resume_val).lower() == "true"
         if auto_resume:
             print("🛑 Shutdown: Auto-Resume is ENABLED. Preserving session states in DB.")
             app.state.inference_engine.shutdown_preserve_state = True
@@ -199,7 +206,15 @@ async def update_system_settings(settings: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ... (Health Check) ...
+@app.get("/health", response_model=HealthResponse)
+async def health_check():
+    """Health Check Endpoint"""
+    return {
+        "status": "ok",
+        "database": os.getenv("DB_PROVIDER", "postgres"),
+        "timestamp": datetime.now(),
+    }
+
 
 # ========================================
 # Session Endpoints
@@ -585,6 +600,12 @@ async def resume_session(session_id: int):
             "resumed_from_frame": last_frame + 1,
             "status": "running",
         }
+    except Exception as e:
+        import traceback
+
+        traceback.print_exc()
+        print(f"CRITICAL ERROR in resume_session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
     except HTTPException:
         raise

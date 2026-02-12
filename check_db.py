@@ -1,13 +1,10 @@
 import asyncio
 import os
-from backend.database import Database
+from backend.db.factory import get_database
 
 
 async def main():
-    db_url = os.getenv(
-        "DATABASE_URL", "postgresql://admin:password@localhost:5432/yolov11_inference"
-    )
-    db = Database(db_url)
+    db = get_database()
     await db.connect()
     try:
         async with db.acquire() as conn:

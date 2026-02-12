@@ -1,13 +1,9 @@
 import asyncio
-import os
-from backend.database import Database
+from backend.db.factory import get_database
 
 
-async def migrate_view():
-    database_url = os.getenv(
-        "DATABASE_URL", "postgresql://admin:password@localhost:5432/yolov11_inference"
-    )
-    db = Database(database_url)
+async def main():
+    db = get_database()
     await db.connect()
 
     view_query = """
