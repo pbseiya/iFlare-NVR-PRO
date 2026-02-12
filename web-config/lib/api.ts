@@ -12,6 +12,7 @@ export const apiClient = axios.create({
 
 // Helper to ensure ISO format (replace space with T) for robust parsing
 // e.g., "2026-02-10 09:39:03.123" -> "2026-02-10T09:39:03.123"
+// NOTE: Backend sends Local Time (no timezone info). Do NOT append 'Z' or it will be treated as UTC.
 const toISO = (dateStr: string | null | undefined): string | null => {
     if (!dateStr) return null;
     return dateStr.replace(' ', 'T');

@@ -35,6 +35,8 @@ dependencies = [
     "python-multipart>=0.0.6",
     "openvino>=2025.4.1",
     "opencv-contrib-python>=4.13.0.92",
+    "pyodbc>=5.3.0",
+    "aioodbc>=0.5.0",
 ]
 
 [project.optional-dependencies]

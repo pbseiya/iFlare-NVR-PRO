@@ -7,9 +7,10 @@ import os
 import asyncio
 import subprocess
 from pathlib import Path
-from datetime import datetime
-from typing import Optional, List
+from datetime import datetime, timedelta
+from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
+from .db.base import DatabaseInterface
 import logging
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ class VideoConverter:
     - Startup recovery scan for orphaned files
     """
 
-    def __init__(self, db, max_concurrent: int = 2):
+    def __init__(self, db: DatabaseInterface, max_concurrent: int = 2):
         """
         Initialize VideoConverter.
 
@@ -249,18 +250,40 @@ class VideoConverter:
         # Get new duration
         duration = await self._get_duration(job.output_path)
 
-        # Update database with new file path, duration, and 'ready' status
+        # Get start_time to calculate end_time (DB-agnostic)
         async with self.db.acquire() as conn:
-            await conn.execute(
-                """
-                UPDATE video_segments 
-                SET file_path = $2, status = $3, duration_seconds = $4, end_time = start_time + make_interval(secs => $4)
-                WHERE id = $1
-                """,
-                job.segment_id,
-                job.output_path,
-                "ready",
-                duration,
+            start_time = await conn.fetchval(
+                "SELECT start_time FROM video_segments WHERE id = $1", job.segment_id
+            )
+
+        if start_time:
+            end_time = start_time + timedelta(seconds=duration)
+
+            # Update database using abstract method
+            await self.db.update_video_segment(job.segment_id, end_time, duration, "ready")
+
+            # Update file path separately if update_video_segment doesn't handle it?
+            # update_video_segment only updates end_time, duration, status.
+            # It does NOT update file_path in the base interface?
+            # Let's check base interface.
+            # SQLServer implementation DOES NOT update file_path in update_video_segment?
+            # Wait, SQLServer implementation of update_video_segment (Lines 450-464) updates: end_time, duration_seconds, status.
+            # It DOES NOT update file_path.
+            # _finalize_conversion needs to update file_path (swap .m4v to .mp4).
+            # So I need a new method or update file_path manually.
+            # sqlserver.py: mark_segment_recovered updates file_path.
+            # I should add a method `update_video_segment_path` or similar.
+            # Or just execute a simple update for path.
+
+            async with self.db.acquire() as conn:
+                await conn.execute(
+                    "UPDATE video_segments SET file_path = $1 WHERE id = $2",
+                    job.output_path,
+                    job.segment_id,
+                )
+        else:
+            logger.warning(
+                f"Could not find start_time for segment {job.segment_id}, skipping end_time update"
             )
 
         # Delete M4V temp file
@@ -311,7 +334,8 @@ class VideoConverter:
                     """
                     SELECT id, file_path, session_id 
                     FROM video_segments 
-                    WHERE file_path LIKE '%.m4v'
+                    WHERE (status = 'recording' OR status = 'processing')
+                    AND file_path LIKE '%.m4v'
                     """
                 )
 

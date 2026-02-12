@@ -270,7 +270,7 @@ function RecordingsContent() {
     };
 
     return (
-        <div className="flex h-screen bg-background text-foreground">
+        <div className="flex h-full bg-background text-foreground">
             <main className="flex-1 flex flex-col min-w-0 transition-all duration-300">
                 {/* Header */}
                 <header className="px-6 py-4 bg-white dark:bg-gray-900 border-b border-slate-200 dark:border-gray-800 flex items-center justify-between gap-4">

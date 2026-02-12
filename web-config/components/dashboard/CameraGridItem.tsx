@@ -11,9 +11,10 @@ interface CameraGridItemProps {
     onFocus?: () => void;
     isFocused?: boolean;
     detectionOptions: DrawDetectionsOptions;
+    layout?: string;
 }
 
-export default function CameraGridItem({ session, onFocus, isFocused = false, detectionOptions }: CameraGridItemProps) {
+export default function CameraGridItem({ session, onFocus, isFocused = false, detectionOptions, layout }: CameraGridItemProps) {
     const [isHovered, setIsHovered] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -42,7 +43,7 @@ export default function CameraGridItem({ session, onFocus, isFocused = false, de
         <div
             ref={containerRef}
             className={`
-                relative bg-gray-900 overflow-hidden transition-all cursor-pointer
+                relative bg-gray-950 overflow-hidden transition-all cursor-pointer h-full w-full flex flex-col
                 ${isFullscreen ? 'rounded-none border-0' : 'rounded-lg border-2'}
                 ${isFocused && !isFullscreen
                     ? 'border-blue-500 shadow-lg shadow-blue-500/20'
@@ -57,14 +58,10 @@ export default function CameraGridItem({ session, onFocus, isFocused = false, de
             onMouseLeave={() => setIsHovered(false)}
         >
             {/* Live Video Feed with Detection Overlay */}
-            <div className={`
-                bg-gray-950 flex items-center justify-center
-                ${isFullscreen
-                    ? 'w-full h-full'
-                    : 'aspect-video max-h-[75vh] w-auto mx-auto'
-                }
-            `}>
-                <LiveCameraFeed session={session} options={detectionOptions} />
+            <div className="flex-1 min-h-0 relative bg-black">
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <LiveCameraFeed session={session} options={detectionOptions} />
+                </div>
             </div>
 
             {/* Overlay - Session Info */}

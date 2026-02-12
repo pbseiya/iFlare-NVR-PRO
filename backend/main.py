@@ -4,6 +4,12 @@ FastAPI application with REST endpoints and WebSocket support.
 """
 
 import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+import asyncio
 from datetime import datetime
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -31,20 +37,20 @@ from .models import (
     SourceAnalysisResponse,
 )
 import cv2
-from .database import Database
+from .db.factory import get_database
+from .db.base import DatabaseInterface
 from .inference_engine import InferenceEngine
 from .video_converter import VideoConverter
 from .recovery import VideoRecoveryService
+from .utils import mask_rtsp_url
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
     # Startup
-    database_url = os.getenv(
-        "DATABASE_URL", "postgresql://admin:password@localhost:5432/yolov11_inference"
-    )
-    app.state.db = Database(database_url)
+    # Initialize Database via Factory (reads DB_PROVIDER from env)
+    app.state.db = get_database()
     await app.state.db.connect()
     print(f"✓ Connected to database")
 
@@ -59,7 +65,8 @@ async def lifespan(app: FastAPI):
     print(f"✓ Video Converter Service started")
 
     # Check Auto-Resume Setting
-    auto_resume = await app.state.db.get_app_setting("auto_resume", default=False)
+    auto_resume_val = await app.state.db.get_app_setting("auto_resume", default="false")
+    auto_resume = str(auto_resume_val).lower() == "true"
     print(f"⚙️ Auto-Resume System: {'ENABLED' if auto_resume else 'DISABLED'}")
 
     # Handle Stale Sessions
@@ -119,14 +126,16 @@ async def lifespan(app: FastAPI):
             else:
                 # Mark as stopped (Default behavior)
                 await conn.execute(
-                    "UPDATE inference_sessions SET status = 'stopped', ended_at = NOW() WHERE status = 'running'"
+                    "UPDATE inference_sessions SET status = 'stopped', ended_at = $1 WHERE status = 'running'",
+                    datetime.now(),
                 )
                 print(f"✓ Cleaned up stale sessions (Marked as stopped)")
 
-    # Run Video Recovery (for crashed segments)
+    # Run Video Recovery (for crashed segments) in background
     recovery_service = VideoRecoveryService(app.state.db)
-    print(f"⏳ Running video recovery scan...")
-    await recovery_service.scan_and_recover()
+    print(f"⏳ Backgrounding video recovery scan...")
+    # Backgrounding this so API can start immediately
+    asyncio.create_task(recovery_service.scan_and_recover())
 
     yield
 
@@ -134,7 +143,8 @@ async def lifespan(app: FastAPI):
 
     # Check if we need to preserve session states for auto-resume
     try:
-        auto_resume = await app.state.db.get_app_setting("auto_resume", default=False)
+        auto_resume_val = await app.state.db.get_app_setting("auto_resume", default="false")
+        auto_resume = str(auto_resume_val).lower() == "true"
         if auto_resume:
             print("🛑 Shutdown: Auto-Resume is ENABLED. Preserving session states in DB.")
             app.state.inference_engine.shutdown_preserve_state = True
@@ -199,7 +209,15 @@ async def update_system_settings(settings: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ... (Health Check) ...
+@app.get("/health", response_model=HealthResponse)
+async def health_check():
+    """Health Check Endpoint"""
+    return {
+        "status": "ok",
+        "database": os.getenv("DB_PROVIDER", "postgres"),
+        "timestamp": datetime.now(),
+    }
+
 
 # ========================================
 # Session Endpoints
@@ -329,6 +347,15 @@ async def update_session(session_id: int, updates: SessionUpdate):
 
         # Filter out None values
         update_data = {k: v for k, v in updates.dict().items() if v is not None}
+
+        # Security: If source_path contains '***', it means the user didn't change the masked password.
+        # We must prevent overwriting the real password in the DB with '***'.
+        if "source_path" in update_data and ":***@" in update_data["source_path"]:
+            print(
+                f"🔒 update_session: Masked password detected in source_path, ignoring this field update."
+            )
+            del update_data["source_path"]
+
         if not update_data:
             return {"message": "No updates provided", "session_id": session_id}
 
@@ -585,6 +612,12 @@ async def resume_session(session_id: int):
             "resumed_from_frame": last_frame + 1,
             "status": "running",
         }
+    except Exception as e:
+        import traceback
+
+        traceback.print_exc()
+        print(f"CRITICAL ERROR in resume_session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
     except HTTPException:
         raise
@@ -602,9 +635,15 @@ async def list_sessions(
     try:
         sessions = await app.state.db.list_sessions(limit, offset, status)
 
-        return SessionListResponse(
-            sessions=[SessionInfo(**s) for s in sessions], total=len(sessions)
-        )
+        # Security: Mask passwords in RTSP URLs
+        masked_sessions = []
+        for s in sessions:
+            sess_dict = dict(s)
+            if sess_dict.get("source_type") == "rtsp":
+                sess_dict["source_path"] = mask_rtsp_url(sess_dict["source_path"])
+            masked_sessions.append(SessionInfo(**sess_dict))
+
+        return SessionListResponse(sessions=masked_sessions, total=len(sessions))
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -619,7 +658,12 @@ async def get_session(session_id: int):
         if not session:
             raise HTTPException(status_code=404, detail="Session not found")
 
-        return SessionInfo(**session)
+        # Security: Mask passwords in RTSP URLs
+        sess_dict = dict(session)
+        if sess_dict.get("source_type") == "rtsp":
+            sess_dict["source_path"] = mask_rtsp_url(sess_dict["source_path"])
+
+        return SessionInfo(**sess_dict)
 
     except HTTPException:
         raise
@@ -944,7 +988,9 @@ async def analyze_source(request: SourceAnalysisRequest):
     try:
         cap = cv2.VideoCapture(source_path)
         if not cap.isOpened():
-            raise HTTPException(status_code=400, detail=f"Could not open source: {source_path}")
+            # Security: Mask password in error message
+            masked_path = mask_rtsp_url(source_path)
+            raise HTTPException(status_code=400, detail=f"Could not open source: {masked_path}")
 
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
