@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+import asyncio
 from datetime import datetime
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -41,6 +42,7 @@ from .db.base import DatabaseInterface
 from .inference_engine import InferenceEngine
 from .video_converter import VideoConverter
 from .recovery import VideoRecoveryService
+from .utils import mask_rtsp_url
 
 
 @asynccontextmanager
@@ -129,10 +131,11 @@ async def lifespan(app: FastAPI):
                 )
                 print(f"✓ Cleaned up stale sessions (Marked as stopped)")
 
-    # Run Video Recovery (for crashed segments)
+    # Run Video Recovery (for crashed segments) in background
     recovery_service = VideoRecoveryService(app.state.db)
-    print(f"⏳ Running video recovery scan...")
-    await recovery_service.scan_and_recover()
+    print(f"⏳ Backgrounding video recovery scan...")
+    # Backgrounding this so API can start immediately
+    asyncio.create_task(recovery_service.scan_and_recover())
 
     yield
 
@@ -344,6 +347,15 @@ async def update_session(session_id: int, updates: SessionUpdate):
 
         # Filter out None values
         update_data = {k: v for k, v in updates.dict().items() if v is not None}
+
+        # Security: If source_path contains '***', it means the user didn't change the masked password.
+        # We must prevent overwriting the real password in the DB with '***'.
+        if "source_path" in update_data and ":***@" in update_data["source_path"]:
+            print(
+                f"🔒 update_session: Masked password detected in source_path, ignoring this field update."
+            )
+            del update_data["source_path"]
+
         if not update_data:
             return {"message": "No updates provided", "session_id": session_id}
 
@@ -623,9 +635,15 @@ async def list_sessions(
     try:
         sessions = await app.state.db.list_sessions(limit, offset, status)
 
-        return SessionListResponse(
-            sessions=[SessionInfo(**s) for s in sessions], total=len(sessions)
-        )
+        # Security: Mask passwords in RTSP URLs
+        masked_sessions = []
+        for s in sessions:
+            sess_dict = dict(s)
+            if sess_dict.get("source_type") == "rtsp":
+                sess_dict["source_path"] = mask_rtsp_url(sess_dict["source_path"])
+            masked_sessions.append(SessionInfo(**sess_dict))
+
+        return SessionListResponse(sessions=masked_sessions, total=len(sessions))
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -640,7 +658,12 @@ async def get_session(session_id: int):
         if not session:
             raise HTTPException(status_code=404, detail="Session not found")
 
-        return SessionInfo(**session)
+        # Security: Mask passwords in RTSP URLs
+        sess_dict = dict(session)
+        if sess_dict.get("source_type") == "rtsp":
+            sess_dict["source_path"] = mask_rtsp_url(sess_dict["source_path"])
+
+        return SessionInfo(**sess_dict)
 
     except HTTPException:
         raise
@@ -965,7 +988,9 @@ async def analyze_source(request: SourceAnalysisRequest):
     try:
         cap = cv2.VideoCapture(source_path)
         if not cap.isOpened():
-            raise HTTPException(status_code=400, detail=f"Could not open source: {source_path}")
+            # Security: Mask password in error message
+            masked_path = mask_rtsp_url(source_path)
+            raise HTTPException(status_code=400, detail=f"Could not open source: {masked_path}")
 
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))

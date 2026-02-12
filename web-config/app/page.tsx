@@ -63,7 +63,7 @@ export default function DashboardPage() {
     const totalDetections = sessionsData?.sessions.reduce((acc, s) => acc + (s.total_detections || 0), 0) || 0;
 
     return (
-        <div className="p-4 md:p-8 max-w-7xl mx-auto">
+        <div className="h-full overflow-auto p-4 md:p-8 max-w-7xl mx-auto custom-scrollbar">
             <div className="space-y-8">
                 {/* Header with Role Switcher */}
                 <div className="flex items-start justify-between">

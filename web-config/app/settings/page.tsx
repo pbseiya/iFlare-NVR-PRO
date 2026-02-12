@@ -105,7 +105,7 @@ export default function SettingsPage() {
     );
 
     return (
-        <div className="flex h-[calc(100vh-64px)] bg-gray-50/50 dark:bg-background">
+        <div className="flex h-full bg-gray-50/50 dark:bg-background">
             {/* Sidebar Navigation */}
             <div className="w-64 border-r border-gray-200 dark:border-slate-800 bg-white dark:bg-gray-900 p-6 flex flex-col gap-1 hidden md:flex">
                 <div className="mb-6 px-4">

@@ -16,8 +16,8 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" suppressHydrationWarning>
-            <body suppressHydrationWarning className="bg-background text-foreground antialiased">
+        <html lang="en" suppressHydrationWarning className="h-full">
+            <body suppressHydrationWarning className="bg-background text-foreground antialiased h-full overflow-hidden">
                 <ThemeProvider
                     attribute="class"
                     defaultTheme="dark"
@@ -25,10 +25,10 @@ export default function RootLayout({
                     disableTransitionOnChange
                 >
                     <Providers>
-                        <div className="min-h-screen flex bg-background text-foreground">
+                        <div className="h-full flex bg-background text-foreground overflow-hidden">
                             <Sidebar />
                             <main
-                                className="flex-1 min-h-screen transition-all duration-300 bg-background text-foreground"
+                                className="flex-1 h-full overflow-hidden transition-all duration-300 bg-background text-foreground"
                                 style={{ marginLeft: 'var(--sidebar-width, 256px)' }}
                             >
                                 {children}
