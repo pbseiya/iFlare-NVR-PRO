@@ -1,12 +1,13 @@
 'use client';
 
 import { useSettings, OverlaySettings } from '@/components/SettingsContext';
-import { Settings, Sliders, Type, Square, RefreshCcw, Camera, Globe, HardDrive, Bell, Check } from 'lucide-react';
+import { Settings, Sliders, Type, Square, RefreshCcw, Camera, Globe, HardDrive, Bell, Check, Database } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import DatabaseSettings from '@/components/settings/DatabaseSettings';
 
-type SettingsTab = 'general' | 'display' | 'storage' | 'notifications';
+type SettingsTab = 'general' | 'display' | 'database' | 'storage' | 'notifications';
 
 export default function SettingsPage() {
     const {
@@ -114,6 +115,7 @@ export default function SettingsPage() {
 
                 <NavItem tab="general" label="General" icon={Settings} />
                 <NavItem tab="display" label="Display" icon={Sliders} />
+                <NavItem tab="database" label="Database" icon={Database} />
                 <NavItem tab="storage" label="Storage" icon={HardDrive} />
                 <NavItem tab="notifications" label="Notifications" icon={Bell} />
             </div>
@@ -122,6 +124,7 @@ export default function SettingsPage() {
             <div className="md:hidden w-full overflow-x-auto bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-slate-800 p-2 flex gap-2">
                 <button onClick={() => setActiveTab('general')} className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${activeTab === 'general' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`}>General</button>
                 <button onClick={() => setActiveTab('display')} className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${activeTab === 'display' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`}>Display</button>
+                <button onClick={() => setActiveTab('database')} className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${activeTab === 'database' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`}>Database</button>
                 <button onClick={() => setActiveTab('storage')} className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap ${activeTab === 'storage' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400' : 'text-slate-600 dark:text-slate-400'}`}>Storage</button>
             </div>
 
@@ -366,6 +369,13 @@ export default function SettingsPage() {
                                     ))}
                                 </div>
                             </section>
+                        </div>
+                    )}
+
+                    {/* CONTENT: DATABASE */}
+                    {activeTab === 'database' && (
+                        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+                            <DatabaseSettings />
                         </div>
                     )}
 

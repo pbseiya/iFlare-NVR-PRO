@@ -35,6 +35,10 @@ from .models import (
     HealthResponse,
     SourceAnalysisRequest,
     SourceAnalysisResponse,
+    DatabaseConfigTest,
+    DatabaseConfigUpdate,
+    DatabaseConfigResponse,
+    ConnectionTestResponse,
 )
 import cv2
 from .db.factory import get_database
@@ -1024,6 +1028,187 @@ async def analyze_source(request: SourceAnalysisRequest):
     except Exception as e:
         print(f"Analyze source error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ========================================
+# Database Configuration Endpoints
+# ========================================
+
+
+@app.get("/api/settings/database")
+async def get_database_config():
+    """
+    Get current database configuration with passwords masked.
+    TODO: Requires Admin authentication
+    """
+    from .config_manager import ConfigManager
+    from .models import DatabaseConfigResponse
+
+    try:
+        db_config = ConfigManager.get_database_config()
+        masked_config = ConfigManager.mask_sensitive_data(db_config)
+
+        return DatabaseConfigResponse(
+            provider=masked_config.get("provider", "postgres"),
+            postgres=masked_config.get("postgres"),
+            sqlserver=masked_config.get("sqlserver"),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load config: {str(e)}")
+
+
+@app.post("/api/settings/database/test")
+async def test_database_connection(config: "DatabaseConfigTest"):
+    """
+    Test database connection without saving configuration.
+    TODO: Requires Admin authentication
+    """
+    from .config_manager import ConfigManager
+    from .models import ConnectionTestResponse
+
+    # Build params dict based on provider
+    if config.provider == "postgres":
+        if not config.postgres_url:
+            raise HTTPException(status_code=400, detail="PostgreSQL URL is required")
+        params = {"url": config.postgres_url}
+    elif config.provider == "sqlserver":
+        if not all(
+            [
+                config.sqlserver_server,
+                config.sqlserver_database,
+                config.sqlserver_username,
+                config.sqlserver_password,
+            ]
+        ):
+            raise HTTPException(status_code=400, detail="All SQL Server fields are required")
+        params = {
+            "server": config.sqlserver_server,
+            "database": config.sqlserver_database,
+            "username": config.sqlserver_username,
+            "password": config.sqlserver_password,
+            "driver": config.sqlserver_driver or "{ODBC Driver 18 for SQL Server}",
+        }
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported provider: {config.provider}")
+
+    # Test connection
+    result = await ConfigManager.test_connection(config.provider, params)
+
+    return ConnectionTestResponse(**result)
+
+
+@app.put("/api/settings/database")
+async def update_database_config(config: "DatabaseConfigUpdate"):
+    """
+    Update database configuration and save to config.json.
+    Note: Backend restart required for changes to take effect.
+    TODO: Requires Admin authentication
+    """
+    from .config_manager import ConfigManager
+
+    # Build params dict based on provider
+    if config.provider == "postgres":
+        if not config.postgres_url:
+            raise HTTPException(status_code=400, detail="PostgreSQL URL is required")
+        new_params = {"url": config.postgres_url}
+    elif config.provider == "sqlserver":
+        if not all(
+            [
+                config.sqlserver_server,
+                config.sqlserver_database,
+                config.sqlserver_username,
+                config.sqlserver_password,
+            ]
+        ):
+            raise HTTPException(status_code=400, detail="All SQL Server fields are required")
+        new_params = {
+            "server": config.sqlserver_server,
+            "database": config.sqlserver_database,
+            "username": config.sqlserver_username,
+            "password": config.sqlserver_password,
+            "driver": config.sqlserver_driver or "{ODBC Driver 18 for SQL Server}",
+        }
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported provider: {config.provider}")
+
+    # Preserve masked passwords
+    current_config = ConfigManager.get_database_config()
+    new_config_dict = {config.provider: new_params}
+    preserved_config = ConfigManager.preserve_masked_passwords(new_config_dict, current_config)
+
+    # Validate
+    is_valid, error = ConfigManager.validate_config(
+        config.provider, preserved_config[config.provider]
+    )
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error)
+
+    # Save
+    try:
+        ConfigManager.update_database_config(config.provider, preserved_config[config.provider])
+        return {
+            "success": True,
+            "message": "Configuration saved. Please restart backend to apply changes.",
+            "provider": config.provider,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save config: {str(e)}")
+
+
+# ========================================
+# System Management Endpoints
+# ========================================
+
+
+@app.post("/api/system/restart")
+async def restart_backend():
+    """
+    Restart backend via Supervisor (Development) or Docker (Production).
+    TODO: Requires Admin authentication
+    """
+    import subprocess
+
+    try:
+        # Check if running under Supervisor
+        result = subprocess.run(
+            ["sudo", "supervisorctl", "status", "nvr-backend"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+
+        if result.returncode == 0 or result.returncode == 3:  # 0=running, 3=stopped
+            # Restart via Supervisor
+            subprocess.run(
+                ["sudo", "supervisorctl", "restart", "nvr-backend"], check=True, timeout=10
+            )
+            return {
+                "success": True,
+                "message": "Backend restart initiated via Supervisor",
+                "method": "supervisor",
+            }
+        else:
+            # Fallback: Self-terminate (Docker will restart)
+            import os
+            import signal
+
+            # Schedule termination after response is sent
+            async def delayed_shutdown():
+                await asyncio.sleep(1)
+                os.kill(os.getpid(), signal.SIGTERM)
+
+            asyncio.create_task(delayed_shutdown())
+
+            return {
+                "success": True,
+                "message": "Backend shutdown initiated. Docker will restart automatically.",
+                "method": "docker",
+            }
+
+    except subprocess.TimeoutExpired:
+        raise HTTPException(status_code=500, detail="Restart command timed out")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to restart: {str(e)}")
 
 
 if __name__ == "__main__":
