@@ -6,7 +6,12 @@ import { Database, Server, CheckCircle, XCircle, Loader2, RefreshCw } from "luci
 interface DatabaseConfig {
     provider: string;
     postgres?: {
-        url: string;
+        url?: string;
+        host?: string;
+        port?: number;
+        database?: string;
+        username?: string;
+        password?: string;
     };
     sqlserver?: {
         server: string;
@@ -34,7 +39,11 @@ export default function DatabaseSettings() {
     const [showRestartModal, setShowRestartModal] = useState(false);
 
     // PostgreSQL form state
-    const [postgresUrl, setPostgresUrl] = useState("");
+    const [postgresHost, setPostgresHost] = useState("localhost");
+    const [postgresPort, setPostgresPort] = useState("5432");
+    const [postgresDatabase, setPostgresDatabase] = useState("yolov11_inference");
+    const [postgresUsername, setPostgresUsername] = useState("admin");
+    const [postgresPassword, setPostgresPassword] = useState("");
 
     // SQL Server form state
     const [sqlserverServer, setSqlserverServer] = useState("");
@@ -56,7 +65,11 @@ export default function DatabaseSettings() {
             setProvider(data.provider);
 
             if (data.provider === "postgres" && data.postgres) {
-                setPostgresUrl(data.postgres.url || "");
+                setPostgresHost(data.postgres.host || "localhost");
+                setPostgresPort(data.postgres.port?.toString() || "5432");
+                setPostgresDatabase(data.postgres.database || "yolov11_inference");
+                setPostgresUsername(data.postgres.username || "admin");
+                setPostgresPassword(data.postgres.password || "");
             } else if (data.provider === "sqlserver" && data.sqlserver) {
                 setSqlserverServer(data.sqlserver.server || "");
                 setSqlserverDatabase(data.sqlserver.database || "");
@@ -79,7 +92,11 @@ export default function DatabaseSettings() {
             const payload: any = { provider };
 
             if (provider === "postgres") {
-                payload.postgres_url = postgresUrl;
+                payload.postgres_host = postgresHost;
+                payload.postgres_port = parseInt(postgresPort) || 5432;
+                payload.postgres_db = postgresDatabase;
+                payload.postgres_user = postgresUsername;
+                payload.postgres_password = postgresPassword;
             } else {
                 payload.sqlserver_server = sqlserverServer;
                 payload.sqlserver_database = sqlserverDatabase;
@@ -113,7 +130,11 @@ export default function DatabaseSettings() {
             const payload: any = { provider };
 
             if (provider === "postgres") {
-                payload.postgres_url = postgresUrl;
+                payload.postgres_host = postgresHost;
+                payload.postgres_port = parseInt(postgresPort) || 5432;
+                payload.postgres_db = postgresDatabase;
+                payload.postgres_user = postgresUsername;
+                payload.postgres_password = postgresPassword;
             } else {
                 payload.sqlserver_server = sqlserverServer;
                 payload.sqlserver_database = sqlserverDatabase;
@@ -155,13 +176,17 @@ export default function DatabaseSettings() {
                 // Show restarting message
                 setShowRestartModal(false);
 
+                // Wait a moment for backend to actually stop/restart
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
                 // Wait for backend to restart and reconnect
                 await waitForBackendReady();
 
+                // Wait for frontend to be ready (Next.js takes time to start)
+                await waitForFrontendReady();
+
                 // Redirect to dashboard
-                setTimeout(() => {
-                    window.location.href = "/";
-                }, 5000);
+                window.location.href = "/";
             } else {
                 alert("Failed to restart backend");
                 setRestarting(false);
@@ -187,6 +212,28 @@ export default function DatabaseSettings() {
                     }
                 }
             } catch { }
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            attempts++;
+        }
+
+        return false;
+    };
+
+    const waitForFrontendReady = async () => {
+        let attempts = 0;
+        const maxAttempts = 60; // Wait up to 60 seconds for frontend
+
+        while (attempts < maxAttempts) {
+            try {
+                // Try to fetch the dashboard page (HEAD request to minimize data)
+                const res = await fetch("/", { method: "HEAD" });
+                if (res.ok) {
+                    return true;
+                }
+            } catch {
+                // Ignore network errors (connection refused) and keep retrying
+            }
 
             await new Promise(resolve => setTimeout(resolve, 1000));
             attempts++;
@@ -236,17 +283,69 @@ export default function DatabaseSettings() {
             {/* PostgreSQL Form */}
             {provider === "postgres" && (
                 <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
+                                Host
+                            </label>
+                            <input
+                                type="text"
+                                value={postgresHost}
+                                onChange={(e) => setPostgresHost(e.target.value)}
+                                placeholder="localhost"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
+                                Port
+                            </label>
+                            <input
+                                type="number"
+                                value={postgresPort}
+                                onChange={(e) => setPostgresPort(e.target.value)}
+                                placeholder="5432"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                    </div>
                     <div>
                         <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
-                            Connection URL
+                            Database Name
                         </label>
                         <input
                             type="text"
-                            value={postgresUrl}
-                            onChange={(e) => setPostgresUrl(e.target.value)}
-                            placeholder="postgresql://user:password@host:port/database"
+                            value={postgresDatabase}
+                            onChange={(e) => setPostgresDatabase(e.target.value)}
+                            placeholder="yolov11_inference"
                             className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
+                                Username
+                            </label>
+                            <input
+                                type="text"
+                                value={postgresUsername}
+                                onChange={(e) => setPostgresUsername(e.target.value)}
+                                placeholder="admin"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 dark:text-gray-300 mb-2">
+                                Password
+                            </label>
+                            <input
+                                type="password"
+                                value={postgresPassword}
+                                onChange={(e) => setPostgresPassword(e.target.value)}
+                                placeholder="***"
+                                className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-slate-300 dark:border-gray-700 rounded-lg text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                        </div>
                     </div>
                 </div>
             )}
@@ -347,8 +446,8 @@ export default function DatabaseSettings() {
             {testResult && (
                 <div
                     className={`flex items-start gap-3 p-4 rounded-lg ${testResult.success
-                            ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
-                            : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                        ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+                        : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
                         }`}
                 >
                     {testResult.success ? (
@@ -359,8 +458,8 @@ export default function DatabaseSettings() {
                     <div className="flex-1">
                         <p
                             className={`font-medium ${testResult.success
-                                    ? "text-green-800 dark:text-green-300"
-                                    : "text-red-800 dark:text-red-300"
+                                ? "text-green-800 dark:text-green-300"
+                                : "text-red-800 dark:text-red-300"
                                 }`}
                         >
                             {testResult.message}

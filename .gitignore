@@ -136,3 +136,5 @@ htmlcov/
 *.db
 database/*.db
 rtsp_webhook.txt
+config.json
+sessions.json

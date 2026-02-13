@@ -9,6 +9,8 @@ from .db.base import DatabaseInterface
 from .video_converter import VideoConverter
 from ultralytics import YOLO
 import torch
+import psutil
+import signal
 
 
 class VideoSegmentManager:
@@ -106,7 +108,15 @@ class VideoSegmentManager:
 
     async def close(self):
         if self.current_writer:
-            await asyncio.to_thread(self.current_writer.release)
+            print(f"🔒 VideoSegmentManager: Releasing writer for {self.current_file_path}...")
+            try:
+                # Use wait_for to prevent infinite hang on release
+                await asyncio.wait_for(asyncio.to_thread(self.current_writer.release), timeout=2.0)
+                print(f"🔓 VideoSegmentManager: Writer released.")
+            except asyncio.TimeoutError:
+                print(f"⚠️ VideoSegmentManager: Writer release timed out! Proceeding anyway.")
+            except Exception as e:
+                print(f"⚠️ VideoSegmentManager: Writer release failed: {e}")
             now = datetime.now()
             duration = (
                 (now - self.segment_start_time).total_seconds() if self.segment_start_time else 0
@@ -147,8 +157,16 @@ class InferenceEngine:
         # Video converter service
         self.converter: Optional[VideoConverter] = None
 
+        # Async Database Writer (for batch inserts)
+        from .db.writer import AsyncDatabaseWriter
+
+        self.writer = AsyncDatabaseWriter(db)
+
         # Flag to preserve 'running' state in DB during shutdown (for auto-resume)
         self.shutdown_preserve_state = False
+
+        # Watchdog Heartbeat
+        self.last_activity = time.time()
 
     def add_subscriber(self, session_id: int) -> asyncio.Queue:
         """Add a subscriber for live frame updates"""
@@ -242,25 +260,56 @@ class InferenceEngine:
 
             traceback.print_exc()
 
+        # Ensure writer is started
+        await self.writer.start()
+
     async def stop_session(self, session_id: int):
         """Stop an inference session"""
         if session_id in self.active_sessions:
             task = self.active_sessions[session_id]
             task.cancel()
             try:
-                await task
+                # Add timeout to prevent hanging if cancellation cleanup stalls
+                await asyncio.wait_for(task, timeout=5.0)
             except asyncio.CancelledError:
                 pass
-            del self.active_sessions[session_id]
-            print(f"🛑 Session {session_id} stopped")
+            except asyncio.TimeoutError:
+                print(f"⚠️ Session {session_id} stop timed out! Forcing removal from active list.")
+            except Exception as e:
+                print(f"⚠️ Error waiting for session {session_id} to stop: {e}")
+
+            if session_id in self.active_sessions:
+                del self.active_sessions[session_id]
+            print(f"🛑 Session {session_id} stopped (Task cleanup finished)")
+
+    def _kill_children(self, pid: int):
+        """Recursively kill child processes"""
+        try:
+            parent = psutil.Process(pid)
+            children = parent.children(recursive=True)
+            for child in children:
+                try:
+                    child.kill()
+                    print(f"💀 Killed child process {child.pid}")
+                except psutil.NoSuchProcess:
+                    pass
+        except psutil.NoSuchProcess:
+            pass
 
     async def stop_all_sessions(self):
-        """Stop all active sessions gracefully"""
-        print(f"🛑 Stopping all {len(self.active_sessions)} active sessions...")
-        session_ids = list(self.active_sessions.keys())
-        for sid in session_ids:
-            await self.stop_session(sid)
-        print("✅ All sessions stopped.")
+        """Stop all active sessions and cleanup processes"""
+        print("🛑 Stopping all sessions...")
+        sessions = list(self.active_sessions.keys())
+        for session_id in sessions:
+            await self.stop_session(session_id)
+
+        # Force kill any remaining child processes of this application
+        # This cleans up any orphaned multiprocessing workers or subprocesses
+        print("🧹 Cleaning up remaining subprocesses...")
+        self._kill_children(os.getpid())
+
+        # Stop writer and flush data
+        await self.writer.stop()
 
     async def _inference_loop(self, session_id: int, config: dict, start_frame: int = 0):
         """Main inference loop"""
@@ -418,16 +467,9 @@ class InferenceEngine:
                             new_item = item[:8] + (x2, y2)
                             final_detections.append(new_item)
 
-                        async with self.db.acquire() as conn:
-                            await conn.executemany(
-                                """
-                                INSERT INTO detections (
-                                    session_id, frame_number, timestamp, class_id, 
-                                    class_name, confidence, bbox_x1, bbox_y1, bbox_x2, bbox_y2
-                                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-                                """,
-                                final_detections,
-                            )
+                            if final_detections:
+                                for d in final_detections:
+                                    await self.writer.enqueue_detection(d)
 
                         # Note: Subprocess doesn't stream images back yet, so no _broadcast_frame here
                         # unless we implement reading encoded frames from stdio.
@@ -568,6 +610,9 @@ class InferenceEngine:
                         else:
                             break  # File not found, stop.
 
+                    # Update heartbeat after connection
+                    self.last_activity = time.time()
+
                     if not is_live and start_frame > 0:
                         await asyncio.to_thread(cap.set, cv2.CAP_PROP_POS_FRAMES, start_frame)
 
@@ -599,7 +644,12 @@ class InferenceEngine:
                         # User Requirement: "Simulate RTSP behavior... must wait for time"
                         if now - last_frame_time < frame_interval:
                             await asyncio.sleep(0.01)
+                            # Update heartbeat even while sleeping/throttling to prevent false positive watchdog kills
+                            self.last_activity = time.time()
                             continue
+
+                        # Update Heartbeat
+                        self.last_activity = time.time()
 
                         # Performance Timers
                         t0 = time.perf_counter()
@@ -744,11 +794,8 @@ class InferenceEngine:
                                 )
 
                             if detections_list:
-                                async with self.db.acquire() as conn:
-                                    await conn.executemany(
-                                        "INSERT INTO detections (session_id, frame_number, timestamp, class_id, class_name, confidence, bbox_x1, bbox_y1, bbox_x2, bbox_y2) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
-                                        detections_list,
-                                    )
+                                for d in detections_list:
+                                    await self.writer.enqueue_detection(d)
                         else:
                             annotated_frame = frame
 
@@ -775,9 +822,8 @@ class InferenceEngine:
                         post_ms = (t3 - t2) * 1000
 
                         try:
-                            async with self.db.acquire() as conn:
-                                await conn.execute(
-                                    "INSERT INTO performance_metrics (session_id, frame_number, timestamp, total_ms, inference_ms, preprocess_ms, postprocess_ms, render_ms) VALUES ($1, $2, $3, $4, $5, $6, $7, 0.0)",
+                            await self.writer.enqueue_metric(
+                                (
                                     session_id,
                                     frame_num,
                                     datetime.now(),
@@ -785,7 +831,9 @@ class InferenceEngine:
                                     infer_ms,
                                     pre_ms,
                                     post_ms,
+                                    0.0,  # render_ms
                                 )
+                            )
                         except Exception as e:
                             print(f"❌ Metrics Error: {e}")
 
@@ -827,6 +875,26 @@ class InferenceEngine:
                     await asyncio.to_thread(cap.release)
                 except:
                     pass
+
+            # Ensure any multiprocessing children spawned by this session are killed
+            # localized cleanup for this session's potential spawn
+            try:
+                # We use the helper to kill children of the current process,
+                # primarily to catch any 'multiprocessing' leaks if they occurred here.
+                # self._kill_children(os.getpid())
+                # Update: Calling robust kill on ALL children might be aggressive if other sessions are running?
+                # Actually, os.getpid() is the main process. precise killing is hard without tracking PIDs.
+                # But wait! _run_python_pytorch runs in the MAIN process (asyncio).
+                # So if we kill children of MAIN process, we kill ALL inferencing subprocesses of ALL sessions!
+                # CRITICAL FIX: We should ONLY kill children if we are stopping ALL sessions or if we track specific PIDs.
+                # Since this method doesn't spawn a subprocess directly (it runs in-process),
+                # It shouldn't be spawning orphaned children unless Ultralytics does it internally.
+                # If Ultralytics spawns workers, they are children of Main.
+                # We cannot safely kill them here without risking other sessions.
+                # CONCLUSION: Leave heavy cleanup to stop_all_sessions.
+                pass
+            except Exception:
+                pass
 
         # End of Main Loop
 
@@ -965,14 +1033,6 @@ class InferenceEngine:
                     )
 
             if db_detections:
-                async with self.db.acquire() as conn:
-                    await conn.executemany(
-                        """
-                        INSERT INTO detections (
-                            session_id, frame_number, timestamp, class_id, 
-                            class_name, confidence, bbox_x1, bbox_y1, bbox_x2, bbox_y2
-                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-                        """,
-                        db_detections,
-                    )
+                for d in db_detections:
+                    await self.writer.enqueue_detection(d)
         cap.release()

@@ -7,6 +7,7 @@ import json
 import os
 from typing import Dict, Any, Optional
 from pathlib import Path
+from urllib.parse import urlparse, quote_plus
 
 
 class ConfigManager:
@@ -53,6 +54,23 @@ class ConfigManager:
                     "DATABASE_URL", "postgresql://admin:password@localhost:5432/yolov11_inference"
                 )
             }
+
+            # Parse URL to populate granular fields
+            try:
+                url = config["database"]["postgres"]["url"]
+                parsed = urlparse(url)
+                if parsed.scheme == "postgresql":
+                    config["database"]["postgres"].update(
+                        {
+                            "host": parsed.hostname or "localhost",
+                            "port": parsed.port or 5432,
+                            "database": parsed.path.lstrip("/") or "yolov11_inference",
+                            "username": parsed.username or "admin",
+                            "password": parsed.password or "",
+                        }
+                    )
+            except Exception:
+                pass
         elif provider == "sqlserver":
             config["database"]["sqlserver"] = {
                 "server": os.getenv("iFlare_NVR_SERVER", ""),
@@ -61,6 +79,12 @@ class ConfigManager:
                 "password": os.getenv("iFlare_NVR_PASSWORD", ""),
                 "driver": os.getenv("DB_DRIVER", "{ODBC Driver 18 for SQL Server}"),
             }
+
+        config["watchdog"] = {
+            "enabled": True,
+            "timeout_seconds": 60,  # Force kill if no heartbeat for 60s
+            "check_interval_seconds": 10,
+        }
 
         return config
 
@@ -83,6 +107,16 @@ class ConfigManager:
         return cls._config.get("database", {})
 
     @classmethod
+    def get_watchdog_config(cls) -> Dict[str, Any]:
+        """Get watchdog configuration"""
+        if cls._config is None:
+            cls.load_config()
+        return cls._config.get(
+            "watchdog",
+            {"enabled": True, "timeout_seconds": 60, "check_interval_seconds": 10},
+        )
+
+    @classmethod
     def update_database_config(cls, provider: str, params: Dict[str, Any]) -> None:
         """
         Update database configuration
@@ -98,6 +132,19 @@ class ConfigManager:
             cls._config["database"] = {}
 
         cls._config["database"]["provider"] = provider
+
+        # For Postgres, ensure URL is constructed if granular fields are present
+        if provider == "postgres":
+            if "url" not in params and all(
+                k in params for k in ["host", "port", "database", "username", "password"]
+            ):
+                try:
+                    params["url"] = (
+                        f"postgresql://{params['username']}:{quote_plus(str(params['password']))}@{params['host']}:{params['port']}/{params['database']}"
+                    )
+                except Exception as e:
+                    print(f"Error constructing PostgreSQL URL: {e}")
+
         cls._config["database"][provider] = params
 
         cls.save_config(cls._config)
@@ -122,7 +169,12 @@ class ConfigManager:
                     user_pass = parts[0].split("://")[1]
                     if ":" in user_pass:
                         user = user_pass.split(":")[0]
+                        user = user_pass.split(":")[0]
                         masked["postgres"]["url"] = f"postgresql://{user}:***@{parts[1]}"
+
+            # Mask granular password
+            if "password" in masked["postgres"] and masked["postgres"]["password"]:
+                masked["postgres"]["password"] = "***"
 
         # Mask SQL Server password
         if "sqlserver" in masked and "password" in masked["sqlserver"]:
@@ -156,6 +208,11 @@ class ConfigManager:
                             ":***@", f":{current_pass}@"
                         )
 
+            # Preserve granular password
+            if "password" in result["postgres"] and result["postgres"]["password"] == "***":
+                if "postgres" in current_config and "password" in current_config["postgres"]:
+                    result["postgres"]["password"] = current_config["postgres"]["password"]
+
         # Preserve SQL Server password
         if "sqlserver" in result and result["sqlserver"].get("password") == "***":
             if "sqlserver" in current_config and "password" in current_config["sqlserver"]:
@@ -172,15 +229,21 @@ class ConfigManager:
             (is_valid, error_message)
         """
         if provider == "postgres":
-            if "url" not in params or not params["url"]:
-                return False, "PostgreSQL connection URL is required"
+            has_url = "url" in params and params["url"]
+            # Check for granular fields
+            required = ["host", "port", "database", "username", "password"]
+            has_granular = all(k in params and params[k] is not None for k in required)
 
-            url = params["url"]
-            if not url.startswith("postgresql://"):
-                return False, "Invalid PostgreSQL URL format (must start with postgresql://)"
+            if not has_url and not has_granular:
+                return False, "PostgreSQL configuration requires URL or Host/Port/DB/User/Pass"
 
-            if "@" not in url or "/" not in url:
-                return False, "Invalid PostgreSQL URL format (missing host or database)"
+            if has_url:
+                url = params["url"]
+                if not url.startswith("postgresql://"):
+                    return False, "Invalid PostgreSQL URL format (must start with postgresql://)"
+
+                if "@" not in url or "/" not in url:
+                    return False, "Invalid PostgreSQL URL format (missing host or database)"
 
         elif provider == "sqlserver":
             required_fields = ["server", "database", "username", "password"]
@@ -218,7 +281,19 @@ class ConfigManager:
             if provider == "postgres":
                 from .db.postgres import PostgresDatabase
 
-                db = PostgresDatabase(params["url"])
+                url = params.get("url")
+                if not url and all(
+                    k in params for k in ["host", "port", "database", "username", "password"]
+                ):
+                    url = f"postgresql://{params['username']}:{quote_plus(str(params['password']))}@{params['host']}:{params['port']}/{params['database']}"
+
+                if not url:
+                    return {
+                        "success": False,
+                        "message": "Missing PostgreSQL URL or connection details",
+                    }
+
+                db = PostgresDatabase(url)
                 await db.connect()
                 await db.health_check()
                 await db.disconnect()
@@ -227,7 +302,7 @@ class ConfigManager:
                 from .db.sqlserver import SQLServerDatabase
 
                 driver = params.get("driver", "{ODBC Driver 18 for SQL Server}")
-                conn_str = f"DRIVER={driver};SERVER={params['server']};DATABASE={params['database']};UID={params['username']};PWD={params['password']};TrustServerCertificate=yes;"
+                conn_str = f"DRIVER={driver};SERVER={params['server']};DATABASE={params['database']};UID={params['username']};PWD={params['password']};TrustServerCertificate=yes;LoginTimeout=30;"
                 db = SQLServerDatabase(conn_str)
                 await db.connect()
                 await db.health_check()

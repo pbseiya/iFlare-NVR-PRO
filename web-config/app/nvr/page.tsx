@@ -237,6 +237,7 @@ function NVRContent() {
                                             showConfidence={detectionFilter.showConfidence}
                                             isMaster={true} // NVR is always master of its own timeline
                                             onTimeUpdate={handlePlayerTimeUpdate}
+                                            segmentsMap={selectedSessionId ? { [selectedSessionId]: segments } : undefined}
                                         />
 
                                         {/* Start/Pause Overlay - Control Synchronized Player state */}

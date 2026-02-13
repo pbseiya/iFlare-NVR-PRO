@@ -4,7 +4,7 @@ Pydantic Models for request/response validation.
 """
 
 from datetime import datetime
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 
 
@@ -313,6 +313,11 @@ class DatabaseConfigTest(BaseModel):
 
     provider: str = Field(..., pattern="^(postgres|sqlserver)$")
     postgres_url: Optional[str] = None
+    postgres_host: Optional[str] = None
+    postgres_port: Optional[int] = None
+    postgres_db: Optional[str] = None
+    postgres_user: Optional[str] = None
+    postgres_password: Optional[str] = None
     sqlserver_server: Optional[str] = None
     sqlserver_database: Optional[str] = None
     sqlserver_username: Optional[str] = None
@@ -325,6 +330,11 @@ class DatabaseConfigUpdate(BaseModel):
 
     provider: str = Field(..., pattern="^(postgres|sqlserver)$")
     postgres_url: Optional[str] = None
+    postgres_host: Optional[str] = None
+    postgres_port: Optional[int] = None
+    postgres_db: Optional[str] = None
+    postgres_user: Optional[str] = None
+    postgres_password: Optional[str] = None
     sqlserver_server: Optional[str] = None
     sqlserver_database: Optional[str] = None
     sqlserver_username: Optional[str] = None
@@ -336,7 +346,7 @@ class DatabaseConfigResponse(BaseModel):
     """Current database configuration (with masked passwords)"""
 
     provider: str
-    postgres: Optional[Dict[str, str]] = None
+    postgres: Optional[Dict[str, Any]] = None
     sqlserver: Optional[Dict[str, str]] = None
 
 

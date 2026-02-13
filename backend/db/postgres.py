@@ -17,6 +17,26 @@ class PostgresDatabase(DatabaseInterface):
         self.pool = await asyncpg.create_pool(
             self.database_url, min_size=5, max_size=20, command_timeout=60
         )
+        await self._check_migration()
+
+    async def _check_migration(self):
+        """Check and apply schema migrations"""
+        async with self.acquire() as conn:
+            # Check if conversion_duration_ms exists in video_segments
+            column_exists = await conn.fetchval(
+                """
+                SELECT EXISTS (
+                    SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_name='video_segments' AND column_name='conversion_duration_ms'
+                );
+                """
+            )
+            if not column_exists:
+                print("⚠ Applying migration: Adding conversion_duration_ms to video_segments...")
+                await conn.execute(
+                    "ALTER TABLE video_segments ADD COLUMN conversion_duration_ms FLOAT;"
+                )
 
     async def disconnect(self):
         """Close connection pool"""
@@ -383,19 +403,25 @@ class PostgresDatabase(DatabaseInterface):
             return [dict(row) for row in rows]
 
     async def mark_segment_recovered(
-        self, segment_id: int, new_path: str, duration: float, status: str
+        self,
+        segment_id: int,
+        new_path: str,
+        duration: float,
+        status: str,
+        conversion_duration: Optional[float] = None,
     ):
         async with self.acquire() as conn:
             await conn.execute(
                 """
                 UPDATE video_segments
-                SET file_path = $1, duration_seconds = $2, status = $3, end_time = start_time + make_interval(secs => $2)
+                SET file_path = $1, duration_seconds = $2, status = $3, end_time = start_time + make_interval(secs => $2), conversion_duration_ms = $5
                 WHERE id = $4
                 """,
                 new_path,
                 duration,
                 status,
                 segment_id,
+                conversion_duration,
             )
 
     # ========================================

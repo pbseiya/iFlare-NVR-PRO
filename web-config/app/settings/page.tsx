@@ -138,22 +138,25 @@ export default function SettingsPage() {
                             <p className="text-slate-500 dark:text-slate-400">Manage your workspace preferences</p>
                         </div>
                         {/* Save Button */}
-                        <button
-                            onClick={handleSave}
-                            disabled={isSaving}
-                            className={`
-                                flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-white transition-all shadow-sm
-                                ${isSaving ? 'bg-green-600 scale-95' : 'bg-blue-600 hover:bg-blue-500'}
-                            `}
-                        >
-                            {isSaving ? (
-                                <>
-                                    <Check className="w-4 h-4" /> Saved!
-                                </>
-                            ) : (
-                                <>Save Changes</>
-                            )}
-                        </button>
+                        {/* Save Button - Hide on Database tab */}
+                        {activeTab !== 'database' && (
+                            <button
+                                onClick={handleSave}
+                                disabled={isSaving}
+                                className={`
+                                    flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold text-white transition-all shadow-sm
+                                    ${isSaving ? 'bg-green-600 scale-95' : 'bg-blue-600 hover:bg-blue-500'}
+                                `}
+                            >
+                                {isSaving ? (
+                                    <>
+                                        <Check className="w-4 h-4" /> Saved!
+                                    </>
+                                ) : (
+                                    <>Save Changes</>
+                                )}
+                            </button>
+                        )}
                     </div>
 
                     {/* CONTENT: GENERAL */}
