@@ -4,7 +4,7 @@ Pydantic Models for request/response validation.
 """
 
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 
 
@@ -301,3 +301,58 @@ class SourceAnalysisResponse(BaseModel):
     estimated_bitrate_bps: Optional[float] = None
     duration_sec: Optional[float] = None
     error: Optional[str] = None
+
+
+# ========================================
+# Database Configuration Models
+# ========================================
+
+
+class DatabaseConfigTest(BaseModel):
+    """Test database connection without saving"""
+
+    provider: str = Field(..., pattern="^(postgres|sqlserver)$")
+    postgres_url: Optional[str] = None
+    postgres_host: Optional[str] = None
+    postgres_port: Optional[int] = None
+    postgres_db: Optional[str] = None
+    postgres_user: Optional[str] = None
+    postgres_password: Optional[str] = None
+    sqlserver_server: Optional[str] = None
+    sqlserver_database: Optional[str] = None
+    sqlserver_username: Optional[str] = None
+    sqlserver_password: Optional[str] = None
+    sqlserver_driver: Optional[str] = Field(None, description="ODBC Driver")
+
+
+class DatabaseConfigUpdate(BaseModel):
+    """Update database configuration"""
+
+    provider: str = Field(..., pattern="^(postgres|sqlserver)$")
+    postgres_url: Optional[str] = None
+    postgres_host: Optional[str] = None
+    postgres_port: Optional[int] = None
+    postgres_db: Optional[str] = None
+    postgres_user: Optional[str] = None
+    postgres_password: Optional[str] = None
+    sqlserver_server: Optional[str] = None
+    sqlserver_database: Optional[str] = None
+    sqlserver_username: Optional[str] = None
+    sqlserver_password: Optional[str] = None
+    sqlserver_driver: Optional[str] = Field(None, description="ODBC Driver")
+
+
+class DatabaseConfigResponse(BaseModel):
+    """Current database configuration (with masked passwords)"""
+
+    provider: str
+    postgres: Optional[Dict[str, Any]] = None
+    sqlserver: Optional[Dict[str, str]] = None
+
+
+class ConnectionTestResponse(BaseModel):
+    """Database connection test result"""
+
+    success: bool
+    message: str
+    latency_ms: Optional[float] = None

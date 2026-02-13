@@ -162,7 +162,12 @@ class DatabaseInterface(ABC):
 
     @abstractmethod
     async def mark_segment_recovered(
-        self, segment_id: int, new_path: str, duration: float, status: str
+        self,
+        segment_id: int,
+        new_path: str,
+        duration: float,
+        status: str,
+        conversion_duration: Optional[float] = None,
     ):
         pass
 

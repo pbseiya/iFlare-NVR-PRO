@@ -7,7 +7,53 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables
+# Load environment variables
 load_dotenv()
+
+import logging
+from logging.handlers import RotatingFileHandler
+import sys
+
+# Configure Logging with Rotation
+# This ensures logs persist even if the application restarts or crashes
+log_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+log_file = "backend.log"
+
+# Rotating File Handler: 10MB max size, keep 5 backups
+file_handler = RotatingFileHandler(log_file, maxBytes=10 * 1024 * 1024, backupCount=5)
+file_handler.setFormatter(log_formatter)
+file_handler.setLevel(logging.INFO)
+
+# Console Handler
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setFormatter(log_formatter)
+console_handler.setLevel(logging.INFO)
+
+# Root Logger Config
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+root_logger.addHandler(file_handler)
+root_logger.addHandler(console_handler)
+
+
+# Redirect print to logging for legacy code that uses print()
+class StreamToLogger(object):
+    def __init__(self, logger, level=logging.INFO):
+        self.logger = logger
+        self.level = level
+        self.linebuf = ""
+
+    def write(self, buf):
+        for line in buf.rstrip().splitlines():
+            self.logger.log(self.level, line.rstrip())
+
+    def flush(self):
+        pass
+
+
+# Redirect stdout/stderr
+sys.stdout = StreamToLogger(logging.getLogger("STDOUT"), logging.INFO)
+sys.stderr = StreamToLogger(logging.getLogger("STDERR"), logging.ERROR)
 
 import asyncio
 from datetime import datetime
@@ -35,6 +81,10 @@ from .models import (
     HealthResponse,
     SourceAnalysisRequest,
     SourceAnalysisResponse,
+    DatabaseConfigTest,
+    DatabaseConfigUpdate,
+    DatabaseConfigResponse,
+    ConnectionTestResponse,
 )
 import cv2
 from .db.factory import get_database
@@ -134,8 +184,57 @@ async def lifespan(app: FastAPI):
     # Run Video Recovery (for crashed segments) in background
     recovery_service = VideoRecoveryService(app.state.db)
     print(f"⏳ Backgrounding video recovery scan...")
-    # Backgrounding this so API can start immediately
-    asyncio.create_task(recovery_service.scan_and_recover())
+    # Backgrounding this so API can start immediately using app.state ref for cancellation
+    app.state.recovery_task = asyncio.create_task(recovery_service.scan_and_recover())
+
+    # --- Health Watchdog ---
+    async def health_watchdog():
+        """Monitors application health and exits if frozen"""
+        from .config_manager import ConfigManager
+        import time
+        import os
+        import signal
+
+        print("🐶 Watchdog System: STARTED")
+        while True:
+            try:
+                # Get Config (dynamic)
+                config = ConfigManager.get_watchdog_config()
+                if not config.get("enabled", True):
+                    await asyncio.sleep(10)
+                    continue
+
+                timeout = config.get("timeout_seconds", 60)
+                interval = config.get("check_interval_seconds", 10)
+
+                # Check Inference Engine Heartbeat
+                engine = app.state.inference_engine
+                now = time.time()
+
+                # Logic: Only kill if there are ACTIVE sessions and NO activity
+                if engine.active_sessions:
+                    last_activity = getattr(engine, "last_activity", now)
+                    inactive_duration = now - last_activity
+
+                    if inactive_duration > timeout:
+                        print(
+                            f"💀 Watchdog: CRITICAL! Application frozen for {inactive_duration:.1f}s. Forcing exit..."
+                        )
+
+                        # Log failure to persistent storage/DB if possible (Optional)
+                        # Then kill self
+                        os.kill(os.getpid(), signal.SIGTERM)
+                        break
+
+                await asyncio.sleep(interval)
+            except asyncio.CancelledError:
+                print("🐶 Watchdog: Stopped")
+                break
+            except Exception as e:
+                print(f"⚠️ Watchdog Error: {e}")
+                await asyncio.sleep(5)
+
+    app.state.watchdog_task = asyncio.create_task(health_watchdog())
 
     yield
 
@@ -157,6 +256,24 @@ async def lifespan(app: FastAPI):
     # Stop Video Converter Service
     await app.state.video_converter.stop()
     print("✓ Video Converter Service stopped")
+
+    # Cancel Background Recovery Task
+    if hasattr(app.state, "recovery_task"):
+        app.state.recovery_task.cancel()
+        try:
+            await app.state.recovery_task
+        except asyncio.CancelledError:
+            pass
+        print("✓ Recovery Service stopped")
+
+    # Cancel Watchdog
+    if hasattr(app.state, "watchdog_task"):
+        app.state.watchdog_task.cancel()
+        try:
+            await app.state.watchdog_task
+        except asyncio.CancelledError:
+            pass
+        print("✓ Watchdog stopped")
 
     await app.state.db.disconnect()
     print("✓ Disconnected from database")
@@ -1024,6 +1141,240 @@ async def analyze_source(request: SourceAnalysisRequest):
     except Exception as e:
         print(f"Analyze source error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ========================================
+# Database Configuration Endpoints
+# ========================================
+
+
+@app.get("/api/settings/database")
+async def get_database_config():
+    """
+    Get current database configuration with passwords masked.
+    TODO: Requires Admin authentication
+    """
+    from .config_manager import ConfigManager
+    from .models import DatabaseConfigResponse
+
+    try:
+        db_config = ConfigManager.get_database_config()
+        masked_config = ConfigManager.mask_sensitive_data(db_config)
+
+        return DatabaseConfigResponse(
+            provider=masked_config.get("provider", "postgres"),
+            postgres=masked_config.get("postgres"),
+            sqlserver=masked_config.get("sqlserver"),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load config: {str(e)}")
+
+
+@app.post("/api/settings/database/test")
+async def test_database_connection(config: "DatabaseConfigTest"):
+    """
+    Test database connection without saving configuration.
+    TODO: Requires Admin authentication
+    """
+    from .config_manager import ConfigManager
+    from .models import ConnectionTestResponse
+
+    # Build params dict based on provider
+    # Build params dict based on provider
+    if config.provider == "postgres":
+        if config.postgres_url:
+            params = {"url": config.postgres_url}
+        elif all(
+            [
+                config.postgres_host,
+                config.postgres_port,
+                config.postgres_db,
+                config.postgres_user,
+                config.postgres_password,
+            ]
+        ):
+            params = {
+                "host": config.postgres_host,
+                "port": config.postgres_port,
+                "database": config.postgres_db,
+                "username": config.postgres_user,
+                "password": config.postgres_password,
+            }
+        else:
+            raise HTTPException(
+                status_code=400, detail="PostgreSQL URL or Host/Port/DB/User/Pass required"
+            )
+    elif config.provider == "sqlserver":
+        if not all(
+            [
+                config.sqlserver_server,
+                config.sqlserver_database,
+                config.sqlserver_username,
+                config.sqlserver_password,
+            ]
+        ):
+            raise HTTPException(status_code=400, detail="All SQL Server fields are required")
+        params = {
+            "server": config.sqlserver_server,
+            "database": config.sqlserver_database,
+            "username": config.sqlserver_username,
+            "password": config.sqlserver_password,
+            "driver": config.sqlserver_driver or "{ODBC Driver 18 for SQL Server}",
+        }
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported provider: {config.provider}")
+
+    # Test connection
+    result = await ConfigManager.test_connection(config.provider, params)
+
+    return ConnectionTestResponse(**result)
+
+
+@app.put("/api/settings/database")
+async def update_database_config(config: "DatabaseConfigUpdate"):
+    """
+    Update database configuration and save to config.json.
+    Note: Backend restart required for changes to take effect.
+    TODO: Requires Admin authentication
+    """
+    from .config_manager import ConfigManager
+
+    # Build params dict based on provider
+    # Build params dict based on provider
+    if config.provider == "postgres":
+        if config.postgres_url:
+            new_params = {"url": config.postgres_url}
+        elif all(
+            [
+                config.postgres_host,
+                config.postgres_port,
+                config.postgres_db,
+                config.postgres_user,
+                config.postgres_password,
+            ]
+        ):
+            new_params = {
+                "host": config.postgres_host,
+                "port": config.postgres_port,
+                "database": config.postgres_db,
+                "username": config.postgres_user,
+                "password": config.postgres_password,
+            }
+        else:
+            raise HTTPException(
+                status_code=400, detail="PostgreSQL URL or Host/Port/DB/User/Pass required"
+            )
+    elif config.provider == "sqlserver":
+        if not all(
+            [
+                config.sqlserver_server,
+                config.sqlserver_database,
+                config.sqlserver_username,
+                config.sqlserver_password,
+            ]
+        ):
+            raise HTTPException(status_code=400, detail="All SQL Server fields are required")
+        new_params = {
+            "server": config.sqlserver_server,
+            "database": config.sqlserver_database,
+            "username": config.sqlserver_username,
+            "password": config.sqlserver_password,
+            "driver": config.sqlserver_driver or "{ODBC Driver 18 for SQL Server}",
+        }
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported provider: {config.provider}")
+
+    # Preserve masked passwords
+    current_config = ConfigManager.get_database_config()
+    new_config_dict = {config.provider: new_params}
+    preserved_config = ConfigManager.preserve_masked_passwords(new_config_dict, current_config)
+
+    # Validate
+    is_valid, error = ConfigManager.validate_config(
+        config.provider, preserved_config[config.provider]
+    )
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error)
+
+    # Save
+    try:
+        ConfigManager.update_database_config(config.provider, preserved_config[config.provider])
+        return {
+            "success": True,
+            "message": "Configuration saved. Please restart backend to apply changes.",
+            "provider": config.provider,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save config: {str(e)}")
+
+
+# ========================================
+# System Management Endpoints
+# ========================================
+
+
+@app.post("/api/system/restart")
+async def restart_backend():
+    """
+    Restart backend via Supervisor (Development) or Docker (Production).
+    TODO: Requires Admin authentication
+    """
+    import subprocess
+
+    try:
+        # Check if running under Supervisor
+        # Use -n for non-interactive mode to prevent hanging on password prompt
+        result = subprocess.run(
+            ["sudo", "-n", "supervisorctl", "status", "nvr-backend"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+
+        if result.returncode == 0 or result.returncode == 3:  # 0=running, 3=stopped
+            # Restart via Supervisor (Delayed to allow response to be sent)
+            async def delayed_restart():
+                await asyncio.sleep(1)
+                try:
+                    # Use Popen to fire and forget, preventing deadlock
+                    subprocess.Popen(
+                        ["sudo", "-n", "supervisorctl", "restart", "nvr-backend"],
+                        start_new_session=True,
+                    )
+                except Exception as e:
+                    print(f"Failed to trigger restart: {e}")
+
+            asyncio.create_task(delayed_restart())
+
+            return {
+                "success": True,
+                "message": "Backend restart initiated via Supervisor",
+                "method": "supervisor",
+            }
+        else:
+            # Fallback: Self-terminate (Docker will restart)
+            import os
+            import signal
+
+            # Schedule termination after response is sent
+            async def delayed_shutdown():
+                await asyncio.sleep(1)
+                os.kill(os.getpid(), signal.SIGTERM)
+
+            asyncio.create_task(delayed_shutdown())
+
+            return {
+                "success": True,
+                "message": "Backend shutdown initiated. Docker will restart automatically.",
+                "method": "docker",
+            }
+
+    except subprocess.TimeoutExpired:
+        print("Restart command timed out")
+        raise HTTPException(status_code=500, detail="Restart command timed out")
+    except Exception as e:
+        print(f"Failed to restart: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to restart: {str(e)}")
 
 
 if __name__ == "__main__":

@@ -39,6 +39,7 @@ export default function SynchronizedPlayer({
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [localSegments, setLocalSegments] = useState<VideoSegment[]>([]);
+    const [isSkipping, setIsSkipping] = useState(false);
 
     // Global Settings with Camera Override
     const { getSettingsForCamera, scopeSettings } = useSettings();
@@ -374,8 +375,6 @@ export default function SynchronizedPlayer({
 
     // 9. Gap Jumping / Auto-Advance Logic (Master Only)
     // Also serves as "Freewheel" logic when activeSource is null but we are playing
-    // 9. Gap Jumping / Auto-Advance Logic (Master Only)
-    // Also serves as "Freewheel" logic when activeSource is null but we are playing
     useEffect(() => {
         if (!isMaster || !isPlaying) return;
 
@@ -384,11 +383,41 @@ export default function SynchronizedPlayer({
 
         const checkTick = () => {
             // Case 1: No active source (GAP or End of list)
-            // We should just tick forward blindly if we are "playing" to traverse the gap
             if (!activeSource) {
+                // [Smart Skip Logic]
+                // Find the next available segment
+                if (segments.length > 0) {
+                    const timeMs = currentTime.getTime();
+                    // Find the first segment that starts AFTER current time
+                    const nextSeg = segments.find(s => new Date(s.start_time).getTime() > timeMs);
+
+                    if (nextSeg) {
+                        const nextStart = new Date(nextSeg.start_time).getTime();
+                        // If we are significantly behind the next segment (> 5 seconds), JUMP!
+                        // Otherwise, just tick forward (small gap)
+                        if (nextStart - timeMs > 5000) {
+                            if (!isSkipping) {
+                                console.log(`[SyncPlayer] Smart Skip detected... Gap to next: ${(nextStart - timeMs) / 1000}s`);
+                                setIsSkipping(true);
+                                // Add a delay to show the "Skipping..." message
+                                setTimeout(() => {
+                                    if (onTimeUpdate) {
+                                        // Jump to 1s before the start to allow buffering
+                                        onTimeUpdate(new Date(nextStart));
+                                        console.log(`[SyncPlayer] Smart Skip executed.`);
+                                    }
+                                    setIsSkipping(false);
+                                }, 1500);
+                            }
+                            return;
+                        }
+                    }
+                }
+
+                // Standard freewheel for small gaps or end of timeline
                 if (onTimeUpdate) {
                     const nextTime = new Date(currentTime.getTime() + tickAmountMs);
-                    console.log('[SyncPlayer] Freewheeling gap (No Source)...', nextTime.toISOString());
+                    // console.log('[SyncPlayer] Freewheeling gap (No Source)...', nextTime.toISOString());
                     onTimeUpdate(nextTime);
                 }
                 return;
@@ -413,7 +442,7 @@ export default function SynchronizedPlayer({
 
         const interval = setInterval(checkTick, intervalMs);
         return () => clearInterval(interval);
-    }, [isMaster, isPlaying, activeSource, currentTime, onTimeUpdate, playbackSpeed]);
+    }, [isMaster, isPlaying, activeSource, currentTime, onTimeUpdate, playbackSpeed, segments]);
 
     // Canvas Draw Effect
     useEffect(() => {
@@ -580,16 +609,25 @@ export default function SynchronizedPlayer({
                     onLoadedMetadata={handleLoadedMetadata}
                     onError={() => { console.log("Video Playback Error"); setError(true); }}
                 />
-                {/* Overlay: No Signal / Loading / Debug */}
-                {/* Overlay: No Signal / Loading / Debug */}
-                {(!videoSrc || error) && (
+                {/* Overlay: No Signal / Loading / Debug / Smart Skip */}
+                {(!videoSrc || error || isSkipping) && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 text-white z-10 p-4 text-center">
                         <p className="text-xl font-bold mb-2">
-                            {error ? 'PLAYBACK ERROR' : 'NO SIGNAL / PROCESSING'}
+                            {/* Smart Skip Notification */}
+                            {isSkipping
+                                ? 'SMART SKIPPING...'
+                                : (isPlaying && !error && segments.some(s => new Date(s.start_time).getTime() > currentTime.getTime())
+                                    ? 'NO SIGNAL - SEEKING...'
+                                    : (error ? 'PLAYBACK ERROR' : 'NO SIGNAL / PROCESSING'))
+                            }
                         </p>
 
+                        {(isSkipping || (isPlaying && !error && segments.some(s => new Date(s.start_time).getTime() > currentTime.getTime()))) && (
+                            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                        )}
+
                         {/* Only show technical details if Debug Mode is ON */}
-                        {true && ( // Force debug for now to help user diagnose
+                        {showDebug && ( // Force debug for now to help user diagnose
                             <div className="text-xs font-mono text-left bg-gray-900 p-2 rounded max-w-full overflow-auto mt-2 border border-gray-700 pointer-events-auto">
                                 <p className="text-red-400 font-bold mb-1">[DEBUG INFO]</p>
                                 <p>Time: {currentTime.toLocaleString()}</p>
@@ -597,9 +635,13 @@ export default function SynchronizedPlayer({
                                 <p>Status: {isPlaying ? 'PLAYING (Freewheel)' : 'PAUSED'}</p>
                             </div>
                         )}
-                        <p>Video Src: {videoSrc || 'None'}</p>
-                        <p>Error: {error ? 'Playback Error' : 'No Source'}</p>
-                        <p>Segments Available: {segments.length}</p>
+                        {showDebug && (
+                            <>
+                                <p>Video Src: {videoSrc || 'None'}</p>
+                                <p>Error: {error ? 'Playback Error' : 'No Source'}</p>
+                                <p>Segments Available: {segments.length}</p>
+                            </>
+                        )}
                     </div>
                 )}
 

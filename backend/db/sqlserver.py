@@ -92,6 +92,26 @@ class SQLServerDatabase(DatabaseInterface):
         self.pool = await aioodbc.create_pool(
             dsn=self.connection_string, minsize=5, maxsize=20, echo=False
         )
+        await self._check_migration()
+
+    async def _check_migration(self):
+        """Check and apply schema migrations"""
+        async with self.acquire() as conn:
+            # Check if conversion_duration_ms exists
+            column_exists = await conn.fetchval(
+                """
+                SELECT CASE WHEN EXISTS (
+                    SELECT 1 
+                    FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE TABLE_NAME = 'video_segments' AND COLUMN_NAME = 'conversion_duration_ms'
+                ) THEN 1 ELSE 0 END
+                """
+            )
+            if not column_exists:
+                print(
+                    "⚠ Applying migration: Adding conversion_duration_ms to video_segments (SQL Server)..."
+                )
+                await conn.execute("ALTER TABLE video_segments ADD conversion_duration_ms FLOAT;")
 
     async def disconnect(self):
         """Close connection pool"""
@@ -487,20 +507,26 @@ class SQLServerDatabase(DatabaseInterface):
             return [dict(row) for row in rows]
 
     async def mark_segment_recovered(
-        self, segment_id: int, new_path: str, duration: float, status: str
+        self,
+        segment_id: int,
+        new_path: str,
+        duration: float,
+        status: str,
+        conversion_duration: Optional[float] = None,
     ):
         async with self.acquire() as conn:
             # SQL Server supports DATEADD(second, duration, start_time)
             await conn.execute(
                 """
                 UPDATE video_segments
-                SET file_path = $1, duration_seconds = $2, status = $3, end_time = DATEADD(second, $2, start_time)
+                SET file_path = $1, duration_seconds = $2, status = $3, end_time = DATEADD(second, $2, start_time), conversion_duration_ms = $5
                 WHERE id = $4
                 """,
                 new_path,
                 duration,
                 status,
-                duration,  # Repeated for DATEADD(..., $2, ...)
+                duration,  # Repeated for DATEADD
+                conversion_duration,
                 segment_id,
             )
 

@@ -1,0 +1,7 @@
+TF2DFX Video 480p -> ~/projects/rtsp_server/demo_clips/tf2dfx.mp4, storage resolution 480p, weight ~/projects/yolov11_inference_cpu/models/om_flare_yolov11.pt
+
+TTM Video Original -> ~/projects/rtsp_server/demo_clips/DSCF0008.AVI, storage resolution Original, weight ~/projects/yolov11_inference_cpu/models/om_flare_yolov11.pt
+
+TF2DFX RTSP 480p -> rtsp://admin:Irpc2024@10.30.25.58:554/Streaming/Channels/3, storage resolution Original, weight ~/projects/yolov11_inference_cpu/models/om_flare_yolov11.pt
+
+ลบ session เก่าทั้งทั้งหมดแล้วสร้าง  session ใหม่ผ่าน browser เท่านั้น การเข้าไปวาง text ให้กด ctrl+A ก่อนเพื่อที่จะแน่ใจว่ามีการ replace ข้อความได้สมบูรณ์

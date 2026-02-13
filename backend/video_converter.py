@@ -12,6 +12,9 @@ from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 from .db.base import DatabaseInterface
 import logging
+import psutil
+import signal
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +87,21 @@ class VideoConverter:
 
         await asyncio.gather(*self.workers, return_exceptions=True)
         self.workers.clear()
+
+        # Force kill any lingering ffmpeg processes started by this process
+        try:
+            current_process = psutil.Process()
+            children = current_process.children(recursive=True)
+            for child in children:
+                try:
+                    if "ffmpeg" in child.name().lower():
+                        logger.warning(f"Force killing lingering ffmpeg process {child.pid}")
+                        child.kill()
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    pass
+        except Exception as e:
+            logger.error(f"Error cleaning up ffmpeg processes: {e}")
+
         logger.info("VideoConverter stopped")
 
     async def enqueue(self, segment_id: int, input_path: str, session_id: int):
@@ -115,6 +133,7 @@ class VideoConverter:
         Args:
             worker_id: Worker identifier
         """
+        print(f"👷 Worker {worker_id} started")
         logger.info(f"Worker {worker_id} started")
 
         while self.running:
@@ -126,6 +145,7 @@ class VideoConverter:
                     continue
 
                 self.active_jobs.append(job)
+                print(f"🎬 Worker {worker_id} processing: {Path(job.input_path).name}")
                 logger.info(f"Worker {worker_id} processing: {Path(job.input_path).name}")
 
                 # Update status to 'processing'
@@ -137,7 +157,14 @@ class VideoConverter:
                 )
 
                 # Perform conversion
-                success = await self._convert(job)
+                try:
+                    success = await self._convert(job)
+                except asyncio.CancelledError:
+                    # If worker is cancelled, ensure we handle it gracefully if not handled in _convert
+                    logger.warning(
+                        f"Worker {worker_id} cancelled during conversion of {Path(job.input_path).name}"
+                    )
+                    raise
 
                 if success:
                     # Update status to 'ready' and update file path
@@ -186,6 +213,9 @@ class VideoConverter:
         ]
 
         try:
+            # Measure conversion time
+            start_time = time.perf_counter()
+
             # Run FFmpeg conversion
             process = await asyncio.create_subprocess_exec(
                 *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
@@ -200,20 +230,42 @@ class VideoConverter:
                     output_size = Path(job.output_path).stat().st_size / (1024 * 1024)
                     compression = (1 - output_size / input_size) * 100
 
+                    end_time = time.perf_counter()
+                    conversion_duration_ms = (end_time - start_time) * 1000
+
+                    print(
+                        f"✅ Conversion successful: {Path(job.input_path).name} "
+                        f"({input_size:.2f} MB -> {output_size:.2f} MB, {compression:.1f}% compression) "
+                        f"in {conversion_duration_ms:.2f}ms"
+                    )
                     logger.info(
                         f"Conversion successful: {Path(job.input_path).name} "
-                        f"({input_size:.2f} MB -> {output_size:.2f} MB, {compression:.1f}% compression)"
+                        f"({input_size:.2f} MB -> {output_size:.2f} MB, {compression:.1f}% compression) "
+                        f"in {conversion_duration_ms:.2f}ms"
                     )
+
+                    # Pass duration to finalize
+                    job.conversion_duration_ms = conversion_duration_ms
                     return True
                 else:
+                    print(f"❌ Output file is empty or missing: {job.output_path}")
                     logger.error(f"Output file is empty or missing: {job.output_path}")
                     return False
             else:
-                logger.error(
-                    f"FFmpeg failed with code {process.returncode}: "
-                    f"{stderr.decode('utf-8', errors='ignore')[:200]}"
-                )
+                stderr_text = stderr.decode() if stderr else "No error info"
+                print(f"❌ FFmpeg error: {stderr_text}")
+                logger.error(f"FFmpeg error: {stderr_text}")
                 return False
+
+        except asyncio.CancelledError:
+            logger.warning(f"Conversion cancelled: {Path(job.input_path).name}")
+            # Ensure subprocess is killed
+            try:
+                process.terminate()
+                await process.wait()
+            except Exception as e:
+                logger.error(f"Error terminating process during cancellation: {e}")
+            raise
 
         except Exception as e:
             logger.error(f"Conversion error: {e}", exc_info=True)
@@ -259,8 +311,14 @@ class VideoConverter:
         if start_time:
             end_time = start_time + timedelta(seconds=duration)
 
-            # Update database using abstract method
-            await self.db.update_video_segment(job.segment_id, end_time, duration, "ready")
+            # Update database using specialized method to handle path and end_time
+            conversion_duration = getattr(job, "conversion_duration_ms", None)
+            await self.db.mark_segment_recovered(
+                job.segment_id, job.output_path, duration, "ready", conversion_duration
+            )
+            print(
+                f"🎯 Segment {job.segment_id} finalized as 'ready' (Conv: {conversion_duration:.0f}ms)"
+            )
 
             # Update file path separately if update_video_segment doesn't handle it?
             # update_video_segment only updates end_time, duration, status.
@@ -275,13 +333,10 @@ class VideoConverter:
             # I should add a method `update_video_segment_path` or similar.
             # Or just execute a simple update for path.
 
-            async with self.db.acquire() as conn:
-                await conn.execute(
-                    "UPDATE video_segments SET file_path = $1 WHERE id = $2",
-                    job.output_path,
-                    job.segment_id,
-                )
+            # Path update is now handled by mark_segment_recovered
+            pass
         else:
+            print(f"⚠️ Could not find start_time for segment {job.segment_id}")
             logger.warning(
                 f"Could not find start_time for segment {job.segment_id}, skipping end_time update"
             )
