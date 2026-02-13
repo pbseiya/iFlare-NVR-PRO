@@ -438,8 +438,15 @@ class InferenceEngine:
                         print(f"Session {session_id} [STD]: {line_str}")
         finally:
             if process.returncode is None:
-                process.terminate()
-                await process.wait()
+                try:
+                    process.terminate()
+                except Exception:
+                    pass
+
+                try:
+                    await process.wait()
+                except Exception:
+                    pass
 
     async def _run_python_pytorch(self, session_id: int, config: dict, start_frame: int = 0):
         """Run Python+PyTorch Inference with Reconnection & Metrics"""
