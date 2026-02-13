@@ -137,7 +137,14 @@ class VideoConverter:
                 )
 
                 # Perform conversion
-                success = await self._convert(job)
+                try:
+                    success = await self._convert(job)
+                except asyncio.CancelledError:
+                    # If worker is cancelled, ensure we handle it gracefully if not handled in _convert
+                    logger.warning(
+                        f"Worker {worker_id} cancelled during conversion of {Path(job.input_path).name}"
+                    )
+                    raise
 
                 if success:
                     # Update status to 'ready' and update file path
@@ -208,12 +215,17 @@ class VideoConverter:
                 else:
                     logger.error(f"Output file is empty or missing: {job.output_path}")
                     return False
-            else:
-                logger.error(
-                    f"FFmpeg failed with code {process.returncode}: "
-                    f"{stderr.decode('utf-8', errors='ignore')[:200]}"
-                )
                 return False
+
+        except asyncio.CancelledError:
+            logger.warning(f"Conversion cancelled: {Path(job.input_path).name}")
+            # Ensure subprocess is killed
+            try:
+                process.terminate()
+                await process.wait()
+            except Exception as e:
+                logger.error(f"Error terminating process during cancellation: {e}")
+            raise
 
         except Exception as e:
             logger.error(f"Conversion error: {e}", exc_info=True)
